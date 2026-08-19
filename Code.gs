@@ -10,6 +10,7 @@ const CONFIG = Object.freeze({
   TEMPLATE_SHEET_NAME: 'Photo_Report',
   ASSET_MASTER_SHEET_NAME: 'Asset_Master',
   PHOTO_FOLDER_ID: '1CU2xREGuoBjzjDVYMfra_KylHGpUd1Re',
+  PDF_FOLDER_ID: '1CU2xREGuoBjzjDVYMfra_KylHGpUd1Re',
   TIME_ZONE: 'Asia/Bangkok',
   HEADER_ROW: 4,
   JOB_CELL: 'B4',
@@ -26,7 +27,18 @@ const CONFIG = Object.freeze({
     after3: 'E29',
     before4: 'A36',
     after4: 'E36'
-  })
+  }),
+  IMAGE_TYPES: Object.freeze([
+    'signage',
+    'before1',
+    'after1',
+    'before2',
+    'after2',
+    'before3',
+    'after3',
+    'before4',
+    'after4'
+  ])
 });
 
 function onOpen() {
@@ -89,6 +101,111 @@ function getJobData() {
 }
 
 /**
+ * คืนสถานะงานของ Job ที่เลือก เพื่อใช้ย้อนกลับมาทำต่อภายหลัง
+ */
+function getJobProgress(jobNo) {
+  if (!jobNo) {
+    throw new Error('ไม่พบเลข Job');
+  }
+
+  const sheetName = buildJobSheetName_(jobNo);
+  const sheet = getSpreadsheet_().getSheetByName(sheetName);
+  if (!sheet) {
+    return {
+      exists: false,
+      sheetName: sheetName,
+      jobNo: String(jobNo),
+      location: '',
+      filledTypes: []
+    };
+  }
+
+  return {
+    exists: true,
+    sheetName: sheetName,
+    jobNo: String(jobNo),
+    location: sheet.getRange(CONFIG.LOCATION_CELL).getDisplayValue(),
+    filledTypes: getFilledImageTypes_(sheet)
+  };
+}
+
+/**
+ * สร้าง/บันทึกชีทรายงานแยกตาม Job เพื่อไม่ให้งานที่ยังไม่เสร็จถูกทับ
+ */
+function saveJobProgress(jobNo, location) {
+  if (!jobNo) {
+    throw new Error('กรุณาเลือก Job ก่อนบันทึก');
+  }
+
+  const sheet = ensureJobSheet_(jobNo);
+  sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
+  sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
+  sheet.getRange(CONFIG.DATE_CELL).setValue(new Date());
+  SpreadsheetApp.flush();
+
+  return {
+    message: 'บันทึกงาน ' + jobNo + ' แล้ว สามารถกลับมาทำต่อภายหลังได้',
+    sheetName: sheet.getName(),
+    filledTypes: getFilledImageTypes_(sheet)
+  };
+}
+
+/**
+ * สร้าง PDF A4 เฉพาะชีทรายงานของ Job ที่เลือก แล้วเก็บไว้ในโฟลเดอร์ Drive
+ */
+function createJobPdf(jobNo) {
+  if (!jobNo) {
+    throw new Error('กรุณาเลือก Job ก่อนสั่งพิมพ์');
+  }
+
+  const spreadsheet = getSpreadsheet_();
+  const sheet = spreadsheet.getSheetByName(buildJobSheetName_(jobNo));
+  if (!sheet) {
+    throw new Error('ยังไม่มีงานที่บันทึกสำหรับ Job ' + jobNo);
+  }
+
+  const exportUrl = 'https://docs.google.com/spreadsheets/d/' + CONFIG.SPREADSHEET_ID + '/export' +
+    '?format=pdf' +
+    '&exportFormat=pdf' +
+    '&gid=' + sheet.getSheetId() +
+    '&size=A4' +
+    '&portrait=true' +
+    '&fitw=true' +
+    '&scale=4' +
+    '&sheetnames=false' +
+    '&printtitle=false' +
+    '&pagenum=UNDEFINED' +
+    '&gridlines=false' +
+    '&fzr=false' +
+    '&horizontal_alignment=CENTER' +
+    '&vertical_alignment=TOP' +
+    '&top_margin=0.20' +
+    '&bottom_margin=0.20' +
+    '&left_margin=0.20' +
+    '&right_margin=0.20';
+
+  const response = UrlFetchApp.fetch(exportUrl, {
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+    muteHttpExceptions: true
+  });
+
+  if (response.getResponseCode() !== 200) {
+    throw new Error('สร้าง PDF ไม่สำเร็จ (HTTP ' + response.getResponseCode() + ')');
+  }
+
+  const filename = buildPdfFilename_(jobNo);
+  const pdfBlob = response.getBlob().setName(filename);
+  const file = DriveApp.getFolderById(CONFIG.PDF_FOLDER_ID).createFile(pdfBlob);
+
+  return {
+    message: 'สร้าง PDF A4 สำหรับ ' + jobNo + ' เรียบร้อยแล้ว',
+    fileId: file.getId(),
+    fileUrl: file.getUrl(),
+    filename: filename
+  };
+}
+
+/**
  * รับรูปจาก Sidebar บันทึกลงโฟลเดอร์ Drive และแทรกรูปลงเทมเพลต Photo_Report
  * รูปจะถูกแทรกเป็น Over-grid image จึงไม่จำเป็นต้องเปิดไฟล์เป็นสาธารณะ
  */
@@ -104,10 +221,7 @@ function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFile
     }
 
     const spreadsheet = getSpreadsheet_();
-    const sheet = spreadsheet.getSheetByName(CONFIG.TEMPLATE_SHEET_NAME);
-    if (!sheet) {
-      throw new Error('ไม่พบชีท ' + CONFIG.TEMPLATE_SHEET_NAME);
-    }
+    const sheet = ensureJobSheet_(jobNo);
 
     const imageBlob = dataUrlToImageBlob_(base64Data, originalFilename);
     const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
@@ -124,7 +238,7 @@ function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFile
     return 'บันทึกรูปภาพเรียบร้อยแล้ว: ' + imageType;
   } catch (error) {
     console.error(error);
-    return 'เกิดข้อผิดพลาด: ' + error.message;
+    throw new Error(error.message || 'ไม่สามารถบันทึกรูปภาพได้');
   }
 }
 
@@ -137,13 +251,61 @@ function checkPhotoReportSetup() {
   const assetSheet = spreadsheet.getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
   const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
 
+  const pdfFolder = DriveApp.getFolderById(CONFIG.PDF_FOLDER_ID);
+
   return {
     spreadsheetName: spreadsheet.getName(),
     templateSheetFound: !!templateSheet,
     assetMasterSheetFound: !!assetSheet,
     photoFolderName: folder.getName(),
-    photoFolderId: CONFIG.PHOTO_FOLDER_ID
+    photoFolderId: CONFIG.PHOTO_FOLDER_ID,
+    pdfFolderName: pdfFolder.getName(),
+    pdfFolderId: CONFIG.PDF_FOLDER_ID
   };
+}
+
+function ensureJobSheet_(jobNo) {
+  const spreadsheet = getSpreadsheet_();
+  const sheetName = buildJobSheetName_(jobNo);
+  const existing = spreadsheet.getSheetByName(sheetName);
+  if (existing) return existing;
+
+  const template = spreadsheet.getSheetByName(CONFIG.TEMPLATE_SHEET_NAME);
+  if (!template) {
+    throw new Error('ไม่พบชีทเทมเพลต ' + CONFIG.TEMPLATE_SHEET_NAME);
+  }
+
+  const jobSheet = template.copyTo(spreadsheet);
+  jobSheet.setName(sheetName);
+  jobSheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
+  return jobSheet;
+}
+
+function buildJobSheetName_(jobNo) {
+  const safeJobNo = String(jobNo)
+    .trim()
+    .replace(/[\\\\/?*\[\]:]/g, '_')
+    .replace(/^'+|'+$/g, '')
+    .substring(0, 85);
+  return 'REPORT_' + (safeJobNo || 'UNNAMED_JOB');
+}
+
+function getFilledImageTypes_(sheet) {
+  const anchors = {};
+  sheet.getImages().forEach(function(image) {
+    const anchor = image.getAnchorCell();
+    if (anchor) anchors[anchor.getA1Notation()] = true;
+  });
+
+  return CONFIG.IMAGE_TYPES.filter(function(imageType) {
+    return !!anchors[CONFIG.IMAGE_CELL_MAP[imageType]];
+  });
+}
+
+function buildPdfFilename_(jobNo) {
+  const safeJobNo = String(jobNo).replace(/[^a-zA-Z0-9ก-๙_-]/g, '_');
+  const timestamp = Utilities.formatDate(new Date(), CONFIG.TIME_ZONE, 'yyyyMMdd_HHmmss');
+  return 'Photo_Report_' + safeJobNo + '_' + timestamp + '.pdf';
 }
 
 function getSpreadsheet_() {

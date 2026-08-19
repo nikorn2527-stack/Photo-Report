@@ -108,6 +108,14 @@
       .photo-slot-wide .slot-image { min-height: 186px; }
       .slot-status { position: absolute; right: 7px; bottom: 6px; padding: 2px 6px; border-radius: 9px; background: rgba(24, 128, 56, .9); color: #fff; font-size: 11px; }
 
+      .job-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+      .job-action { min-height: 48px; border: 1px solid var(--border); background: #fff; color: var(--text); }
+      .job-action-save { background: var(--green); color: #fff; border-color: var(--green); }
+      .job-action-print { background: #1967d2; color: #fff; border-color: #1967d2; }
+      .job-action:disabled { background: #e5e7eb !important; color: #80868b; border-color: #d2d5da; }
+      .progress-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+      .print-link { display: none; margin-top: 10px; color: var(--blue); font-size: 13px; text-align: center; text-decoration: underline; }
+      .print-link.is-visible { display: block; }
       .report-footer { margin-top: 18px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; text-align: center; }
       .status { min-height: 22px; margin-top: 10px; color: var(--muted); font-size: 14px; text-align: center; }
       .status.error { color: var(--danger); }
@@ -227,6 +235,12 @@
           </div>
         </section>
 
+        <div class="job-actions">
+          <button id="saveJobBtn" type="button" class="job-action job-action-save" onclick="saveJob()" disabled>บันทึกงาน</button>
+          <button id="printJobBtn" type="button" class="job-action job-action-print" onclick="printJob()" disabled>สั่งพิมพ์งาน</button>
+        </div>
+        <p id="progressNote" class="progress-note">เลือก Job เพื่อเริ่มงาน</p>
+        <a id="printLink" class="print-link" href="#" target="_blank" rel="noopener">เปิด PDF สำหรับพิมพ์</a>
         <div id="status" class="status" role="status" aria-live="polite"></div>
         <footer class="report-footer">รองรับ JPG, PNG, GIF, WEBP ขนาดไม่เกิน 2 MB ต่อรูป</footer>
       </section>
@@ -297,15 +311,143 @@
           option.textContent = job.jobNo;
           select.appendChild(option);
         });
-        select.addEventListener('change', updateLocation);
+        select.addEventListener('change', handleJobChange);
         setStatus(jobDataList.length ? '' : 'ไม่พบ Job ใน Asset_Master', !jobDataList.length);
+        handleJobChange();
+      }
+
+      function getSelectedJob() {
+        const selectedIndex = document.getElementById('jobSelect').value;
+        return selectedIndex === '' ? null : jobDataList[selectedIndex];
       }
 
       function updateLocation() {
-        const selectedIndex = document.getElementById('jobSelect').value;
-        document.getElementById('locationDisplay').value = selectedIndex === ''
-          ? ''
-          : jobDataList[selectedIndex].location;
+        const job = getSelectedJob();
+        document.getElementById('locationDisplay').value = job ? job.location : '';
+      }
+
+      function handleJobChange() {
+        updateLocation();
+        clearRenderedSlots();
+        hidePrintLink();
+        const job = getSelectedJob();
+        setJobActions(!!job, false);
+
+        if (!job) {
+          document.getElementById('progressNote').textContent = 'เลือก Job เพื่อเริ่มงาน';
+          return;
+        }
+
+        setStatus('กำลังโหลดความคืบหน้าของ ' + job.jobNo + '...');
+        google.script.run
+          .withSuccessHandler(renderJobProgress)
+          .withFailureHandler(function(error) {
+            setStatus('โหลดความคืบหน้าไม่สำเร็จ: ' + getErrorMessage(error), true);
+          })
+          .getJobProgress(job.jobNo);
+      }
+
+      function renderJobProgress(progress) {
+        const filledTypes = (progress && progress.filledTypes) || [];
+        filledTypes.forEach(function(photoType) {
+          renderSavedSlot(photoType);
+        });
+
+        const hasJob = !!getSelectedJob();
+        setJobActions(hasJob, !!(progress && progress.exists));
+        document.getElementById('progressNote').textContent = filledTypes.length + '/9 ช่องมีรูปแล้ว' +
+          (progress && progress.exists ? ' สามารถกดบันทึกเพื่อทำต่อได้' : ' งานนี้ยังไม่เคยบันทึก');
+        setStatus('');
+      }
+
+      function setJobActions(hasJob, canPrint) {
+        document.getElementById('saveJobBtn').disabled = !hasJob;
+        document.getElementById('printJobBtn').disabled = !canPrint;
+      }
+
+      function clearRenderedSlots() {
+        document.querySelectorAll('[data-photo-type]').forEach(function(slot) {
+          const photoType = slot.getAttribute('data-photo-type');
+          slot.classList.remove('is-filled');
+          slot.innerHTML = '<span class="slot-content"><span class="slot-label">' + PHOTO_LABELS[photoType] + '</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>';
+        });
+      }
+
+      function renderSavedSlot(photoType) {
+        const slot = document.querySelector('[data-photo-type="' + photoType + '"]');
+        if (!slot) return;
+        slot.classList.add('is-filled');
+        slot.innerHTML = '<span class="slot-content"><span class="slot-label">' + PHOTO_LABELS[photoType] + '</span><span class="slot-hint">แตะเพื่อเปลี่ยนรูป</span></span><span class="slot-status">มีรูปแล้ว</span>';
+      }
+
+      function saveJob() {
+        const job = getSelectedJob();
+        if (!job) {
+          setStatus('กรุณาเลือก Job ก่อนบันทึก', true);
+          return;
+        }
+
+        const button = document.getElementById('saveJobBtn');
+        button.disabled = true;
+        button.textContent = 'กำลังบันทึก...';
+        setStatus('กำลังบันทึกงาน ' + job.jobNo + '...');
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            button.disabled = false;
+            button.textContent = 'บันทึกงาน';
+            setJobActions(true, true);
+            document.getElementById('progressNote').textContent = (result.filledTypes || []).length + '/9 ช่องมีรูปแล้ว สามารถกลับมาทำต่อได้';
+            setStatus(result.message, false, true);
+          })
+          .withFailureHandler(function(error) {
+            button.disabled = false;
+            button.textContent = 'บันทึกงาน';
+            setStatus('บันทึกงานไม่สำเร็จ: ' + getErrorMessage(error), true);
+          })
+          .saveJobProgress(job.jobNo, document.getElementById('locationDisplay').value);
+      }
+
+      function printJob() {
+        const job = getSelectedJob();
+        if (!job) {
+          setStatus('กรุณาเลือก Job ก่อนสั่งพิมพ์', true);
+          return;
+        }
+
+        const button = document.getElementById('printJobBtn');
+        button.disabled = true;
+        button.textContent = 'กำลังสร้าง PDF...';
+        setStatus('กำลังสร้าง PDF A4 ของ ' + job.jobNo + '...');
+        const popup = window.open('about:blank', '_blank');
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            button.disabled = false;
+            button.textContent = 'สั่งพิมพ์งาน';
+            showPrintLink(result.fileUrl);
+            if (popup) popup.location = result.fileUrl;
+            setStatus(result.message, false, true);
+          })
+          .withFailureHandler(function(error) {
+            button.disabled = false;
+            button.textContent = 'สั่งพิมพ์งาน';
+            if (popup) popup.close();
+            setStatus('สร้าง PDF ไม่สำเร็จ: ' + getErrorMessage(error), true);
+          })
+          .createJobPdf(job.jobNo);
+      }
+
+      function showPrintLink(url) {
+        const link = document.getElementById('printLink');
+        link.href = url;
+        link.classList.add('is-visible');
+      }
+
+      function hidePrintLink() {
+        const link = document.getElementById('printLink');
+        link.href = '#';
+        link.classList.remove('is-visible');
       }
 
       function openPhotoModal(photoType) {
@@ -385,6 +527,8 @@
             renderFilledSlot(activePhotoType, pendingDataUrl);
             closePhotoModal();
             saveButton.textContent = 'บันทึกรูปช่องนี้';
+            setJobActions(true, true);
+            document.getElementById('progressNote').textContent = countFilledSlots() + '/9 ช่องมีรูปแล้ว กดบันทึกงานเพื่อเก็บความคืบหน้า';
             setStatus(message, false, true);
           })
           .withFailureHandler(function(error) {
@@ -406,6 +550,10 @@
         if (!slot) return;
         slot.classList.add('is-filled');
         slot.innerHTML = '<img class="slot-image" alt="' + PHOTO_LABELS[photoType] + '" src="' + dataUrl + '"><span class="slot-status">บันทึกแล้ว</span>';
+      }
+
+      function countFilledSlots() {
+        return document.querySelectorAll('.photo-slot.is-filled').length;
       }
 
       function resetPendingPhoto() {
