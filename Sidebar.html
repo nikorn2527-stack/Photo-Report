@@ -46,8 +46,9 @@
         text-align: center;
       }
 
-      .report-title { margin: 0; font-size: 23px; line-height: 1.2; letter-spacing: .05em; }
-      .report-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+      .company-title { margin: 0 0 5px; color: var(--muted); font-size: 11px; font-weight: 600; line-height: 1.35; }
+      .report-title { margin: 0; font-size: 19px; line-height: 1.25; }
+      .report-subtitle { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
 
       .job-section { margin-top: 14px; }
       .field { margin-bottom: 12px; }
@@ -96,6 +97,8 @@
       }
 
       .photo-slot-wide { min-height: 190px; }
+      .photo-slot[data-photo-type^="before"] { border-color: #b45f16; }
+      .photo-slot[data-photo-type^="after"] { border-color: #1b6e43; }
       .photo-slot:hover { border-color: var(--blue); background: #f4f8ff; }
       .photo-slot.is-filled { border-style: solid; border-color: var(--green); background: #fff; }
       .slot-content { width: 100%; padding: 12px; }
@@ -158,10 +161,12 @@
         .photo-slot-wide { grid-column: auto; }
       }
 
+      @page { size: A4 portrait; margin: 10mm; }
+
       @media print {
         html, body { background: #fff; }
         body { padding: 0; }
-        .template-page { max-width: none; min-height: 0; border: 0; box-shadow: none; }
+        .template-page { width: 190mm; max-width: none; min-height: 277mm; padding: 0; border: 0; box-shadow: none; }
         .modal-backdrop, .status { display: none !important; }
       }
     </style>
@@ -170,8 +175,9 @@
     <main class="app">
       <section class="template-page" aria-label="แบบฟอร์ม Photo Report">
         <header class="report-header">
-          <h1 class="report-title">PHOTO REPORT</h1>
-          <p class="report-subtitle">แบบฟอร์มบันทึกรูปภาพหน้างาน</p>
+          <p class="company-title">ห้างหุ้นส่วนจำกัด เปซิกฟิก พลัส ไอที<br>(PACIFIC PLUS IT LIMITED PARTNERSHIP)</p>
+          <h1 class="report-title">ใบบันทึกภาพถ่ายการติดตั้งอุปกรณ์</h1>
+          <p class="report-subtitle">Installation Photo Report</p>
         </header>
 
         <section class="job-section">
@@ -205,6 +211,18 @@
             </button>
             <button type="button" class="photo-slot" data-photo-type="after2" onclick="openPhotoModal('after2')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 2">
               <span class="slot-content"><span class="slot-label">หลังติดตั้ง 2</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+            </button>
+            <button type="button" class="photo-slot" data-photo-type="before3" onclick="openPhotoModal('before3')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 3">
+              <span class="slot-content"><span class="slot-label">ก่อนติดตั้ง 3</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+            </button>
+            <button type="button" class="photo-slot" data-photo-type="after3" onclick="openPhotoModal('after3')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 3">
+              <span class="slot-content"><span class="slot-label">หลังติดตั้ง 3</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+            </button>
+            <button type="button" class="photo-slot" data-photo-type="before4" onclick="openPhotoModal('before4')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 4">
+              <span class="slot-content"><span class="slot-label">ก่อนติดตั้ง 4</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+            </button>
+            <button type="button" class="photo-slot" data-photo-type="after4" onclick="openPhotoModal('after4')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 4">
+              <span class="slot-content"><span class="slot-label">หลังติดตั้ง 4</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
             </button>
           </div>
         </section>
@@ -241,7 +259,11 @@
         before1: 'ก่อนติดตั้ง 1',
         after1: 'หลังติดตั้ง 1',
         before2: 'ก่อนติดตั้ง 2',
-        after2: 'หลังติดตั้ง 2'
+        after2: 'หลังติดตั้ง 2',
+        before3: 'ก่อนติดตั้ง 3',
+        after3: 'หลังติดตั้ง 3',
+        before4: 'ก่อนติดตั้ง 4',
+        after4: 'หลังติดตั้ง 4'
       };
 
       let jobDataList = [];

@@ -21,7 +21,11 @@ const CONFIG = Object.freeze({
     before1: 'A15',
     after1: 'E15',
     before2: 'A22',
-    after2: 'E22'
+    after2: 'E22',
+    before3: 'A29',
+    after3: 'E29',
+    before4: 'A36',
+    after4: 'E36'
   })
 });
 
