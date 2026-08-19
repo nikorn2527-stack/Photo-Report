@@ -58,8 +58,23 @@ function doGet(e) {
     ? 'AssetMaster'
     : 'Sidebar';
   const title = fileName === 'AssetMaster' ? 'จัดการ Asset_Master' : 'อัปโหลดรูปภาพ Photo Report';
-  return HtmlService.createHtmlOutputFromFile(fileName)
-    .setTitle(title);
+
+  try {
+    return HtmlService.createHtmlOutputFromFile(fileName)
+      .setTitle(title)
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (error) {
+    const message = String(error && error.message ? error.message : error)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+    return HtmlService.createHtmlOutput(
+      '<!doctype html><html lang="th"><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Photo Report</title>' +
+      '<style>body{font-family:Arial,sans-serif;padding:24px;line-height:1.6;color:#202124}code{background:#f1f3f4;padding:3px 6px;border-radius:4px}.error{color:#b3261e}</style></head>' +
+      '<body><h1>เปิดหน้า Photo Report ไม่สำเร็จ</h1><p>กรุณาตรวจสอบว่าได้สร้างไฟล์ HTML ชื่อ <code>' + fileName + '.html</code> ใน Apps Script แล้ว และ Deploy เป็นเวอร์ชันล่าสุด</p><p class="error">รายละเอียด: ' + message + '</p></body></html>'
+    ).setTitle('Photo Report - ตรวจสอบการติดตั้ง');
+  }
 }
 
 function showSidebar() {
