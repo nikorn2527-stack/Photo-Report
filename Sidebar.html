@@ -10,8 +10,8 @@
         --blue: #1967d2;
         --text: #202124;
         --muted: #5f6368;
-        --border: #dadce0;
-        --surface: #f8fafd;
+        --border: #c7cbd1;
+        --surface: #f6f8fb;
         --danger: #b3261e;
       }
 
@@ -20,181 +20,234 @@
       html, body {
         margin: 0;
         min-height: 100%;
-        background: #ffffff;
+        background: #eef1f5;
         color: var(--text);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         font-size: 16px;
         line-height: 1.45;
       }
 
-      body { padding: 16px; }
+      body { padding: 12px; }
+      .app { width: 100%; max-width: 620px; margin: 0 auto; }
 
-      .app { width: 100%; max-width: 560px; margin: 0 auto; }
-
-      .app-header { margin-bottom: 18px; }
-      .app-title { margin: 0; font-size: 26px; line-height: 1.2; }
-      .app-subtitle { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
-
-      .card {
-        margin-bottom: 14px;
-        padding: 16px;
-        border: 1px solid var(--border);
-        border-radius: 14px;
+      .template-page {
+        width: 100%;
+        min-height: 794px;
+        padding: 18px;
+        border: 1px solid #b9bec6;
+        border-radius: 5px;
         background: #fff;
-        box-shadow: 0 1px 3px rgba(60, 64, 67, .08);
+        box-shadow: 0 2px 8px rgba(60, 64, 67, .15);
       }
 
-      .field { margin-bottom: 16px; }
+      .report-header {
+        padding-bottom: 14px;
+        border-bottom: 2px solid #202124;
+        text-align: center;
+      }
+
+      .report-title { margin: 0; font-size: 23px; line-height: 1.2; letter-spacing: .05em; }
+      .report-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+      .job-section { margin-top: 14px; }
+      .field { margin-bottom: 12px; }
       .field:last-child { margin-bottom: 0; }
-
-      label, .field-label {
-        display: block;
-        margin-bottom: 7px;
-        font-weight: 600;
-        font-size: 15px;
-      }
+      label, .field-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
 
       select, input[type="text"] {
         width: 100%;
-        min-height: 48px;
-        padding: 11px 12px;
-        border: 1px solid #bdc1c6;
-        border-radius: 10px;
+        min-height: 46px;
+        padding: 10px 11px;
+        border: 1px solid #9aa0a6;
+        border-radius: 7px;
         background: #fff;
         color: var(--text);
         font: inherit;
       }
 
-      select:focus, input:focus, button:focus-visible {
-        outline: 3px solid rgba(25, 103, 210, .24);
-        outline-offset: 1px;
-      }
-
       input[readonly] { background: var(--surface); color: var(--muted); }
-
-      .photo-source-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
+      select:focus, input:focus, button:focus-visible, .photo-slot:focus-visible {
+        outline: 3px solid rgba(25, 103, 210, .24);
+        outline-offset: 2px;
       }
 
-      button {
-        min-height: 50px;
-        padding: 12px 14px;
-        border: 0;
-        border-radius: 10px;
-        color: #fff;
-        font: inherit;
-        font-weight: 600;
+      .photo-section { margin-top: 18px; }
+      .section-heading { margin: 0 0 8px; font-size: 16px; }
+      .section-note { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+
+      .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .photo-slot-wide { grid-column: 1 / -1; }
+
+      .photo-slot {
+        position: relative;
+        display: flex;
+        min-height: 170px;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 0;
+        border: 2px dashed #9aa0a6;
+        border-radius: 8px;
+        background: #fafbfc;
+        color: var(--muted);
         cursor: pointer;
+        text-align: center;
         -webkit-tap-highlight-color: transparent;
       }
 
-      button:active { transform: translateY(1px); }
-      button:disabled { background: #9aa0a6 !important; cursor: wait; transform: none; }
-      .button-gallery { background: var(--blue); }
-      .button-camera { background: #5f6368; }
-      .button-upload { width: 100%; background: var(--green); font-size: 17px; }
-      .button-upload:not(:disabled):hover { background: var(--green-dark); }
+      .photo-slot-wide { min-height: 190px; }
+      .photo-slot:hover { border-color: var(--blue); background: #f4f8ff; }
+      .photo-slot.is-filled { border-style: solid; border-color: var(--green); background: #fff; }
+      .slot-content { width: 100%; padding: 12px; }
+      .slot-label { display: block; color: var(--text); font-weight: 600; font-size: 14px; }
+      .slot-hint { display: block; margin-top: 5px; font-size: 12px; }
+      .slot-image { display: block; width: 100%; height: 100%; min-height: 166px; object-fit: contain; background: #f1f3f4; }
+      .photo-slot-wide .slot-image { min-height: 186px; }
+      .slot-status { position: absolute; right: 7px; bottom: 6px; padding: 2px 6px; border-radius: 9px; background: rgba(24, 128, 56, .9); color: #fff; font-size: 11px; }
 
-      .file-info {
-        display: none;
-        margin-top: 12px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        background: var(--surface);
-        color: var(--muted);
-        font-size: 14px;
-        overflow-wrap: anywhere;
-      }
-
-      .preview-wrap { display: none; margin-top: 12px; }
-      .preview-wrap.is-visible { display: block; }
-      .preview-label { margin-bottom: 7px; color: var(--muted); font-size: 13px; }
-      .preview {
-        display: block;
-        width: 100%;
-        max-height: 300px;
-        object-fit: contain;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        background: #f1f3f4;
-      }
-
-      .hint { margin-top: 8px; color: var(--muted); font-size: 13px; }
-      .status { min-height: 22px; margin: 12px 2px 0; color: var(--muted); font-size: 14px; text-align: center; }
+      .report-footer { margin-top: 18px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; text-align: center; }
+      .status { min-height: 22px; margin-top: 10px; color: var(--muted); font-size: 14px; text-align: center; }
       .status.error { color: var(--danger); }
       .status.success { color: var(--green-dark); }
-      .required-note { color: var(--muted); font-size: 12px; font-weight: 400; }
 
-      @media (max-width: 380px) {
-        body { padding: 12px; }
-        .card { padding: 13px; }
-        .photo-source-grid { grid-template-columns: 1fr; }
+      .modal-backdrop {
+        position: fixed;
+        z-index: 10;
+        inset: 0;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 12px;
+        background: rgba(32, 33, 36, .52);
       }
 
-      @media (min-width: 700px) {
-        body { padding: 24px; }
+      .modal-backdrop.is-open { display: flex; }
+      .modal {
+        width: 100%;
+        max-width: 560px;
+        max-height: 92vh;
+        overflow-y: auto;
+        padding: 18px;
+        border-radius: 16px 16px 8px 8px;
+        background: #fff;
+        box-shadow: 0 -4px 18px rgba(0, 0, 0, .2);
+      }
+
+      .modal-title { margin: 0; font-size: 19px; }
+      .modal-note { margin: 5px 0 14px; color: var(--muted); font-size: 13px; }
+      .source-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      button { min-height: 48px; padding: 11px 14px; border: 0; border-radius: 9px; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+      button:disabled { background: #9aa0a6 !important; cursor: wait; }
+      .button-gallery { background: var(--blue); }
+      .button-camera { background: #5f6368; }
+      .button-save { width: 100%; margin-top: 12px; background: var(--green); font-size: 16px; }
+      .button-save:not(:disabled):hover { background: var(--green-dark); }
+      .button-cancel { width: 100%; margin-top: 8px; background: #fff; color: var(--text); border: 1px solid #9aa0a6; }
+      .pending-preview { display: none; margin-top: 14px; }
+      .pending-preview.is-visible { display: block; }
+      .pending-preview img { display: block; width: 100%; max-height: 260px; object-fit: contain; border: 1px solid var(--border); border-radius: 8px; background: #f1f3f4; }
+      .pending-file { margin-top: 6px; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+
+      .required-note { color: var(--muted); font-size: 12px; font-weight: 400; }
+      .hidden-input { display: none; }
+
+      @media (max-width: 380px) {
+        body { padding: 8px; }
+        .template-page { padding: 13px; }
+        .photo-grid, .source-buttons { grid-template-columns: 1fr; }
+        .photo-slot-wide { grid-column: auto; }
+      }
+
+      @media print {
+        html, body { background: #fff; }
+        body { padding: 0; }
+        .template-page { max-width: none; min-height: 0; border: 0; box-shadow: none; }
+        .modal-backdrop, .status { display: none !important; }
       }
     </style>
   </head>
   <body>
     <main class="app">
-      <header class="app-header">
-        <h1 class="app-title">Photo Report</h1>
-        <p class="app-subtitle">อัปโหลดรูปหน้างานจากมือถือได้ทันที</p>
-      </header>
+      <section class="template-page" aria-label="แบบฟอร์ม Photo Report">
+        <header class="report-header">
+          <h1 class="report-title">PHOTO REPORT</h1>
+          <p class="report-subtitle">แบบฟอร์มบันทึกรูปภาพหน้างาน</p>
+        </header>
 
-      <section class="card">
-        <div class="field">
-          <label for="jobSelect">เลข Job <span class="required-note">(จำเป็น)</span></label>
-          <select id="jobSelect">
-            <option value="">กำลังโหลดรายการ Job...</option>
-          </select>
-        </div>
+        <section class="job-section">
+          <div class="field">
+            <label for="jobSelect">เลข Job <span class="required-note">(จำเป็น)</span></label>
+            <select id="jobSelect">
+              <option value="">กำลังโหลดรายการ Job...</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="locationDisplay">สถานที่ติดตั้ง</label>
+            <input type="text" id="locationDisplay" readonly placeholder="จะแสดงหลังเลือก Job">
+          </div>
+        </section>
 
-        <div class="field">
-          <label for="locationDisplay">สถานที่ติดตั้ง</label>
-          <input type="text" id="locationDisplay" readonly placeholder="จะแสดงหลังเลือก Job">
-        </div>
+        <section class="photo-section">
+          <h2 class="section-heading">รูปภาพประกอบรายงาน</h2>
+          <p class="section-note">แตะช่องที่ต้องการ แล้วเลือกภาพจากคลังหรือถ่ายภาพใหม่</p>
+          <div class="photo-grid">
+            <button type="button" class="photo-slot photo-slot-wide" data-photo-type="signage" onclick="openPhotoModal('signage')" aria-label="ใส่รูปป้ายชื่อหน่วยงาน">
+              <span class="slot-content"><span class="slot-label">ป้ายชื่อหน่วยงาน / จุดติดตั้ง</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+            </button>
+            <button type="button" class="photo-slot" data-photo-type="before1" onclick="openPhotoModal('before1')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 1">
+              <span class="slot-content"><span class="slot-label">ก่อนติดตั้ง 1</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+            </button>
+            <button type="button" class="photo-slot" data-photo-type="after1" onclick="openPhotoModal('after1')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 1">
+              <span class="slot-content"><span class="slot-label">หลังติดตั้ง 1</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+            </button>
+            <button type="button" class="photo-slot" data-photo-type="before2" onclick="openPhotoModal('before2')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 2">
+              <span class="slot-content"><span class="slot-label">ก่อนติดตั้ง 2</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+            </button>
+            <button type="button" class="photo-slot" data-photo-type="after2" onclick="openPhotoModal('after2')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 2">
+              <span class="slot-content"><span class="slot-label">หลังติดตั้ง 2</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+            </button>
+          </div>
+        </section>
 
-        <div class="field">
-          <label for="imageType">จุดที่ถ่ายรูป <span class="required-note">(จำเป็น)</span></label>
-          <select id="imageType">
-            <option value="signage">ป้ายชื่อหน่วยงาน / จุดติดตั้ง</option>
-            <option value="before1">ก่อนติดตั้ง (รูปที่ 1)</option>
-            <option value="after1">หลังติดตั้ง (รูปที่ 1)</option>
-            <option value="before2">ก่อนติดตั้ง (รูปที่ 2)</option>
-            <option value="after2">หลังติดตั้ง (รูปที่ 2)</option>
-          </select>
-        </div>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+        <footer class="report-footer">รองรับ JPG, PNG, GIF, WEBP ขนาดไม่เกิน 2 MB ต่อรูป</footer>
       </section>
+    </main>
 
-      <section class="card">
-        <div class="field-label">เลือกรูปภาพ</div>
-        <div class="photo-source-grid">
+    <div id="photoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <section class="modal">
+        <h2 id="modalTitle" class="modal-title">ใส่รูปภาพ</h2>
+        <p class="modal-note">เลือกจากคลังรูปหรือเปิดกล้องของมือถือ</p>
+        <div class="source-buttons">
           <button type="button" class="button-gallery" onclick="openGallery()">เลือกรูปจากคลัง</button>
           <button type="button" class="button-camera" onclick="openCamera()">ถ่ายรูปด้วยกล้อง</button>
         </div>
-        <input id="galleryFile" type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden>
-        <input id="cameraFile" type="file" accept="image/*" capture="environment" hidden>
-        <div id="fileInfo" class="file-info"></div>
-        <div id="previewWrap" class="preview-wrap">
-          <div class="preview-label">ตัวอย่างรูปก่อนอัปโหลด</div>
-          <img id="preview" class="preview" alt="ตัวอย่างรูปที่เลือก">
+        <input id="galleryFile" class="hidden-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+        <input id="cameraFile" class="hidden-input" type="file" accept="image/*" capture="environment">
+        <div id="pendingPreview" class="pending-preview">
+          <img id="pendingImage" alt="ตัวอย่างรูปที่เลือก">
+          <div id="pendingFile" class="pending-file"></div>
         </div>
-        <div class="hint">รองรับ JPG, PNG, GIF หรือ WEBP ขนาดไม่เกิน 2 MB</div>
+        <button id="savePhotoBtn" type="button" class="button-save" onclick="savePhoto()" disabled>บันทึกรูปช่องนี้</button>
+        <button type="button" class="button-cancel" onclick="closePhotoModal()">ยกเลิก</button>
       </section>
-
-      <button id="uploadBtn" type="button" class="button-upload" onclick="uploadImage()" disabled>อัปโหลดเข้าชีท</button>
-      <div id="status" class="status" role="status" aria-live="polite"></div>
-    </main>
+    </div>
 
     <script>
       const MAX_FILE_SIZE = 2 * 1024 * 1024;
       const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      const PHOTO_LABELS = {
+        signage: 'ป้ายชื่อหน่วยงาน / จุดติดตั้ง',
+        before1: 'ก่อนติดตั้ง 1',
+        after1: 'หลังติดตั้ง 1',
+        before2: 'ก่อนติดตั้ง 2',
+        after2: 'หลังติดตั้ง 2'
+      };
+
       let jobDataList = [];
-      let selectedFile = null;
+      let activePhotoType = '';
+      let pendingFile = null;
+      let pendingDataUrl = '';
 
       window.addEventListener('load', function() {
         document.getElementById('galleryFile').addEventListener('change', handleFileChange);
@@ -224,7 +277,31 @@
         });
         select.addEventListener('change', updateLocation);
         setStatus(jobDataList.length ? '' : 'ไม่พบ Job ใน Asset_Master', !jobDataList.length);
-        updateUploadState();
+      }
+
+      function updateLocation() {
+        const selectedIndex = document.getElementById('jobSelect').value;
+        document.getElementById('locationDisplay').value = selectedIndex === ''
+          ? ''
+          : jobDataList[selectedIndex].location;
+      }
+
+      function openPhotoModal(photoType) {
+        if (document.getElementById('jobSelect').value === '') {
+          setStatus('กรุณาเลือก Job ก่อนใส่รูป', true);
+          return;
+        }
+
+        activePhotoType = photoType;
+        resetPendingPhoto();
+        document.getElementById('modalTitle').textContent = 'ใส่รูป: ' + PHOTO_LABELS[photoType];
+        document.getElementById('photoModal').classList.add('is-open');
+      }
+
+      function closePhotoModal() {
+        resetPendingPhoto();
+        document.getElementById('photoModal').classList.remove('is-open');
+        activePhotoType = '';
       }
 
       function openGallery() {
@@ -235,90 +312,90 @@
         document.getElementById('cameraFile').click();
       }
 
-      function updateLocation() {
-        const selectedIndex = document.getElementById('jobSelect').value;
-        document.getElementById('locationDisplay').value = selectedIndex === ''
-          ? ''
-          : jobDataList[selectedIndex].location;
-        updateUploadState();
-      }
-
       function handleFileChange(event) {
         const file = event.target.files && event.target.files[0];
         if (!file) return;
 
         const validationMessage = validateFile(file);
         if (validationMessage) {
-          clearSelectedFile();
+          resetPendingPhoto();
           setStatus(validationMessage, true);
           return;
         }
 
-        selectedFile = file;
-        const fileInfo = document.getElementById('fileInfo');
-        fileInfo.textContent = file.name + ' (' + formatBytes(file.size) + ')';
-        fileInfo.style.display = 'block';
-
+        pendingFile = file;
         const reader = new FileReader();
         reader.onload = function(loadEvent) {
-          document.getElementById('preview').src = loadEvent.target.result;
-          document.getElementById('previewWrap').classList.add('is-visible');
+          pendingDataUrl = loadEvent.target.result;
+          document.getElementById('pendingImage').src = pendingDataUrl;
+          document.getElementById('pendingFile').textContent = file.name + ' (' + formatBytes(file.size) + ')';
+          document.getElementById('pendingPreview').classList.add('is-visible');
+          document.getElementById('savePhotoBtn').disabled = false;
         };
         reader.onerror = function() {
+          resetPendingPhoto();
           setStatus('ไม่สามารถอ่านไฟล์รูปภาพได้', true);
-          clearSelectedFile();
-          return;
         };
         reader.readAsDataURL(file);
-        setStatus('เลือกรูปแล้ว กรุณาตรวจสอบตัวอย่างก่อนอัปโหลด');
-        updateUploadState();
       }
 
-      function uploadImage() {
-        const jobSelect = document.getElementById('jobSelect');
-        if (jobSelect.value === '') {
-          setStatus('กรุณาเลือก Job ก่อนอัปโหลด', true);
-          return;
-        }
-        if (!selectedFile) {
-          setStatus('กรุณาเลือกรูปจากคลังหรือถ่ายรูปด้วยกล้องก่อน', true);
+      function savePhoto() {
+        if (!pendingFile || !pendingDataUrl || !activePhotoType) {
+          setStatus('กรุณาเลือกรูปภาพก่อนบันทึก', true);
           return;
         }
 
-        const job = jobDataList[jobSelect.value];
-        const button = document.getElementById('uploadBtn');
-        button.disabled = true;
-        button.textContent = 'กำลังบันทึก...';
-        setStatus('กำลังบันทึกรูปภาพ โปรดอย่าปิดหน้านี้');
+        const selectedIndex = document.getElementById('jobSelect').value;
+        if (selectedIndex === '') {
+          closePhotoModal();
+          setStatus('กรุณาเลือก Job ก่อนใส่รูป', true);
+          return;
+        }
 
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          google.script.run
-            .withSuccessHandler(function(message) {
-              setStatus(message, false, true);
-              button.textContent = 'อัปโหลดเข้าชีท';
-              clearSelectedFile();
-              updateUploadState();
-            })
-            .withFailureHandler(function(error) {
-              setStatus('เกิดข้อผิดพลาด: ' + getErrorMessage(error), true);
-              button.disabled = false;
-              button.textContent = 'อัปโหลดเข้าชีท';
-            })
-            .uploadImageToSheet(
-              job.jobNo,
-              job.location,
-              document.getElementById('imageType').value,
-              event.target.result,
-              selectedFile.name
-            );
-        };
-        reader.onerror = function() {
-          setStatus('ไม่สามารถอ่านไฟล์รูปภาพได้', true);
-          button.disabled = false;
-          button.textContent = 'อัปโหลดเข้าชีท';
-        };
-        reader.readAsDataURL(selectedFile);
+        const job = jobDataList[selectedIndex];
+        const saveButton = document.getElementById('savePhotoBtn');
+        saveButton.disabled = true;
+        saveButton.textContent = 'กำลังบันทึกรูป...';
+        setStatus('กำลังบันทึก ' + PHOTO_LABELS[activePhotoType] + ' โปรดรอสักครู่');
+
+        google.script.run
+          .withSuccessHandler(function(message) {
+            renderFilledSlot(activePhotoType, pendingDataUrl);
+            closePhotoModal();
+            saveButton.textContent = 'บันทึกรูปช่องนี้';
+            setStatus(message, false, true);
+          })
+          .withFailureHandler(function(error) {
+            saveButton.disabled = false;
+            saveButton.textContent = 'บันทึกรูปช่องนี้';
+            setStatus('เกิดข้อผิดพลาด: ' + getErrorMessage(error), true);
+          })
+          .uploadImageToSheet(
+            job.jobNo,
+            job.location,
+            activePhotoType,
+            pendingDataUrl,
+            pendingFile.name
+          );
+      }
+
+      function renderFilledSlot(photoType, dataUrl) {
+        const slot = document.querySelector('[data-photo-type="' + photoType + '"]');
+        if (!slot) return;
+        slot.classList.add('is-filled');
+        slot.innerHTML = '<img class="slot-image" alt="' + PHOTO_LABELS[photoType] + '" src="' + dataUrl + '"><span class="slot-status">บันทึกแล้ว</span>';
+      }
+
+      function resetPendingPhoto() {
+        pendingFile = null;
+        pendingDataUrl = '';
+        document.getElementById('galleryFile').value = '';
+        document.getElementById('cameraFile').value = '';
+        document.getElementById('pendingImage').removeAttribute('src');
+        document.getElementById('pendingFile').textContent = '';
+        document.getElementById('pendingPreview').classList.remove('is-visible');
+        document.getElementById('savePhotoBtn').disabled = true;
+        document.getElementById('savePhotoBtn').textContent = 'บันทึกรูปช่องนี้';
       }
 
       function validateFile(file) {
@@ -329,22 +406,6 @@
           return 'ไฟล์รูปภาพต้องมีขนาดไม่เกิน 2 MB';
         }
         return '';
-      }
-
-      function clearSelectedFile() {
-        selectedFile = null;
-        document.getElementById('galleryFile').value = '';
-        document.getElementById('cameraFile').value = '';
-        document.getElementById('fileInfo').textContent = '';
-        document.getElementById('fileInfo').style.display = 'none';
-        document.getElementById('preview').removeAttribute('src');
-        document.getElementById('previewWrap').classList.remove('is-visible');
-        updateUploadState();
-      }
-
-      function updateUploadState() {
-        const hasJob = document.getElementById('jobSelect').value !== '';
-        document.getElementById('uploadBtn').disabled = !(hasJob && selectedFile);
       }
 
       function formatBytes(bytes) {
