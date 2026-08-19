@@ -3,108 +3,152 @@
   <head>
     <base target="_top">
     <style>
-      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 10px; }
+      body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 10px; color: #202124; }
       .form-group { margin-bottom: 15px; }
-      label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;}
-      select, input[type="text"], input[type="file"] { width: 100%; padding: 8px; box-sizing: border-box; }
-      input[readonly] { background-color: #f0f0f0; border: 1px solid #ccc; }
-      button { width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; font-size: 16px; border-radius: 4px;}
-      button:disabled { background-color: #ccc; }
-      #status { margin-top: 15px; font-size: 14px; color: #333; text-align: center; }
+      label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+      select, input[type="text"], input[type="file"] {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      input[readonly] { background: #f0f0f0; border: 1px solid #ccc; }
+      button {
+        width: 100%;
+        padding: 10px;
+        background: #188038;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 4px;
+      }
+      button:disabled { background: #9aa0a6; cursor: wait; }
+      #status { margin-top: 15px; font-size: 14px; text-align: center; white-space: pre-wrap; }
+      .hint { margin-top: 4px; color: #5f6368; font-size: 12px; }
     </style>
   </head>
   <body>
-    
     <div class="form-group">
-      <label>เลข Job:</label>
+      <label for="jobSelect">เลข Job:</label>
       <select id="jobSelect" onchange="updateLocation()">
         <option value="">กำลังโหลด...</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label>สถานที่ติดตั้ง:</label>
+      <label for="locationDisplay">สถานที่ติดตั้ง:</label>
       <input type="text" id="locationDisplay" readonly placeholder="จะแสดงอัตโนมัติ">
     </div>
 
     <div class="form-group">
-      <label>จุดที่ถ่ายรูป:</label>
+      <label for="imageType">จุดที่ถ่ายรูป:</label>
       <select id="imageType">
-        <option value="signage">🏢 ป้ายชื่อหน่วยงาน / จุดติดตั้ง</option>
-        <option value="before1">📷 ก่อนติดตั้ง (รูปที่ 1)</option>
-        <option value="after1">📷 หลังติดตั้ง (รูปที่ 1)</option>
-        <option value="before2">📷 ก่อนติดตั้ง (รูปที่ 2)</option>
-        <option value="after2">📷 หลังติดตั้ง (รูปที่ 2)</option>
+        <option value="signage">ป้ายชื่อหน่วยงาน / จุดติดตั้ง</option>
+        <option value="before1">ก่อนติดตั้ง (รูปที่ 1)</option>
+        <option value="after1">หลังติดตั้ง (รูปที่ 1)</option>
+        <option value="before2">ก่อนติดตั้ง (รูปที่ 2)</option>
+        <option value="after2">หลังติดตั้ง (รูปที่ 2)</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label>เลือกไฟล์รูปภาพ:</label>
-      <input type="file" id="imageFile" accept="image/*">
+      <label for="imageFile">เลือกไฟล์รูปภาพ:</label>
+      <input type="file" id="imageFile" accept="image/jpeg,image/png,image/gif,image/webp">
+      <div class="hint">รองรับ JPG, PNG, GIF, WEBP ขนาดไม่เกิน 2 MB</div>
     </div>
 
-    <button id="uploadBtn" onclick="uploadImage()">อัพโหลดเข้าชีท</button>
+    <button id="uploadBtn" onclick="uploadImage()">อัปโหลดเข้าชีท</button>
     <div id="status"></div>
 
     <script>
+      const MAX_FILE_SIZE = 2 * 1024 * 1024;
+      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       let jobDataList = [];
 
-      // โหลดข้อมูล Job ทันทีที่เปิด Sidebar
       window.onload = function() {
-        google.script.run.withSuccessHandler(populateJobs).getJobData();
+        setStatus('กำลังโหลดรายการ Job...');
+        google.script.run
+          .withSuccessHandler(populateJobs)
+          .withFailureHandler(function(error) {
+            setStatus('โหลดรายการ Job ไม่สำเร็จ: ' + error.message);
+          })
+          .getJobData();
       };
 
       function populateJobs(jobs) {
-        jobDataList = jobs;
-        let select = document.getElementById('jobSelect');
+        jobDataList = jobs || [];
+        const select = document.getElementById('jobSelect');
         select.innerHTML = '<option value="">-- เลือก Job --</option>';
-        jobs.forEach((job, index) => {
-          let option = document.createElement('option');
-          option.value = index; 
+        jobDataList.forEach(function(job, index) {
+          const option = document.createElement('option');
+          option.value = index;
           option.text = job.jobNo;
           select.appendChild(option);
         });
+        setStatus(jobDataList.length ? '' : 'ไม่พบ Job ใน Asset_Master');
       }
 
       function updateLocation() {
-        let selectedIndex = document.getElementById('jobSelect').value;
-        if(selectedIndex !== "") {
-          document.getElementById('locationDisplay').value = jobDataList[selectedIndex].location;
-        } else {
-          document.getElementById('locationDisplay').value = "";
-        }
+        const selectedIndex = document.getElementById('jobSelect').value;
+        document.getElementById('locationDisplay').value = selectedIndex === ''
+          ? ''
+          : jobDataList[selectedIndex].location;
       }
 
       function uploadImage() {
-        let jobSelect = document.getElementById('jobSelect');
-        let fileInput = document.getElementById('imageFile');
-        let imageType = document.getElementById('imageType').value;
-        
-        if (jobSelect.value === "" || fileInput.files.length === 0) {
-          alert("กรุณาเลือก Job และไฟล์รูปภาพ");
+        const jobSelect = document.getElementById('jobSelect');
+        const fileInput = document.getElementById('imageFile');
+        const imageType = document.getElementById('imageType').value;
+
+        if (jobSelect.value === '' || fileInput.files.length === 0) {
+          setStatus('กรุณาเลือก Job และไฟล์รูปภาพ');
           return;
         }
 
-        let jobNo = jobDataList[jobSelect.value].jobNo;
-        let location = document.getElementById('locationDisplay').value;
-        let file = fileInput.files[0];
-        
-        let reader = new FileReader();
-        reader.onload = function(e) {
-          let base64Data = e.target.result;
-          
-          document.getElementById('status').innerText = "กำลังอัพโหลด... โปรดรอสักครู่";
-          document.getElementById('uploadBtn').disabled = true;
+        const file = fileInput.files[0];
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          setStatus('รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP');
+          return;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          setStatus('ไฟล์รูปภาพต้องมีขนาดไม่เกิน 2 MB');
+          return;
+        }
 
+        const job = jobDataList[jobSelect.value];
+        const button = document.getElementById('uploadBtn');
+        button.disabled = true;
+        setStatus('กำลังบันทึกรูปภาพ... โปรดรอสักครู่');
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
           google.script.run
-            .withSuccessHandler(function(msg) {
-              document.getElementById('status').innerText = msg;
-              document.getElementById('uploadBtn').disabled = false;
-              fileInput.value = ""; // เคลียร์ไฟล์หลังเสร็จ
+            .withSuccessHandler(function(message) {
+              setStatus(message);
+              button.disabled = false;
+              fileInput.value = '';
             })
-            .uploadImageToSheet(jobNo, location, imageType, base64Data, file.name);
+            .withFailureHandler(function(error) {
+              setStatus('เกิดข้อผิดพลาด: ' + error.message);
+              button.disabled = false;
+            })
+            .uploadImageToSheet(
+              job.jobNo,
+              job.location,
+              imageType,
+              event.target.result,
+              file.name
+            );
+        };
+        reader.onerror = function() {
+          setStatus('ไม่สามารถอ่านไฟล์รูปภาพได้');
+          button.disabled = false;
         };
         reader.readAsDataURL(file);
+      }
+
+      function setStatus(message) {
+        document.getElementById('status').innerText = message || '';
       }
     </script>
   </body>
