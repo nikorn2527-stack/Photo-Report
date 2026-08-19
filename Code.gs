@@ -101,6 +101,70 @@ function getJobData() {
 }
 
 /**
+ * อ่านรายการ Asset_Master สำหรับหน้าจัดการข้อมูล
+ * แก้ไขเฉพาะคอลัมน์ A และ D:G เพื่อคงข้อมูลคอลัมน์อื่นไว้
+ */
+function getAssetMasterRows() {
+  const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!sheet) throw new Error('ไม่พบชีต ' + CONFIG.ASSET_MASTER_SHEET_NAME);
+
+  const lastRow = Math.max(sheet.getLastRow(), CONFIG.HEADER_ROW - 1);
+  if (lastRow < CONFIG.HEADER_ROW) return [];
+
+  const values = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, 7).getDisplayValues();
+  return values.map(function(row, index) {
+    return {
+      rowNumber: CONFIG.HEADER_ROW + index,
+      jobNo: row[0] || '',
+      building: row[3] || '',
+      floor: row[4] || '',
+      department: row[5] || '',
+      room: row[6] || ''
+    };
+  }).filter(function(item) {
+    return item.jobNo || item.building || item.floor || item.department || item.room;
+  });
+}
+
+/**
+ * เพิ่มหรือแก้ไขข้อมูล Asset_Master จากหน้ามือถือ
+ */
+function saveAssetMasterRow(rowNumber, asset) {
+  asset = asset || {};
+  const jobNo = String(asset.jobNo || '').trim();
+  if (!jobNo) throw new Error('กรุณากรอกเลข Job');
+  if (jobNo.indexOf('JOB-') !== 0) throw new Error('เลข Job ต้องขึ้นต้นด้วย JOB-');
+
+  const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!sheet) throw new Error('ไม่พบชีต ' + CONFIG.ASSET_MASTER_SHEET_NAME);
+
+  let targetRow = Number(rowNumber);
+  if (!targetRow || targetRow < CONFIG.HEADER_ROW) {
+    targetRow = Math.max(sheet.getLastRow() + 1, CONFIG.HEADER_ROW);
+  }
+
+  const duplicate = getAssetMasterRows().some(function(item) {
+    return item.rowNumber !== targetRow && item.jobNo.toLowerCase() === jobNo.toLowerCase();
+  });
+  if (duplicate) throw new Error('มีเลข Job นี้อยู่แล้ว: ' + jobNo);
+
+  sheet.getRange(targetRow, 1).setValue(jobNo);
+  sheet.getRange(targetRow, 4, 1, 4).setValues([[
+    asset.building || '',
+    asset.floor || '',
+    asset.department || '',
+    asset.room || ''
+  ]]);
+  SpreadsheetApp.flush();
+
+  return {
+    message: (rowNumber ? 'แก้ไขข้อมูล ' : 'เพิ่มข้อมูล ') + jobNo + ' เรียบร้อยแล้ว',
+    rowNumber: targetRow,
+    jobNo: jobNo
+  };
+}
+
+/**
  * คืนสถานะงานของ Job ที่เลือก เพื่อใช้ย้อนกลับมาทำต่อภายหลัง
  */
 function getJobProgress(jobNo) {

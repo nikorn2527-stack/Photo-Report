@@ -29,6 +29,34 @@
 
       body { padding: 8px 8px 88px; }
       .app { width: 100%; max-width: 620px; margin: 0 auto; }
+      .view-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; padding: 4px; border-radius: 10px; background: #dfe3e8; }
+      .view-toggle button { min-height: 42px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-weight: 600; }
+      .view-toggle button.is-active { background: #fff; color: var(--text); box-shadow: 0 1px 4px rgba(60, 64, 67, .16); }
+      .asset-page { width: 100%; min-height: 794px; padding: 16px; border: 1px solid #b9bec6; border-radius: 5px; background: #fff; box-shadow: 0 2px 8px rgba(60, 64, 67, .15); }
+      .asset-header { padding-bottom: 12px; border-bottom: 2px solid #202124; }
+      .asset-title { margin: 0; font-size: 22px; }
+      .asset-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+      .asset-toolbar { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 14px 0; }
+      .asset-toolbar input { min-height: 46px; padding: 10px 12px; border: 1px solid #9aa0a6; border-radius: 8px; font: inherit; }
+      .asset-add { min-height: 46px; padding: 10px 14px; border: 0; border-radius: 8px; background: var(--green); color: #fff; font: inherit; font-weight: 600; }
+      .asset-form { margin-bottom: 14px; padding: 14px; border: 1px solid #9aa0a6; border-radius: 10px; background: var(--surface); }
+      .asset-form[hidden], .asset-page[hidden], #reportView[hidden] { display: none !important; }
+      .asset-form-title { margin: 0 0 12px; font-size: 17px; }
+      .asset-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .asset-form-field { margin-bottom: 10px; }
+      .asset-form-field input { width: 100%; min-height: 44px; padding: 9px 10px; border: 1px solid #9aa0a6; border-radius: 7px; background: #fff; font: inherit; }
+      .asset-form-field:first-child { grid-column: 1 / -1; }
+      .asset-form-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+      .asset-save { min-height: 46px; border: 0; border-radius: 8px; background: var(--green); color: #fff; font: inherit; font-weight: 600; }
+      .asset-cancel { min-height: 46px; border: 1px solid #9aa0a6; border-radius: 8px; background: #fff; color: var(--text); font: inherit; font-weight: 600; }
+      .asset-list { display: grid; gap: 9px; }
+      .asset-row { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+      .asset-row-main { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .asset-job { color: var(--text); font-size: 16px; font-weight: 700; }
+      .asset-location { margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+      .asset-edit { flex: 0 0 auto; min-height: 40px; padding: 8px 12px; border: 1px solid #9aa0a6; border-radius: 7px; background: #fff; color: var(--blue); font: inherit; font-weight: 600; }
+      .asset-empty { padding: 22px 12px; color: var(--muted); text-align: center; }
+      .asset-count { margin: 0 0 9px; color: var(--muted); font-size: 13px; }
 
       .template-page {
         width: 100%;
@@ -209,7 +237,12 @@
   </head>
   <body>
     <main class="app">
-      <section class="template-page" aria-label="แบบฟอร์ม Photo Report">
+      <nav class="view-toggle" aria-label="เมนูหลัก">
+        <button id="reportTab" type="button" class="is-active" onclick="showView('report')">Photo Report</button>
+        <button id="assetTab" type="button" onclick="showView('asset')">จัดการ Asset_Master</button>
+      </nav>
+
+      <section id="reportView" class="template-page" aria-label="แบบฟอร์ม Photo Report">
         <header class="report-header">
           <p class="company-title">ห้างหุ้นส่วนจำกัด เปซิกฟิก พลัส ไอที<br>(PACIFIC PLUS IT LIMITED PARTNERSHIP)</p>
           <h1 class="report-title">ใบบันทึกภาพถ่ายการติดตั้งอุปกรณ์</h1>
@@ -272,6 +305,53 @@
         <div id="status" class="status" role="status" aria-live="polite"></div>
         <footer class="report-footer">รองรับ JPG, PNG, GIF, WEBP ขนาดไม่เกิน 2 MB ต่อรูป</footer>
       </section>
+
+      <section id="assetView" class="asset-page" aria-label="จัดการข้อมูล Asset_Master" hidden>
+        <header class="asset-header">
+          <h1 class="asset-title">จัดการ Asset_Master</h1>
+          <p class="asset-subtitle">ดู เพิ่ม และแก้ไขข้อมูล Job จากมือถือ</p>
+        </header>
+
+        <div class="asset-toolbar">
+          <input id="assetSearch" type="search" placeholder="ค้นหา Job, อาคาร, แผนก หรือห้อง" oninput="filterAssetRows()">
+          <button type="button" class="asset-add" onclick="openAssetForm()">+ เพิ่ม Job</button>
+        </div>
+
+        <section id="assetForm" class="asset-form" hidden>
+          <h2 id="assetFormTitle" class="asset-form-title">เพิ่มข้อมูล Job</h2>
+          <input id="assetRowNumber" class="hidden-input" type="hidden">
+          <div class="asset-form-grid">
+            <div class="asset-form-field">
+              <label for="assetJobNo">เลข Job</label>
+              <input id="assetJobNo" type="text" placeholder="เช่น JOB-001" autocapitalize="characters">
+            </div>
+            <div class="asset-form-field">
+              <label for="assetBuilding">อาคาร</label>
+              <input id="assetBuilding" type="text" placeholder="อาคาร">
+            </div>
+            <div class="asset-form-field">
+              <label for="assetFloor">ชั้น</label>
+              <input id="assetFloor" type="text" placeholder="ชั้น">
+            </div>
+            <div class="asset-form-field">
+              <label for="assetDepartment">แผนก</label>
+              <input id="assetDepartment" type="text" placeholder="แผนก">
+            </div>
+            <div class="asset-form-field">
+              <label for="assetRoom">ห้อง</label>
+              <input id="assetRoom" type="text" placeholder="ห้อง">
+            </div>
+          </div>
+          <div class="asset-form-actions">
+            <button id="assetSaveBtn" type="button" class="asset-save" onclick="saveAssetRow()">บันทึกข้อมูล</button>
+            <button type="button" class="asset-cancel" onclick="closeAssetForm()">ยกเลิก</button>
+          </div>
+        </section>
+
+        <p id="assetCount" class="asset-count">กำลังโหลดข้อมูล...</p>
+        <div id="assetList" class="asset-list"></div>
+        <div id="assetStatus" class="status" role="status" aria-live="polite"></div>
+      </section>
     </main>
 
     <div id="photoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -311,7 +391,9 @@
       };
 
       let jobDataList = [];
+      let assetRows = [];
       let activePhotoType = '';
+      let currentView = 'report';
       let pendingFile = null;
       let pendingDataUrl = '';
 
@@ -331,6 +413,167 @@
           .getJobData();
       }
 
+      function showView(view) {
+        currentView = view;
+        const reportView = document.getElementById('reportView');
+        const assetView = document.getElementById('assetView');
+        const reportTab = document.getElementById('reportTab');
+        const assetTab = document.getElementById('assetTab');
+
+        reportView.hidden = view !== 'report';
+        assetView.hidden = view !== 'asset';
+        reportTab.classList.toggle('is-active', view === 'report');
+        assetTab.classList.toggle('is-active', view === 'asset');
+
+        if (view === 'asset') {
+          closePhotoModal();
+          loadAssetMaster();
+        } else {
+          setAssetStatus('');
+        }
+      }
+
+      function loadAssetMaster() {
+        setAssetStatus('กำลังโหลดข้อมูล Asset_Master...');
+        google.script.run
+          .withSuccessHandler(renderAssetRows)
+          .withFailureHandler(function(error) {
+            setAssetStatus('โหลดข้อมูลไม่สำเร็จ: ' + getErrorMessage(error), true);
+          })
+          .getAssetMasterRows();
+      }
+
+      function renderAssetRows(rows) {
+        assetRows = rows || [];
+        filterAssetRows();
+        setAssetStatus('');
+      }
+
+      function filterAssetRows() {
+        const query = document.getElementById('assetSearch').value.trim().toLowerCase();
+        const filtered = assetRows.filter(function(item) {
+          const text = [item.jobNo, item.building, item.floor, item.department, item.room]
+            .join(' ')
+            .toLowerCase();
+          return !query || text.indexOf(query) !== -1;
+        });
+
+        document.getElementById('assetCount').textContent = 'แสดง ' + filtered.length + ' จาก ' + assetRows.length + ' รายการ';
+        const list = document.getElementById('assetList');
+        list.innerHTML = '';
+
+        if (!filtered.length) {
+          const empty = document.createElement('div');
+          empty.className = 'asset-empty';
+          empty.textContent = query ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูล Job';
+          list.appendChild(empty);
+          return;
+        }
+
+        filtered.forEach(function(item) {
+          const row = document.createElement('article');
+          row.className = 'asset-row';
+
+          const main = document.createElement('div');
+          main.className = 'asset-row-main';
+
+          const info = document.createElement('div');
+          const job = document.createElement('div');
+          job.className = 'asset-job';
+          job.textContent = item.jobNo || '(ไม่มีเลข Job)';
+          const location = document.createElement('div');
+          location.className = 'asset-location';
+          location.textContent = [item.building, item.floor, item.department, item.room]
+            .filter(function(value) { return value; })
+            .join('  |  ') || 'ยังไม่มีรายละเอียดสถานที่';
+          info.appendChild(job);
+          info.appendChild(location);
+
+          const editButton = document.createElement('button');
+          editButton.type = 'button';
+          editButton.className = 'asset-edit';
+          editButton.textContent = 'แก้ไข';
+          editButton.addEventListener('click', function() {
+            openAssetForm(item);
+          });
+
+          main.appendChild(info);
+          main.appendChild(editButton);
+          row.appendChild(main);
+          list.appendChild(row);
+        });
+      }
+
+      function openAssetForm(item) {
+        item = item || {};
+        document.getElementById('assetForm').hidden = false;
+        document.getElementById('assetFormTitle').textContent = item.rowNumber ? 'แก้ไขข้อมูล Job' : 'เพิ่มข้อมูล Job';
+        document.getElementById('assetRowNumber').value = item.rowNumber || '';
+        document.getElementById('assetJobNo').value = item.jobNo || '';
+        document.getElementById('assetBuilding').value = item.building || '';
+        document.getElementById('assetFloor').value = item.floor || '';
+        document.getElementById('assetDepartment').value = item.department || '';
+        document.getElementById('assetRoom').value = item.room || '';
+        document.getElementById('assetForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('assetJobNo').focus();
+      }
+
+      function closeAssetForm() {
+        document.getElementById('assetForm').hidden = true;
+        document.getElementById('assetRowNumber').value = '';
+        document.getElementById('assetJobNo').value = '';
+        document.getElementById('assetBuilding').value = '';
+        document.getElementById('assetFloor').value = '';
+        document.getElementById('assetDepartment').value = '';
+        document.getElementById('assetRoom').value = '';
+      }
+
+      function saveAssetRow() {
+        const jobNo = document.getElementById('assetJobNo').value.trim().toUpperCase();
+        if (!jobNo) {
+          setAssetStatus('กรุณากรอกเลข Job', true);
+          return;
+        }
+
+        const button = document.getElementById('assetSaveBtn');
+        button.disabled = true;
+        button.textContent = 'กำลังบันทึก...';
+        setAssetStatus('กำลังบันทึกข้อมูล...');
+
+        const asset = {
+          jobNo: jobNo,
+          building: document.getElementById('assetBuilding').value.trim(),
+          floor: document.getElementById('assetFloor').value.trim(),
+          department: document.getElementById('assetDepartment').value.trim(),
+          room: document.getElementById('assetRoom').value.trim()
+        };
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            button.disabled = false;
+            button.textContent = 'บันทึกข้อมูล';
+            closeAssetForm();
+            setAssetStatus(result.message, false, true);
+            loadAssetMaster();
+            loadJobs();
+          })
+          .withFailureHandler(function(error) {
+            button.disabled = false;
+            button.textContent = 'บันทึกข้อมูล';
+            setAssetStatus('บันทึกไม่สำเร็จ: ' + getErrorMessage(error), true);
+          })
+          .saveAssetMasterRow(
+            document.getElementById('assetRowNumber').value,
+            asset
+          );
+      }
+
+      function setAssetStatus(message, isError, isSuccess) {
+        const status = document.getElementById('assetStatus');
+        status.textContent = message || '';
+        status.className = 'status' + (isError ? ' error' : '') + (isSuccess ? ' success' : '');
+      }
+
       function populateJobs(jobs) {
         jobDataList = jobs || [];
         const select = document.getElementById('jobSelect');
@@ -341,7 +584,7 @@
           option.textContent = job.jobNo;
           select.appendChild(option);
         });
-        select.addEventListener('change', handleJobChange);
+        select.onchange = handleJobChange;
         const lastJobNo = localStorage.getItem(LAST_JOB_KEY);
         const lastJobIndex = jobDataList.findIndex(function(job) {
           return job.jobNo === lastJobNo;
