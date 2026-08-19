@@ -122,7 +122,7 @@
       .slot-content { display: flex; width: 100%; flex: 1; min-height: 150px; align-items: center; justify-content: center; padding: 10px; }
       .slot-label { display: none; }
       .slot-hint { display: block; font-size: 12px; }
-      .slot-image { display: block; width: 100%; height: 100%; min-height: 150px; object-fit: contain; background: #f1f3f4; }
+      .slot-image { display: block; width: 100%; height: 100%; min-height: 150px; object-fit: cover; object-position: center; background: #f1f3f4; }
       .photo-slot-wide .slot-image { min-height: 170px; }
       .photo-slot-wide .slot-content { min-height: 170px; }
       .slot-status { position: absolute; right: 7px; bottom: 6px; padding: 2px 6px; border-radius: 9px; background: rgba(24, 128, 56, .9); color: #fff; font-size: 11px; }
@@ -161,21 +161,22 @@
         z-index: 10;
         inset: 0;
         display: none;
-        align-items: flex-end;
+        align-items: center;
         justify-content: center;
-        background: rgba(32, 33, 36, .52);
+        padding: 18px;
+        background: rgba(32, 33, 36, .58);
       }
 
       .modal-backdrop.is-open { display: flex; }
       .modal {
-        width: 100%;
-        max-width: 620px;
-        max-height: min(88vh, 680px);
+        width: min(94vw, 620px);
+        max-height: min(86vh, 720px);
         overflow-y: auto;
-        padding: 10px 16px calc(18px + env(safe-area-inset-bottom));
-        border-radius: 18px 18px 0 0;
+        padding: 16px 18px calc(20px + env(safe-area-inset-bottom));
+        border: 1px solid #c7cbd1;
+        border-radius: 18px;
         background: #fff;
-        box-shadow: 0 -4px 18px rgba(0, 0, 0, .2);
+        box-shadow: 0 10px 32px rgba(0, 0, 0, .28);
       }
 
       .sheet-handle {
@@ -186,9 +187,14 @@
         background: #c6c9ce;
       }
 
-      .modal-title { margin: 0; font-size: 19px; }
-      .modal-note { margin: 5px 0 14px; color: var(--muted); font-size: 13px; }
+      .modal-title { margin: 0; font-size: 22px; }
+      .modal-note { margin: 6px 0 16px; color: var(--muted); font-size: 14px; }
       .source-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .existing-photo-actions { display: none; margin: 14px 0 0; padding: 12px; border: 1px solid #e0b28b; border-radius: 10px; background: #fff7ed; }
+      .existing-photo-actions.is-visible { display: block; }
+      .existing-photo-note { margin: 0 0 9px; color: #8a4b0f; font-size: 13px; font-weight: 700; }
+      .button-delete { width: 100%; background: #b3261e; }
+      .button-delete:hover { background: #8c1d18; }
       button { min-height: 48px; padding: 11px 14px; border: 0; border-radius: 9px; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
       button:disabled { background: #9aa0a6 !important; cursor: wait; }
       .button-gallery { background: var(--blue); }
@@ -204,17 +210,29 @@
       .required-note { color: var(--muted); font-size: 12px; font-weight: 400; }
       .hidden-input { display: none; }
 
+      @media (max-width: 640px) {
+        .modal-backdrop { padding: 12px; }
+        .modal { width: min(94vw, 560px); max-height: 88vh; padding: 17px 16px calc(18px + env(safe-area-inset-bottom)); }
+        .photo-slot { min-height: 218px; }
+        .photo-slot-wide { min-height: 238px; }
+        .slot-content { min-height: 178px; }
+        .slot-image { min-height: 178px; }
+        .photo-slot-wide .slot-content, .photo-slot-wide .slot-image { min-height: 198px; }
+        .slot-doc-label { font-size: 13px; }
+        .slot-hint { font-size: 13px; }
+      }
+
       @media (max-width: 380px) {
         body { padding: 6px 6px 86px; }
         .template-page { padding: 11px; }
-        .photo-grid { grid-template-columns: 1fr 1fr; gap: 7px; }
-        .source-buttons { grid-template-columns: 1fr 1fr; }
-        .photo-slot { min-height: 132px; }
-        .photo-slot-wide { grid-column: 1 / -1; min-height: 150px; }
-        .slot-image { min-height: 128px; }
-        .photo-slot-wide .slot-image { min-height: 146px; }
-        .slot-label { font-size: 12px; }
-        .slot-hint { font-size: 10px; }
+        .photo-grid { grid-template-columns: 1fr 1fr; gap: 0; }
+        .source-buttons { grid-template-columns: 1fr; }
+        .modal-backdrop { padding: 8px; }
+        .modal { width: 96vw; max-height: 90vh; padding-left: 13px; padding-right: 13px; }
+        .photo-slot { min-height: 195px; }
+        .photo-slot-wide { min-height: 215px; }
+        .slot-content, .slot-image { min-height: 155px; }
+        .photo-slot-wide .slot-content, .photo-slot-wide .slot-image { min-height: 175px; }
         .job-action { min-height: 50px; font-size: 14px; }
       }
 
@@ -323,9 +341,13 @@
           <div class="sheet-handle" aria-hidden="true"></div>
           <h2 id="modalTitle" class="modal-title">ใส่รูปภาพ</h2>
         <p class="modal-note">เลือกจากคลังรูปหรือเปิดกล้องของมือถือ</p>
+        <div id="existingPhotoActions" class="existing-photo-actions">
+          <p id="existingPhotoNote" class="existing-photo-note">ช่องนี้มีรูปแล้ว</p>
+          <button type="button" class="button-delete" onclick="deletePhoto()">ลบรูปช่องนี้</button>
+        </div>
         <div class="source-buttons">
-          <button type="button" class="button-gallery" onclick="openGallery()">เลือกรูปจากคลัง</button>
-          <button type="button" class="button-camera" onclick="openCamera()">ถ่ายรูปด้วยกล้อง</button>
+          <button type="button" class="button-gallery" onclick="openGallery()">เลือกรูปใหม่จากคลัง</button>
+          <button type="button" class="button-camera" onclick="openCamera()">ถ่ายรูปใหม่ด้วยกล้อง</button>
         </div>
         <input id="galleryFile" class="hidden-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
         <input id="cameraFile" class="hidden-input" type="file" accept="image/*" capture="environment">
@@ -669,7 +691,7 @@
         });
         const complete = filled.length === Object.keys(PHOTO_LABELS).length;
         renderProgressBoard({ filledTypes: filled, complete: complete });
-        setJobActions(!!getSelectedJob(), true, complete);
+        setJobActions(!!getSelectedJob(), filled.length > 0, complete);
         document.getElementById('progressNote').textContent = filled.length + '/9 ช่องมีรูปแล้ว' + (complete ? ' งานครบทุกช่องแล้ว' : ' กดบันทึกงานเพื่อให้คนอื่นทำต่อได้');
       }
 
@@ -767,14 +789,54 @@
 
         activePhotoType = photoType;
         resetPendingPhoto();
-        document.getElementById('modalTitle').textContent = 'ใส่รูป: ' + PHOTO_LABELS[photoType];
+        const slot = document.querySelector('[data-photo-type="' + photoType + '"]');
+        const hasExistingPhoto = !!(slot && slot.classList.contains('is-filled'));
+        document.getElementById('modalTitle').textContent = hasExistingPhoto ? 'จัดการรูป: ' + PHOTO_LABELS[photoType] : 'ใส่รูป: ' + PHOTO_LABELS[photoType];
+        document.getElementById('existingPhotoActions').classList.toggle('is-visible', hasExistingPhoto);
+        document.getElementById('existingPhotoNote').textContent = hasExistingPhoto ? 'ช่องนี้มีรูปแล้ว สามารถลบหรือเลือกรูปใหม่แทนได้' : '';
         document.getElementById('photoModal').classList.add('is-open');
       }
 
       function closePhotoModal() {
         resetPendingPhoto();
+        document.getElementById('existingPhotoActions').classList.remove('is-visible');
+        document.getElementById('existingPhotoNote').textContent = '';
         document.getElementById('photoModal').classList.remove('is-open');
         activePhotoType = '';
+      }
+
+      function deletePhoto() {
+        const job = getSelectedJob();
+        if (!job || !activePhotoType) {
+          setStatus('กรุณาเลือก Job และช่องรูปก่อนลบ', true);
+          return;
+        }
+        if (!window.confirm('ยืนยันลบรูปช่อง ' + PHOTO_LABELS[activePhotoType] + ' หรือไม่? ไฟล์ต้นฉบับใน Drive จะยังคงอยู่')) return;
+
+        const deleteButton = document.querySelector('.button-delete');
+        deleteButton.disabled = true;
+        deleteButton.textContent = 'กำลังลบรูป...';
+        setStatus('กำลังลบรูป ' + PHOTO_LABELS[activePhotoType] + '...');
+        google.script.run
+          .withSuccessHandler(function(result) {
+            const type = activePhotoType;
+            const slot = document.querySelector('[data-photo-type="' + type + '"]');
+            if (slot) {
+              slot.classList.remove('is-filled');
+              slot.innerHTML = '<span class="slot-doc-label">' + PHOTO_LABELS[type] + '</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>';
+            }
+            closePhotoModal();
+            deleteButton.disabled = false;
+            deleteButton.textContent = 'ลบรูปช่องนี้';
+            updateProgressFromSlots();
+            setStatus(result.message, false, true);
+          })
+          .withFailureHandler(function(error) {
+            deleteButton.disabled = false;
+            deleteButton.textContent = 'ลบรูปช่องนี้';
+            setStatus('ลบรูปไม่สำเร็จ: ' + getErrorMessage(error), true);
+          })
+          .deleteImageFromSheet(job.jobNo, job.location, activePhotoType, document.getElementById('installDate').value);
       }
 
       function openGallery() {

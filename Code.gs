@@ -595,6 +595,40 @@ function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFile
 }
 
 /**
+ * ลบรูปออกจากช่องของ Job ที่เลือก โดยคงไฟล์ต้นฉบับใน Drive ไว้เป็นประวัติ
+ */
+function deleteImageFromSheet(jobNo, location, imageType, installDate) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const targetCell = CONFIG.IMAGE_CELL_MAP[imageType];
+    if (!targetCell) throw new Error('ไม่พบตำแหน่งสำหรับประเภทรูป: ' + imageType);
+    if (!jobNo) throw new Error('กรุณาเลือก Job ก่อนลบรูป');
+
+    const sheet = getSpreadsheet_().getSheetByName(buildJobSheetName_(jobNo));
+    if (!sheet) throw new Error('ยังไม่มีรายงานของ Job นี้');
+    const targetRange = sheet.getRange(targetCell);
+    const mergedRanges = targetRange.getMergedRanges();
+    const imageArea = mergedRanges.length > 0 ? mergedRanges[0] : targetRange;
+    const anchorCell = imageArea.getCell(1, 1);
+    removeImageAtAnchor_(sheet, anchorCell.getA1Notation());
+    sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
+    sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
+    sheet.getRange(CONFIG.DATE_CELL).setValue(parsePortalDate_(installDate) || new Date());
+    SpreadsheetApp.flush();
+
+    const filledTypes = getFilledImageTypes_(sheet);
+    return {
+      message: 'ลบรูปช่อง ' + imageType + ' แล้ว สามารถใส่รูปใหม่ได้',
+      filledTypes: filledTypes,
+      complete: filledTypes.length === CONFIG.IMAGE_TYPES.length
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
  * ตรวจสอบการตั้งค่าหลักจาก Editor ได้โดยตรง หากต้องการทดสอบสิทธิ์ก่อนใช้งาน
  */
 function checkPhotoReportSetup() {
