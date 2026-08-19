@@ -27,7 +27,7 @@
         line-height: 1.45;
       }
 
-      body { padding: 12px; }
+      body { padding: 8px 8px 88px; }
       .app { width: 100%; max-width: 620px; margin: 0 auto; }
 
       .template-page {
@@ -108,7 +108,21 @@
       .photo-slot-wide .slot-image { min-height: 186px; }
       .slot-status { position: absolute; right: 7px; bottom: 6px; padding: 2px 6px; border-radius: 9px; background: rgba(24, 128, 56, .9); color: #fff; font-size: 11px; }
 
-      .job-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+      .job-actions {
+        position: sticky;
+        z-index: 5;
+        bottom: 8px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 16px -8px -8px;
+        padding: 8px;
+        border: 1px solid rgba(199, 203, 209, .9);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .94);
+        box-shadow: 0 2px 12px rgba(32, 33, 36, .16);
+        backdrop-filter: blur(8px);
+      }
       .job-action { min-height: 48px; border: 1px solid var(--border); background: #fff; color: var(--text); }
       .job-action-save { background: var(--green); color: #fff; border-color: var(--green); }
       .job-action-print { background: #1967d2; color: #fff; border-color: #1967d2; }
@@ -170,10 +184,17 @@
       .hidden-input { display: none; }
 
       @media (max-width: 380px) {
-        body { padding: 8px; }
-        .template-page { padding: 13px; }
-        .photo-grid, .source-buttons { grid-template-columns: 1fr; }
-        .photo-slot-wide { grid-column: auto; }
+        body { padding: 6px 6px 86px; }
+        .template-page { padding: 11px; }
+        .photo-grid { grid-template-columns: 1fr 1fr; gap: 7px; }
+        .source-buttons { grid-template-columns: 1fr 1fr; }
+        .photo-slot { min-height: 132px; }
+        .photo-slot-wide { grid-column: 1 / -1; min-height: 150px; }
+        .slot-image { min-height: 128px; }
+        .photo-slot-wide .slot-image { min-height: 146px; }
+        .slot-label { font-size: 12px; }
+        .slot-hint { font-size: 10px; }
+        .job-action { min-height: 50px; font-size: 14px; }
       }
 
       @page { size: A4 portrait; margin: 10mm; }
@@ -275,6 +296,7 @@
 
     <script>
       const MAX_FILE_SIZE = 2 * 1024 * 1024;
+      const LAST_JOB_KEY = 'photoReport.lastJob';
       const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       const PHOTO_LABELS = {
         signage: 'ป้ายชื่อหน่วยงาน / จุดติดตั้ง',
@@ -320,6 +342,11 @@
           select.appendChild(option);
         });
         select.addEventListener('change', handleJobChange);
+        const lastJobNo = localStorage.getItem(LAST_JOB_KEY);
+        const lastJobIndex = jobDataList.findIndex(function(job) {
+          return job.jobNo === lastJobNo;
+        });
+        if (lastJobIndex >= 0) select.value = lastJobIndex;
         setStatus(jobDataList.length ? '' : 'ไม่พบ Job ใน Asset_Master', !jobDataList.length);
         handleJobChange();
       }
@@ -336,9 +363,11 @@
 
       function handleJobChange() {
         updateLocation();
+        const job = getSelectedJob();
+        if (job) localStorage.setItem(LAST_JOB_KEY, job.jobNo);
+        else localStorage.removeItem(LAST_JOB_KEY);
         clearRenderedSlots();
         hidePrintLink();
-        const job = getSelectedJob();
         setJobActions(!!job, false);
 
         if (!job) {
