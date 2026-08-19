@@ -40,16 +40,25 @@
       }
 
       .report-header {
-        padding-bottom: 14px;
-        border-bottom: 2px solid #202124;
+        padding: 18px 12px 14px;
+        border: 1px solid #d9dde3;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8fbff 0%, #ffffff 72%);
         text-align: center;
       }
 
       .company-title { margin: 0 0 5px; color: var(--muted); font-size: 11px; font-weight: 600; line-height: 1.35; }
-      .report-title { margin: 0; font-size: 19px; line-height: 1.25; }
-      .report-subtitle { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+      .report-title { margin: 0; font-size: 21px; line-height: 1.25; }
+      .report-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+      .sheet-access { margin-top: 12px; padding: 12px; border: 1px solid #d9dde3; border-radius: 10px; background: #f8fafc; }
+      .sheet-access-title { margin: 0 0 8px; color: var(--text); font-size: 13px; font-weight: 700; }
+      .sheet-access-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .sheet-access-link { display: flex; min-height: 42px; align-items: center; justify-content: center; padding: 8px 10px; border: 1px solid #9aa0a6; border-radius: 8px; background: #fff; color: var(--blue); font-size: 13px; font-weight: 700; text-align: center; text-decoration: none; }
+      .sheet-access-link.primary { border-color: var(--green); background: var(--green); color: #fff; }
+      .sheet-access-link.is-disabled { pointer-events: none; opacity: .55; }
+      .sheet-access-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
 
-      .job-section { margin-top: 14px; }
+      .job-section { margin-top: 14px; padding: 14px; border: 1px solid #d9dde3; border-radius: 10px; background: #fff; }
       .field { margin-bottom: 12px; }
       .field:last-child { margin-bottom: 0; }
       label, .field-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
@@ -130,6 +139,7 @@
       .print-link { display: none; margin-top: 10px; color: var(--blue); font-size: 13px; text-align: center; text-decoration: underline; }
       .print-link.is-visible { display: block; }
       .manage-link { display: inline-block; margin-top: 9px; color: var(--blue); font-size: 13px; text-decoration: underline; }
+      .manage-link.is-disabled { pointer-events: none; opacity: .55; }
       .report-footer { margin-top: 18px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; text-align: center; }
       .status { min-height: 22px; margin-top: 10px; color: var(--muted); font-size: 14px; text-align: center; }
       .status.error { color: var(--danger); }
@@ -216,6 +226,15 @@
           <p class="report-subtitle">Installation Photo Report</p>
         </header>
 
+        <section class="sheet-access" aria-label="ลิงก์แก้ไข Google Sheet">
+          <p class="sheet-access-title">จัดการข้อมูลและพิมพ์จาก Google Sheet</p>
+          <div class="sheet-access-actions">
+            <a id="openAssetSheetLink" class="sheet-access-link primary is-disabled" href="#" target="_blank" rel="noopener">แก้ไข Asset_Master</a>
+            <a id="openTemplateSheetLink" class="sheet-access-link is-disabled" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a>
+          </div>
+          <p class="sheet-access-note">หากต้องแก้ข้อมูลโดยตรง ให้กดปุ่มด้านบน ระบบจะเปิด Google Sheet ในหน้าใหม่</p>
+        </section>
+
         <section class="job-section">
           <div class="field">
             <label for="jobSelect">เลข Job <span class="required-note">(จำเป็น)</span></label>
@@ -270,7 +289,7 @@
         <p id="progressNote" class="progress-note">เลือก Job เพื่อเริ่มงาน</p>
         <a id="printLink" class="print-link" href="#" target="_blank" rel="noopener">เปิด PDF สำหรับพิมพ์</a>
         <div id="status" class="status" role="status" aria-live="polite"></div>
-        <footer class="report-footer">รองรับ JPG, PNG, GIF, WEBP ขนาดไม่เกิน 2 MB ต่อรูป<br><a class="manage-link" href="?page=asset" target="_top">เปิดหน้าจัดการ Asset_Master</a></footer>
+        <footer class="report-footer">รองรับ JPG, PNG, GIF, WEBP ขนาดไม่เกิน 2 MB ต่อรูป<br><a id="managePageLink" class="manage-link is-disabled" href="#" target="_top">เปิดหน้าจัดการ Asset_Master</a></footer>
       </section>
 
     </main>
@@ -312,9 +331,7 @@
       };
 
       let jobDataList = [];
-      let assetRows = [];
       let activePhotoType = '';
-      let currentView = 'report';
       let pendingFile = null;
       let pendingDataUrl = '';
 
@@ -322,7 +339,28 @@
         document.getElementById('galleryFile').addEventListener('change', handleFileChange);
         document.getElementById('cameraFile').addEventListener('change', handleFileChange);
         loadJobs();
+        loadSheetEditLinks();
       });
+
+      function loadSheetEditLinks() {
+        google.script.run
+          .withSuccessHandler(function(links) {
+            setLink('openAssetSheetLink', links.assetMasterUrl);
+            setLink('openTemplateSheetLink', links.templateUrl);
+            setLink('managePageLink', links.assetWebUrl);
+          })
+          .withFailureHandler(function(error) {
+            setStatus('ยังเปิดลิงก์แก้ไขชีตไม่ได้: ' + getErrorMessage(error), true);
+          })
+          .getSheetEditLinks();
+      }
+
+      function setLink(id, url) {
+        const link = document.getElementById(id);
+        if (!link || !url) return;
+        link.href = url;
+        link.classList.remove('is-disabled');
+      }
 
       function loadJobs() {
         setStatus('กำลังโหลดรายการ Job...');

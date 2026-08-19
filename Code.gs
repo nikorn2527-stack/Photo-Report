@@ -226,11 +226,31 @@ function saveJobProgress(jobNo, location) {
 function getJobReportInfo(jobNo) {
   if (!jobNo) throw new Error('กรุณาระบุ Job');
   const sheet = ensureJobSheet_(jobNo);
-  const spreadsheet = getSpreadsheet_();
   SpreadsheetApp.flush();
   return {
     sheetName: sheet.getName(),
-    sheetUrl: spreadsheet.getUrl() + '#gid=' + sheet.getSheetId()
+    sheetUrl: buildSheetEditUrl_(sheet)
+  };
+}
+
+/**
+ * คืนลิงก์แก้ไข Spreadsheet และชีตหลักสำหรับปุ่มใน Web App
+ */
+function getSheetEditLinks() {
+  const spreadsheet = getSpreadsheet_();
+  const template = spreadsheet.getSheetByName(CONFIG.TEMPLATE_SHEET_NAME);
+  const assetMaster = spreadsheet.getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!template || !assetMaster) {
+    throw new Error('ไม่พบชีต Photo_Report หรือ Asset_Master');
+  }
+
+  const webAppUrl = ScriptApp.getService().getUrl() || '';
+  return {
+    spreadsheetUrl: buildSpreadsheetEditUrl_(),
+    templateUrl: buildSheetEditUrl_(template),
+    assetMasterUrl: buildSheetEditUrl_(assetMaster),
+    reportWebUrl: webAppUrl || '?page=report',
+    assetWebUrl: webAppUrl ? webAppUrl + '?page=asset' : '?page=asset'
   };
 }
 
@@ -391,6 +411,14 @@ function buildPdfFilename_(jobNo) {
 
 function getSpreadsheet_() {
   return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+}
+
+function buildSpreadsheetEditUrl_() {
+  return 'https://docs.google.com/spreadsheets/d/' + CONFIG.SPREADSHEET_ID + '/edit';
+}
+
+function buildSheetEditUrl_(sheet) {
+  return buildSpreadsheetEditUrl_() + '#gid=' + sheet.getSheetId();
 }
 
 function dataUrlToImageBlob_(dataUrl, filename) {
