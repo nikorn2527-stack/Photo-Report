@@ -40,10 +40,8 @@
       }
 
       .report-header {
-        padding: 18px 12px 14px;
-        border: 1px solid #d9dde3;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #f8fbff 0%, #ffffff 72%);
+        padding: 4px 0 12px;
+        border-bottom: 2px solid #202124;
         text-align: center;
       }
 
@@ -58,12 +56,15 @@
       .sheet-access-link.is-disabled { pointer-events: none; opacity: .55; }
       .sheet-access-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
 
-      .job-section { margin-top: 14px; padding: 14px; border: 1px solid #d9dde3; border-radius: 10px; background: #fff; }
-      .field { margin-bottom: 12px; }
+      .job-section { display: grid; grid-template-columns: 1.1fr 1.6fr .9fr; gap: 0; margin-top: 14px; border: 1px solid #7b7f86; background: #fff; }
+      .field { min-width: 0; margin: 0; padding: 9px 10px; border-right: 1px solid #7b7f86; }
+      .field:last-child { border-right: 0; }
+      .field-date { display: block; }
+      .field-date input { font-size: 14px; }
       .field:last-child { margin-bottom: 0; }
       label, .field-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
 
-      select, input[type="text"] {
+      select, input[type="text"], input[type="date"] {
         width: 100%;
         min-height: 46px;
         padding: 10px 11px;
@@ -83,37 +84,40 @@
       .photo-section { margin-top: 18px; }
       .section-heading { margin: 0 0 8px; font-size: 16px; }
       .section-note { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
-
-      .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #7b7f86; }
+      .photo-column-heading { padding: 8px 6px; border: 1px solid #7b7f86; background: #f1f3f4; color: var(--text); font-size: 13px; font-weight: 800; text-align: center; }
+      .photo-column-heading.before { color: #8a4b0f; }
+      .photo-column-heading.after { color: #17663e; }
       .photo-slot-wide { grid-column: 1 / -1; }
-
       .photo-slot {
         position: relative;
         display: flex;
-        min-height: 170px;
-        align-items: center;
-        justify-content: center;
+        min-height: 190px;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
         overflow: hidden;
         padding: 0;
-        border: 2px dashed #9aa0a6;
-        border-radius: 8px;
-        background: #fafbfc;
+        border: 1px solid #7b7f86;
+        border-radius: 0;
+        background: #fff;
         color: var(--muted);
         cursor: pointer;
         text-align: center;
         -webkit-tap-highlight-color: transparent;
       }
-
-      .photo-slot-wide { min-height: 190px; }
+      .photo-slot-wide { min-height: 205px; }
       .photo-slot[data-photo-type^="before"] { border-color: #b45f16; }
       .photo-slot[data-photo-type^="after"] { border-color: #1b6e43; }
-      .photo-slot:hover { border-color: var(--blue); background: #f4f8ff; }
-      .photo-slot.is-filled { border-style: solid; border-color: var(--green); background: #fff; }
-      .slot-content { width: 100%; padding: 12px; }
-      .slot-label { display: block; color: var(--text); font-weight: 600; font-size: 14px; }
-      .slot-hint { display: block; margin-top: 5px; font-size: 12px; }
-      .slot-image { display: block; width: 100%; height: 100%; min-height: 166px; object-fit: contain; background: #f1f3f4; }
-      .photo-slot-wide .slot-image { min-height: 186px; }
+      .photo-slot:hover { background: #f4f8ff; }
+      .photo-slot.is-filled { border-color: var(--green); background: #fff; }
+      .slot-doc-label { display: block; min-height: 28px; padding: 5px 6px; border-bottom: 1px solid #c7cbd1; background: #fafbfc; color: var(--text); font-size: 12px; font-weight: 700; }
+      .slot-content { display: flex; width: 100%; flex: 1; min-height: 150px; align-items: center; justify-content: center; padding: 10px; }
+      .slot-label { display: none; }
+      .slot-hint { display: block; font-size: 12px; }
+      .slot-image { display: block; width: 100%; height: 100%; min-height: 150px; object-fit: contain; background: #f1f3f4; }
+      .photo-slot-wide .slot-image { min-height: 170px; }
+      .photo-slot-wide .slot-content { min-height: 170px; }
       .slot-status { position: absolute; right: 7px; bottom: 6px; padding: 2px 6px; border-radius: 9px; background: rgba(24, 128, 56, .9); color: #fff; font-size: 11px; }
 
       .job-actions {
@@ -212,29 +216,30 @@
       @media print {
         html, body { background: #fff; }
         body { padding: 0; }
+        .sheet-access, .modal-backdrop, .status, .job-actions, .progress-note, .report-footer, .manage-link, .print-link { display: none !important; }
         .template-page { width: 190mm; max-width: none; min-height: 277mm; padding: 0; border: 0; box-shadow: none; }
-        .modal-backdrop, .status { display: none !important; }
+        .job-section { margin-top: 10px; }
       }
     </style>
   </head>
   <body>
     <noscript><div style="margin:12px;padding:12px;border:1px solid #b3261e;border-radius:8px;background:#fff3f2;color:#b3261e">กรุณาเปิดใช้งาน JavaScript เพื่อใช้งาน Photo Report</div></noscript>
     <main class="app">
+      <section class="sheet-access" aria-label="ลิงก์แก้ไข Google Sheet">
+        <p class="sheet-access-title">จัดการข้อมูลและพิมพ์จาก Google Sheet</p>
+        <div class="sheet-access-actions">
+          <a id="openAssetSheetLink" class="sheet-access-link primary is-disabled" href="#" target="_blank" rel="noopener">แก้ไข Asset_Master</a>
+          <a id="openTemplateSheetLink" class="sheet-access-link is-disabled" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a>
+        </div>
+        <p class="sheet-access-note">หากต้องแก้ข้อมูลโดยตรง ให้กดปุ่มด้านบน ระบบจะเปิด Google Sheet ในหน้าใหม่</p>
+      </section>
+
       <section id="reportView" class="template-page" aria-label="แบบฟอร์ม Photo Report">
         <header class="report-header">
           <p class="company-title">ห้างหุ้นส่วนจำกัด เปซิกฟิก พลัส ไอที<br>(PACIFIC PLUS IT LIMITED PARTNERSHIP)</p>
           <h1 class="report-title">ใบบันทึกภาพถ่ายการติดตั้งอุปกรณ์</h1>
           <p class="report-subtitle">Installation Photo Report</p>
         </header>
-
-        <section class="sheet-access" aria-label="ลิงก์แก้ไข Google Sheet">
-          <p class="sheet-access-title">จัดการข้อมูลและพิมพ์จาก Google Sheet</p>
-          <div class="sheet-access-actions">
-            <a id="openAssetSheetLink" class="sheet-access-link primary is-disabled" href="#" target="_blank" rel="noopener">แก้ไข Asset_Master</a>
-            <a id="openTemplateSheetLink" class="sheet-access-link is-disabled" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a>
-          </div>
-          <p class="sheet-access-note">หากต้องแก้ข้อมูลโดยตรง ให้กดปุ่มด้านบน ระบบจะเปิด Google Sheet ในหน้าใหม่</p>
-        </section>
 
         <section class="job-section">
           <div class="field">
@@ -247,38 +252,45 @@
             <label for="locationDisplay">สถานที่ติดตั้ง</label>
             <input type="text" id="locationDisplay" readonly placeholder="จะแสดงหลังเลือก Job">
           </div>
+          <div class="field field-date">
+            <label for="installDate">วันที่ติดตั้ง</label>
+            <input type="date" id="installDate">
+          </div>
         </section>
 
         <section class="photo-section">
           <h2 class="section-heading">รูปภาพประกอบรายงาน</h2>
           <p class="section-note">แตะช่องที่ต้องการ แล้วเลือกภาพจากคลังหรือถ่ายภาพใหม่</p>
           <div class="photo-grid">
+            <div class="photo-column-heading photo-slot-wide">🏢 ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div>
             <button type="button" class="photo-slot photo-slot-wide" data-photo-type="signage" onclick="openPhotoModal('signage')" aria-label="ใส่รูปป้ายชื่อหน่วยงาน">
-              <span class="slot-content"><span class="slot-label">ป้ายชื่อหน่วยงาน / จุดติดตั้ง</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+              <span class="slot-doc-label">รูปถ่ายจุดติดตั้ง</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
             </button>
+            <div class="photo-column-heading before">📷 ภาพถ่ายก่อนติดตั้ง (BEFORE)</div>
+            <div class="photo-column-heading after">📷 ภาพถ่ายหลังติดตั้ง (AFTER)</div>
             <button type="button" class="photo-slot" data-photo-type="before1" onclick="openPhotoModal('before1')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 1">
-              <span class="slot-content"><span class="slot-label">ก่อนติดตั้ง 1</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+              <span class="slot-doc-label">รูปที่ 1 (ก่อนติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
             </button>
             <button type="button" class="photo-slot" data-photo-type="after1" onclick="openPhotoModal('after1')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 1">
-              <span class="slot-content"><span class="slot-label">หลังติดตั้ง 1</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+              <span class="slot-doc-label">รูปที่ 1 (หลังติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
             </button>
             <button type="button" class="photo-slot" data-photo-type="before2" onclick="openPhotoModal('before2')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 2">
-              <span class="slot-content"><span class="slot-label">ก่อนติดตั้ง 2</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+              <span class="slot-doc-label">รูปที่ 2 (ก่อนติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
             </button>
             <button type="button" class="photo-slot" data-photo-type="after2" onclick="openPhotoModal('after2')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 2">
-              <span class="slot-content"><span class="slot-label">หลังติดตั้ง 2</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+              <span class="slot-doc-label">รูปที่ 2 (หลังติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
             </button>
             <button type="button" class="photo-slot" data-photo-type="before3" onclick="openPhotoModal('before3')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 3">
-              <span class="slot-content"><span class="slot-label">ก่อนติดตั้ง 3</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+              <span class="slot-doc-label">รูปที่ 3 (ก่อนติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
             </button>
             <button type="button" class="photo-slot" data-photo-type="after3" onclick="openPhotoModal('after3')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 3">
-              <span class="slot-content"><span class="slot-label">หลังติดตั้ง 3</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+              <span class="slot-doc-label">รูปที่ 3 (หลังติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
             </button>
             <button type="button" class="photo-slot" data-photo-type="before4" onclick="openPhotoModal('before4')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 4">
-              <span class="slot-content"><span class="slot-label">ก่อนติดตั้ง 4</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+              <span class="slot-doc-label">รูปที่ 4 (ก่อนติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
             </button>
             <button type="button" class="photo-slot" data-photo-type="after4" onclick="openPhotoModal('after4')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 4">
-              <span class="slot-content"><span class="slot-label">หลังติดตั้ง 4</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
+              <span class="slot-doc-label">รูปที่ 4 (หลังติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
             </button>
           </div>
         </section>
@@ -339,6 +351,7 @@
       window.addEventListener('load', function() {
         document.getElementById('galleryFile').addEventListener('change', handleFileChange);
         document.getElementById('cameraFile').addEventListener('change', handleFileChange);
+        setDefaultInstallDate();
         loadJobs();
         loadSheetEditLinks();
       });
@@ -597,7 +610,16 @@
         setJobActions(hasJob, !!(progress && progress.exists));
         document.getElementById('progressNote').textContent = filledTypes.length + '/9 ช่องมีรูปแล้ว' +
           (progress && progress.exists ? ' สามารถกดบันทึกเพื่อทำต่อได้' : ' งานนี้ยังไม่เคยบันทึก');
+        if (progress && progress.date) document.getElementById('installDate').value = progress.date;
         setStatus('');
+      }
+
+      function setDefaultInstallDate() {
+        const input = document.getElementById('installDate');
+        if (!input.value) {
+          const now = new Date();
+          input.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        }
       }
 
       function setJobActions(hasJob, canPrint) {
@@ -609,7 +631,7 @@
         document.querySelectorAll('[data-photo-type]').forEach(function(slot) {
           const photoType = slot.getAttribute('data-photo-type');
           slot.classList.remove('is-filled');
-          slot.innerHTML = '<span class="slot-content"><span class="slot-label">' + PHOTO_LABELS[photoType] + '</span><span class="slot-hint">แตะเพื่อใส่รูป</span></span>';
+          slot.innerHTML = '<span class="slot-doc-label">' + PHOTO_LABELS[photoType] + '</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>';
         });
       }
 
@@ -617,7 +639,7 @@
         const slot = document.querySelector('[data-photo-type="' + photoType + '"]');
         if (!slot) return;
         slot.classList.add('is-filled');
-        slot.innerHTML = '<span class="slot-content"><span class="slot-label">' + PHOTO_LABELS[photoType] + '</span><span class="slot-hint">แตะเพื่อเปลี่ยนรูป</span></span><span class="slot-status">มีรูปแล้ว</span>';
+        slot.innerHTML = '<span class="slot-doc-label">' + PHOTO_LABELS[photoType] + '</span><span class="slot-content"><span class="slot-hint">แตะเพื่อเปลี่ยนรูป</span></span><span class="slot-status">มีรูปแล้ว</span>';
       }
 
       function saveJob() {
@@ -645,7 +667,7 @@
             button.textContent = 'บันทึกงาน';
             setStatus('บันทึกงานไม่สำเร็จ: ' + getErrorMessage(error), true);
           })
-          .saveJobProgress(job.jobNo, document.getElementById('locationDisplay').value);
+          .saveJobProgress(job.jobNo, document.getElementById('locationDisplay').value, document.getElementById('installDate').value);
       }
 
       function printJob() {
@@ -789,7 +811,7 @@
         const slot = document.querySelector('[data-photo-type="' + photoType + '"]');
         if (!slot) return;
         slot.classList.add('is-filled');
-        slot.innerHTML = '<img class="slot-image" alt="' + PHOTO_LABELS[photoType] + '" src="' + dataUrl + '"><span class="slot-status">บันทึกแล้ว</span>';
+        slot.innerHTML = '<span class="slot-doc-label">' + PHOTO_LABELS[photoType] + '</span><img class="slot-image" alt="' + PHOTO_LABELS[photoType] + '" src="' + dataUrl + '"><span class="slot-status">บันทึกแล้ว</span>';
       }
 
       function countFilledSlots() {

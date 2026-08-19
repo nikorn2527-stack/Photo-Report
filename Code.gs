@@ -230,6 +230,7 @@ function getJobProgress(jobNo) {
       sheetName: sheetName,
       jobNo: String(jobNo),
       location: '',
+      date: '',
       filledTypes: []
     };
   }
@@ -239,6 +240,7 @@ function getJobProgress(jobNo) {
     sheetName: sheetName,
     jobNo: String(jobNo),
     location: sheet.getRange(CONFIG.LOCATION_CELL).getDisplayValue(),
+    date: sheet.getRange(CONFIG.DATE_CELL).getDisplayValue(),
     filledTypes: getFilledImageTypes_(sheet)
   };
 }
@@ -246,7 +248,7 @@ function getJobProgress(jobNo) {
 /**
  * สร้าง/บันทึกชีทรายงานแยกตาม Job เพื่อไม่ให้งานที่ยังไม่เสร็จถูกทับ
  */
-function saveJobProgress(jobNo, location) {
+function saveJobProgress(jobNo, location, installDate) {
   if (!jobNo) {
     throw new Error('กรุณาเลือก Job ก่อนบันทึก');
   }
@@ -254,7 +256,7 @@ function saveJobProgress(jobNo, location) {
   const sheet = ensureJobSheet_(jobNo);
   sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
   sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
-  sheet.getRange(CONFIG.DATE_CELL).setValue(new Date());
+  sheet.getRange(CONFIG.DATE_CELL).setValue(parsePortalDate_(installDate) || new Date());
   SpreadsheetApp.flush();
 
   return {
