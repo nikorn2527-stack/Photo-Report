@@ -84,6 +84,13 @@
       .photo-section { margin-top: 18px; }
       .section-heading { margin: 0 0 8px; font-size: 16px; }
       .section-note { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+      .progress-board { margin: 0 0 12px; padding: 10px; border: 1px solid #c7cbd1; background: #f8fafc; }
+      .progress-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+      .progress-count { color: var(--blue); font-weight: 800; }
+      .progress-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 8px; }
+      .progress-chip { padding: 5px 6px; border: 1px solid #c5cad2; border-radius: 6px; background: #fff; color: var(--muted); font-size: 11px; text-align: center; }
+      .progress-chip.done { border-color: #7bb58d; background: #eaf6ed; color: #17663e; font-weight: 700; }
+      .progress-chip.missing { border-color: #e0b28b; background: #fff7ed; color: #8a4b0f; }
       .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #7b7f86; }
       .photo-column-heading { padding: 8px 6px; border: 1px solid #7b7f86; background: #f1f3f4; color: var(--text); font-size: 13px; font-weight: 800; text-align: center; }
       .photo-column-heading.before { color: #8a4b0f; }
@@ -216,7 +223,7 @@
       @media print {
         html, body { background: #fff; }
         body { padding: 0; }
-        .sheet-access, .modal-backdrop, .status, .job-actions, .progress-note, .report-footer, .manage-link, .print-link { display: none !important; }
+        .sheet-access, .modal-backdrop, .status, .job-actions, .progress-board, .progress-note, .report-footer, .manage-link, .print-link { display: none !important; }
         .template-page { width: 190mm; max-width: none; min-height: 277mm; padding: 0; border: 0; box-shadow: none; }
         .job-section { margin-top: 10px; }
       }
@@ -260,7 +267,11 @@
 
         <section class="photo-section">
           <h2 class="section-heading">รูปภาพประกอบรายงาน</h2>
-          <p class="section-note">แตะช่องที่ต้องการ แล้วเลือกภาพจากคลังหรือถ่ายภาพใหม่</p>
+          <p class="section-note">ทุกคนเลือก Job เดิมแล้วเติมเฉพาะช่องที่ยังขาดได้ ระบบจะรวมรูปไว้ในรายงานเดียวกัน</p>
+          <div id="progressBoard" class="progress-board">
+            <div class="progress-head"><strong id="progressTitle">ยังไม่เลือก Job</strong><span id="progressCount" class="progress-count">0/9</span></div>
+            <div id="progressChips" class="progress-chips"></div>
+          </div>
           <div class="photo-grid">
             <div class="photo-column-heading photo-slot-wide">🏢 ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div>
             <button type="button" class="photo-slot photo-slot-wide" data-photo-type="signage" onclick="openPhotoModal('signage')" aria-label="ใส่รูปป้ายชื่อหน่วยงาน">
@@ -554,7 +565,8 @@
         jobDataList.forEach(function(job, index) {
           const option = document.createElement('option');
           option.value = index;
-          option.textContent = job.jobNo;
+          const progressLabel = job.complete ? ' ✓ ครบ 9/9' : (job.hasReport ? ' • มีแล้ว ' + job.filledCount + '/9' : ' • ยังไม่เริ่ม');
+          option.textContent = job.jobNo + progressLabel;
           select.appendChild(option);
         });
         select.onchange = handleJobChange;
@@ -584,7 +596,8 @@
         else localStorage.removeItem(LAST_JOB_KEY);
         clearRenderedSlots();
         hidePrintLink();
-        setJobActions(!!job, false);
+        renderProgressBoard(null);
+        setJobActions(!!job, false, false);
 
         if (!job) {
           document.getElementById('progressNote').textContent = 'เลือก Job เพื่อเริ่มงาน';
@@ -607,9 +620,10 @@
         });
 
         const hasJob = !!getSelectedJob();
-        setJobActions(hasJob, !!(progress && progress.exists));
+        renderProgressBoard(progress);
+        setJobActions(hasJob, !!(progress && progress.filledTypes && progress.filledTypes.length), !!(progress && progress.complete));
         document.getElementById('progressNote').textContent = filledTypes.length + '/9 ช่องมีรูปแล้ว' +
-          (progress && progress.exists ? ' สามารถกดบันทึกเพื่อทำต่อได้' : ' งานนี้ยังไม่เคยบันทึก');
+          (progress && progress.complete ? ' งานครบทุกช่องแล้ว' : ' ยังสามารถให้คนอื่นเข้ามาเติมต่อได้');
         if (progress && progress.date) document.getElementById('installDate').value = progress.date;
         setStatus('');
       }
@@ -622,9 +636,41 @@
         }
       }
 
-      function setJobActions(hasJob, canPrint) {
+      function setJobActions(hasJob, canPrint, complete) {
         document.getElementById('saveJobBtn').disabled = !hasJob;
         document.getElementById('printJobBtn').disabled = !canPrint;
+        document.getElementById('printJobBtn').textContent = complete ? 'สั่งพิมพ์งาน' : (canPrint ? 'พิมพ์งานค้าง' : 'สั่งพิมพ์งาน');
+      }
+
+      function renderProgressBoard(progress) {
+        const title = document.getElementById('progressTitle');
+        const count = document.getElementById('progressCount');
+        const chips = document.getElementById('progressChips');
+        const selectedJob = getSelectedJob();
+        const filled = (progress && progress.filledTypes) || [];
+        if (!selectedJob) {
+          title.textContent = 'ยังไม่เลือก Job';
+          count.textContent = '0/9';
+          chips.innerHTML = '';
+          return;
+        }
+        const complete = filled.length === Object.keys(PHOTO_LABELS).length;
+        title.textContent = complete ? 'งานครบทุกช่องแล้ว' : 'งานยังขาด ' + (Object.keys(PHOTO_LABELS).length - filled.length) + ' ช่อง';
+        count.textContent = filled.length + '/' + Object.keys(PHOTO_LABELS).length;
+        chips.innerHTML = Object.keys(PHOTO_LABELS).map(function(type) {
+          const done = filled.indexOf(type) !== -1;
+          return '<span class="progress-chip ' + (done ? 'done' : 'missing') + '">' + (done ? '✓ ' : 'ขาด ') + PHOTO_LABELS[type] + '</span>';
+        }).join('');
+      }
+
+      function updateProgressFromSlots() {
+        const filled = Array.from(document.querySelectorAll('.photo-slot.is-filled')).map(function(slot) {
+          return slot.getAttribute('data-photo-type');
+        });
+        const complete = filled.length === Object.keys(PHOTO_LABELS).length;
+        renderProgressBoard({ filledTypes: filled, complete: complete });
+        setJobActions(!!getSelectedJob(), true, complete);
+        document.getElementById('progressNote').textContent = filled.length + '/9 ช่องมีรูปแล้ว' + (complete ? ' งานครบทุกช่องแล้ว' : ' กดบันทึกงานเพื่อให้คนอื่นทำต่อได้');
       }
 
       function clearRenderedSlots() {
@@ -658,8 +704,9 @@
           .withSuccessHandler(function(result) {
             button.disabled = false;
             button.textContent = 'บันทึกงาน';
-            setJobActions(true, true);
-            document.getElementById('progressNote').textContent = (result.filledTypes || []).length + '/9 ช่องมีรูปแล้ว สามารถกลับมาทำต่อได้';
+            setJobActions(true, !!(result.filledTypes && result.filledTypes.length), !!result.complete);
+            renderProgressBoard(result);
+            document.getElementById('progressNote').textContent = (result.filledTypes || []).length + '/9 ช่องมีรูปแล้ว' + (result.complete ? ' งานครบทุกช่องแล้ว' : ' สามารถกลับมาทำต่อได้');
             setStatus(result.message, false, true);
           })
           .withFailureHandler(function(error) {
@@ -789,8 +836,7 @@
             renderFilledSlot(activePhotoType, pendingDataUrl);
             closePhotoModal();
             saveButton.textContent = 'บันทึกรูปช่องนี้';
-            setJobActions(true, true);
-            document.getElementById('progressNote').textContent = countFilledSlots() + '/9 ช่องมีรูปแล้ว กดบันทึกงานเพื่อเก็บความคืบหน้า';
+            updateProgressFromSlots();
             setStatus(message, false, true);
           })
           .withFailureHandler(function(error) {
@@ -803,7 +849,8 @@
             job.location,
             activePhotoType,
             pendingDataUrl,
-            pendingFile.name
+            pendingFile.name,
+            document.getElementById('installDate').value
           );
       }
 

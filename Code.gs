@@ -119,9 +119,14 @@ function checkWebAppFiles() {
  * A = Job No., D:G = อาคาร ชั้น แผนก ห้อง
  */
 function getJobData() {
-  const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  const spreadsheet = getSpreadsheet_();
+  const sheet = spreadsheet.getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
   if (!sheet) return [];
 
+  const reportSheets = {};
+  spreadsheet.getSheets().forEach(function(reportSheet) {
+    if (reportSheet.getName().indexOf('REPORT_') === 0) reportSheets[reportSheet.getName()] = reportSheet;
+  });
   const values = sheet.getDataRange().getValues();
   const jobs = [];
 
@@ -141,9 +146,15 @@ function getJobData() {
       return value !== '' && value !== null && value !== undefined;
     });
 
+    const reportSheet = reportSheets[buildJobSheetName_(jobText)];
+    const filledCount = reportSheet ? getFilledImageTypes_(reportSheet).length : 0;
     jobs.push({
       jobNo: jobText,
-      location: locationParts.join(' ')
+      location: locationParts.join(' '),
+      filledCount: filledCount,
+      requiredCount: CONFIG.IMAGE_TYPES.length,
+      complete: filledCount === CONFIG.IMAGE_TYPES.length,
+      hasReport: !!reportSheet
     });
   }
 
@@ -215,55 +226,58 @@ function saveAssetMasterRow(rowNumber, asset) {
 }
 
 /**
- * คืนสถานะงานของ Job ที่เลือก เพื่อใช้ย้อนกลับมาทำต่อภายหลัง
+ * คืนสถานะงานของ Job ที่เลือก เพื่อให้หลายคนช่วยเติมรูปได้
  */
 function getJobProgress(jobNo) {
-  if (!jobNo) {
-    throw new Error('ไม่พบเลข Job');
-  }
+  if (!jobNo) throw new Error('ไม่พบเลข Job');
 
   const sheetName = buildJobSheetName_(jobNo);
   const sheet = getSpreadsheet_().getSheetByName(sheetName);
-  if (!sheet) {
-    return {
-      exists: false,
-      sheetName: sheetName,
-      jobNo: String(jobNo),
-      location: '',
-      date: '',
-      filledTypes: []
-    };
-  }
+  const filledTypes = sheet ? getFilledImageTypes_(sheet) : [];
+  const missingTypes = CONFIG.IMAGE_TYPES.filter(function(imageType) {
+    return filledTypes.indexOf(imageType) === -1;
+  });
 
   return {
-    exists: true,
+    exists: !!sheet,
     sheetName: sheetName,
     jobNo: String(jobNo),
-    location: sheet.getRange(CONFIG.LOCATION_CELL).getDisplayValue(),
-    date: sheet.getRange(CONFIG.DATE_CELL).getDisplayValue(),
-    filledTypes: getFilledImageTypes_(sheet)
+    location: sheet ? sheet.getRange(CONFIG.LOCATION_CELL).getDisplayValue() : '',
+    date: sheet ? sheet.getRange(CONFIG.DATE_CELL).getDisplayValue() : '',
+    filledTypes: filledTypes,
+    missingTypes: missingTypes,
+    filledCount: filledTypes.length,
+    requiredCount: CONFIG.IMAGE_TYPES.length,
+    complete: missingTypes.length === 0
   };
 }
 
 /**
- * สร้าง/บันทึกชีทรายงานแยกตาม Job เพื่อไม่ให้งานที่ยังไม่เสร็จถูกทับ
+ * สร้าง/บันทึกชีทรายงานแยกตาม Job โดยไม่ทับรูปที่คนอื่นอัปโหลดไว้
  */
 function saveJobProgress(jobNo, location, installDate) {
-  if (!jobNo) {
-    throw new Error('กรุณาเลือก Job ก่อนบันทึก');
+  if (!jobNo) throw new Error('กรุณาเลือก Job ก่อนบันทึก');
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const sheet = ensureJobSheet_(jobNo);
+    sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
+    sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
+    sheet.getRange(CONFIG.DATE_CELL).setValue(parsePortalDate_(installDate) || new Date());
+    SpreadsheetApp.flush();
+
+    const filledTypes = getFilledImageTypes_(sheet);
+    return {
+      message: 'บันทึกงาน ' + jobNo + ' แล้ว สามารถกลับมาทำต่อภายหลังได้',
+      sheetName: sheet.getName(),
+      filledTypes: filledTypes,
+      missingTypes: CONFIG.IMAGE_TYPES.filter(function(imageType) { return filledTypes.indexOf(imageType) === -1; }),
+      complete: filledTypes.length === CONFIG.IMAGE_TYPES.length
+    };
+  } finally {
+    lock.releaseLock();
   }
-
-  const sheet = ensureJobSheet_(jobNo);
-  sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
-  sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
-  sheet.getRange(CONFIG.DATE_CELL).setValue(parsePortalDate_(installDate) || new Date());
-  SpreadsheetApp.flush();
-
-  return {
-    message: 'บันทึกงาน ' + jobNo + ' แล้ว สามารถกลับมาทำต่อภายหลังได้',
-    sheetName: sheet.getName(),
-    filledTypes: getFilledImageTypes_(sheet)
-  };
 }
 
 /**
@@ -503,9 +517,11 @@ function createJobPdf(jobNo) {
     throw new Error('กรุณาเลือก Job ก่อนสั่งพิมพ์');
   }
 
-  const spreadsheet = getSpreadsheet_();
+    const spreadsheet = getSpreadsheet_();
   const sheet = ensureJobSheet_(jobNo);
-
+  const filledTypes = getFilledImageTypes_(sheet);
+  if (!filledTypes.length) throw new Error('งานนี้ยังไม่มีรูป กรุณาใส่รูปอย่างน้อย 1 ช่องก่อนสั่งพิมพ์');
+  const isComplete = filledTypes.length === CONFIG.IMAGE_TYPES.length;
   const exportUrl = 'https://docs.google.com/spreadsheets/d/' + CONFIG.SPREADSHEET_ID + '/export' +
     '?format=pdf' +
     '&exportFormat=pdf' +
@@ -540,7 +556,7 @@ function createJobPdf(jobNo) {
   const file = DriveApp.getFolderById(CONFIG.PDF_FOLDER_ID).createFile(pdfBlob);
 
   return {
-    message: 'สร้าง PDF A4 สำหรับ ' + jobNo + ' เรียบร้อยแล้ว',
+    message: 'สร้าง PDF A4 สำหรับ ' + jobNo + ' เรียบร้อยแล้ว (' + filledTypes.length + '/' + CONFIG.IMAGE_TYPES.length + ' รูป' + (isComplete ? ', ครบทุกช่อง' : ', งานยังไม่ครบแต่พิมพ์ได้') + ')',
     fileId: file.getId(),
     fileUrl: file.getUrl(),
     filename: filename
@@ -551,36 +567,30 @@ function createJobPdf(jobNo) {
  * รับรูปจาก Sidebar บันทึกลงโฟลเดอร์ Drive และแทรกรูปลงเทมเพลต Photo_Report
  * รูปจะถูกแทรกเป็น Over-grid image จึงไม่จำเป็นต้องเปิดไฟล์เป็นสาธารณะ
  */
-function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFilename) {
+function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFilename, installDate) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
   try {
     const targetCell = CONFIG.IMAGE_CELL_MAP[imageType];
-    if (!targetCell) {
-      throw new Error('ไม่พบตำแหน่งสำหรับประเภทรูป: ' + imageType);
-    }
+    if (!targetCell) throw new Error('ไม่พบตำแหน่งสำหรับประเภทรูป: ' + imageType);
+    if (!jobNo || !base64Data) throw new Error('กรุณาเลือก Job และไฟล์รูปภาพ');
 
-    if (!jobNo || !base64Data) {
-      throw new Error('กรุณาเลือก Job และไฟล์รูปภาพ');
-    }
-
-    const spreadsheet = getSpreadsheet_();
     const sheet = ensureJobSheet_(jobNo);
-
     const imageBlob = dataUrlToImageBlob_(base64Data, originalFilename);
     const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
     const savedFile = folder.createFile(imageBlob);
     savedFile.setName(buildPhotoFilename_(jobNo, imageType, originalFilename));
-
     sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
     sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
-    sheet.getRange(CONFIG.DATE_CELL).setValue(new Date());
-
+    sheet.getRange(CONFIG.DATE_CELL).setValue(parsePortalDate_(installDate) || new Date());
     insertImageInTemplate_(sheet, imageBlob, targetCell);
     SpreadsheetApp.flush();
-
     return 'บันทึกรูปภาพเรียบร้อยแล้ว: ' + imageType;
   } catch (error) {
     console.error(error);
     throw new Error(error.message || 'ไม่สามารถบันทึกรูปภาพได้');
+  } finally {
+    lock.releaseLock();
   }
 }
 
