@@ -128,20 +128,27 @@
         display: none;
         align-items: flex-end;
         justify-content: center;
-        padding: 12px;
         background: rgba(32, 33, 36, .52);
       }
 
       .modal-backdrop.is-open { display: flex; }
       .modal {
         width: 100%;
-        max-width: 560px;
-        max-height: 92vh;
+        max-width: 620px;
+        max-height: min(88vh, 680px);
         overflow-y: auto;
-        padding: 18px;
-        border-radius: 16px 16px 8px 8px;
+        padding: 10px 16px calc(18px + env(safe-area-inset-bottom));
+        border-radius: 18px 18px 0 0;
         background: #fff;
         box-shadow: 0 -4px 18px rgba(0, 0, 0, .2);
+      }
+
+      .sheet-handle {
+        width: 42px;
+        height: 4px;
+        margin: 0 auto 12px;
+        border-radius: 4px;
+        background: #c6c9ce;
       }
 
       .modal-title { margin: 0; font-size: 19px; }
@@ -247,8 +254,9 @@
     </main>
 
     <div id="photoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <section class="modal">
-        <h2 id="modalTitle" class="modal-title">ใส่รูปภาพ</h2>
+        <section class="modal">
+          <div class="sheet-handle" aria-hidden="true"></div>
+          <h2 id="modalTitle" class="modal-title">ใส่รูปภาพ</h2>
         <p class="modal-note">เลือกจากคลังรูปหรือเปิดกล้องของมือถือ</p>
         <div class="source-buttons">
           <button type="button" class="button-gallery" onclick="openGallery()">เลือกรูปจากคลัง</button>
