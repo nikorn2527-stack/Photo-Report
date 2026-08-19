@@ -60,9 +60,7 @@ function doGet(e) {
   const title = fileName === 'AssetMaster' ? 'จัดการ Asset_Master' : 'อัปโหลดรูปภาพ Photo Report';
 
   try {
-    return HtmlService.createHtmlOutputFromFile(fileName)
-      .setTitle(title)
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    return createHtmlOutputFromProjectFile_(fileName, title);
   } catch (error) {
     const message = String(error && error.message ? error.message : error)
       .replace(/&/g, '&amp;')
@@ -72,8 +70,18 @@ function doGet(e) {
     return HtmlService.createHtmlOutput(
       '<!doctype html><html lang="th"><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Photo Report</title>' +
       '<style>body{font-family:Arial,sans-serif;padding:24px;line-height:1.6;color:#202124}code{background:#f1f3f4;padding:3px 6px;border-radius:4px}.error{color:#b3261e}</style></head>' +
-      '<body><h1>เปิดหน้า Photo Report ไม่สำเร็จ</h1><p>กรุณาตรวจสอบว่าได้สร้างไฟล์ HTML ชื่อ <code>' + fileName + '.html</code> ใน Apps Script แล้ว และ Deploy เป็นเวอร์ชันล่าสุด</p><p class="error">รายละเอียด: ' + message + '</p></body></html>'
+      '<body><h1>เปิดหน้า Photo Report ไม่สำเร็จ</h1><p>กรุณาสร้างไฟล์ HTML ใน Apps Script โดยใช้ชื่อ <code>' + fileName + '</code> (ไม่ต้องพิมพ์ .html) แล้ว Deploy เป็นเวอร์ชันล่าสุด</p><p class="error">รายละเอียด: ' + message + '</p></body></html>'
     ).setTitle('Photo Report - ตรวจสอบการติดตั้ง');
+  }
+}
+
+function createHtmlOutputFromProjectFile_(fileName, title) {
+  try {
+    return HtmlService.createHtmlOutputFromFile(fileName)
+      .setTitle(title);
+  } catch (firstError) {
+    return HtmlService.createHtmlOutputFromFile(fileName + '.html')
+      .setTitle(title);
   }
 }
 
@@ -82,6 +90,28 @@ function showSidebar() {
     .setTitle('อัปโหลดรูปภาพ Photo Report')
     .setWidth(320);
   SpreadsheetApp.getUi().showSidebar(html);
+}
+
+/**
+ * ตรวจสอบว่าไฟล์ HTML ที่ doGet ต้องใช้ถูกสร้างไว้ใน Apps Script ครบหรือไม่
+ */
+function checkWebAppFiles() {
+  const result = {};
+  ['Sidebar', 'AssetMaster'].forEach(function(fileName) {
+    try {
+      const html = createHtmlOutputFromProjectFile_(fileName, fileName);
+      result[fileName] = {
+        found: true,
+        contentLength: html.getContent().length
+      };
+    } catch (error) {
+      result[fileName] = {
+        found: false,
+        error: error.message || String(error)
+      };
+    }
+  });
+  return result;
 }
 
 /**
