@@ -762,22 +762,61 @@ function insertImageInTemplate_(sheet, blob, targetCell) {
   image.setAltTextTitle('Photo Report - ' + targetCell);
   image.setAltTextDescription('รูปภาพสำหรับ ' + targetCell);
 
-  const maxWidth = Math.max(50, imageArea.getWidth() - 8);
-  const maxHeight = Math.max(50, imageArea.getHeight() - 8);
+  const areaWidth = getRangePixelWidth_(sheet, imageArea);
+  const areaHeight = getRangePixelHeight_(sheet, imageArea);
+  const maxWidth = Math.max(80, areaWidth - 12);
+  const maxHeight = Math.max(80, areaHeight - 12);
   const inherentWidth = image.getInherentWidth();
   const inherentHeight = image.getInherentHeight();
+  let finalWidth = maxWidth;
+  let finalHeight = maxHeight;
 
   if (inherentWidth > 0 && inherentHeight > 0) {
-    const scale = Math.min(
-      maxWidth / inherentWidth,
-      maxHeight / inherentHeight
-    );
-    image.setWidth(Math.max(1, Math.round(inherentWidth * scale)));
-    image.setHeight(Math.max(1, Math.round(inherentHeight * scale)));
-  } else {
-    image.setWidth(maxWidth);
-    image.setHeight(maxHeight);
+    const scale = Math.min(maxWidth / inherentWidth, maxHeight / inherentHeight);
+    finalWidth = Math.max(1, Math.round(inherentWidth * scale));
+    finalHeight = Math.max(1, Math.round(inherentHeight * scale));
   }
+
+  image.setWidth(finalWidth);
+  image.setHeight(finalHeight);
+  image.setLeft(getRangePixelLeft_(sheet, imageArea) + Math.max(0, Math.round((areaWidth - finalWidth) / 2)));
+  image.setTop(getRangePixelTop_(sheet, imageArea) + Math.max(0, Math.round((areaHeight - finalHeight) / 2)));
+}
+
+function getRangePixelWidth_(sheet, range) {
+  let width = 0;
+  const start = range.getColumn();
+  const end = start + range.getNumColumns() - 1;
+  for (let column = start; column <= end; column += 1) {
+    width += sheet.getColumnWidth(column);
+  }
+  return width;
+}
+
+function getRangePixelHeight_(sheet, range) {
+  let height = 0;
+  const start = range.getRow();
+  const end = start + range.getNumRows() - 1;
+  for (let row = start; row <= end; row += 1) {
+    height += sheet.getRowHeight(row);
+  }
+  return height;
+}
+
+function getRangePixelLeft_(sheet, range) {
+  let left = 0;
+  for (let column = 1; column < range.getColumn(); column += 1) {
+    left += sheet.getColumnWidth(column);
+  }
+  return left;
+}
+
+function getRangePixelTop_(sheet, range) {
+  let top = 0;
+  for (let row = 1; row < range.getRow(); row += 1) {
+    top += sheet.getRowHeight(row);
+  }
+  return top;
 }
 
 function removeImageAtAnchor_(sheet, a1Notation) {
