@@ -51,9 +51,12 @@ function onOpen() {
 /**
  * Entry point สำหรับการ Deploy เป็น Web App
  */
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Sidebar')
-    .setTitle('อัปโหลดรูปภาพ Photo Report');
+function doGet(e) {
+  const page = e && e.parameter ? e.parameter.page : '';
+  const fileName = page === 'asset' || page === 'manage' ? 'AssetMaster' : 'Sidebar';
+  const title = fileName === 'AssetMaster' ? 'จัดการ Asset_Master' : 'อัปโหลดรูปภาพ Photo Report';
+  return HtmlService.createHtmlOutputFromFile(fileName)
+    .setTitle(title);
 }
 
 function showSidebar() {
