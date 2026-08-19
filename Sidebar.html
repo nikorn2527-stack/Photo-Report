@@ -129,6 +129,7 @@
       .progress-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
       .print-link { display: none; margin-top: 10px; color: var(--blue); font-size: 13px; text-align: center; text-decoration: underline; }
       .print-link.is-visible { display: block; }
+      .manage-link { display: inline-block; margin-top: 9px; color: var(--blue); font-size: 13px; text-decoration: underline; }
       .report-footer { margin-top: 18px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; text-align: center; }
       .status { min-height: 22px; margin-top: 10px; color: var(--muted); font-size: 14px; text-align: center; }
       .status.error { color: var(--danger); }
@@ -269,7 +270,7 @@
         <p id="progressNote" class="progress-note">เลือก Job เพื่อเริ่มงาน</p>
         <a id="printLink" class="print-link" href="#" target="_blank" rel="noopener">เปิด PDF สำหรับพิมพ์</a>
         <div id="status" class="status" role="status" aria-live="polite"></div>
-        <footer class="report-footer">รองรับ JPG, PNG, GIF, WEBP ขนาดไม่เกิน 2 MB ต่อรูป</footer>
+        <footer class="report-footer">รองรับ JPG, PNG, GIF, WEBP ขนาดไม่เกิน 2 MB ต่อรูป<br><a class="manage-link" href="?page=asset" target="_top">เปิดหน้าจัดการ Asset_Master</a></footer>
       </section>
 
     </main>

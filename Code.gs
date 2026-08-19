@@ -52,8 +52,11 @@ function onOpen() {
  * Entry point สำหรับการ Deploy เป็น Web App
  */
 function doGet(e) {
-  const page = e && e.parameter ? e.parameter.page : '';
-  const fileName = page === 'asset' || page === 'manage' ? 'AssetMaster' : 'Sidebar';
+  const params = e && e.parameter ? e.parameter : {};
+  const page = String(params.page || params.mode || params.view || '').toLowerCase();
+  const fileName = page === 'asset' || page === 'manage' || page === 'assetmaster'
+    ? 'AssetMaster'
+    : 'Sidebar';
   const title = fileName === 'AssetMaster' ? 'จัดการ Asset_Master' : 'อัปโหลดรูปภาพ Photo Report';
   return HtmlService.createHtmlOutputFromFile(fileName)
     .setTitle(title);
