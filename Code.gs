@@ -54,10 +54,9 @@ function onOpen() {
 function doGet(e) {
   const params = e && e.parameter ? e.parameter : {};
   const page = String(params.page || params.mode || params.view || '').toLowerCase();
-  const fileName = page === 'asset' || page === 'manage' || page === 'assetmaster'
-    ? 'AssetMaster'
-    : 'Sidebar';
-  const title = fileName === 'AssetMaster' ? 'จัดการ Asset_Master' : 'อัปโหลดรูปภาพ Photo Report';
+  const isPortal = page === 'portal' || page === 'asset' || page === 'manage' || page === 'assetmaster' || page === 'dashboard';
+  const fileName = isPortal ? 'Portal' : 'Sidebar';
+  const title = isPortal ? 'IT Rental Portal' : 'อัปโหลดรูปภาพ Photo Report';
 
   try {
     return createHtmlOutputFromProjectFile_(fileName, title);
@@ -97,7 +96,7 @@ function showSidebar() {
  */
 function checkWebAppFiles() {
   const result = {};
-  ['Sidebar', 'AssetMaster'].forEach(function(fileName) {
+  ['Sidebar', 'Portal', 'AssetMaster'].forEach(function(fileName) {
     try {
       const html = createHtmlOutputFromProjectFile_(fileName, fileName);
       result[fileName] = {
@@ -297,6 +296,201 @@ function getSheetEditLinks() {
     reportWebUrl: webAppUrl || '?page=report',
     assetWebUrl: webAppUrl ? webAppUrl + '?page=asset' : '?page=asset'
   };
+}
+
+/**
+ * อ่านข้อมูลรวมสำหรับหน้า IT Rental Portal
+ */
+function getWorkbookPortalData() {
+  const spreadsheet = getSpreadsheet_();
+  const assetSheet = spreadsheet.getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!assetSheet) throw new Error('ไม่พบชีต Asset_Master');
+
+  const rows = getAssetPortalRows_(assetSheet);
+  const sheetNames = ['Dashboard', 'Asset_Master', 'Delivery_Form', 'Return_Form', 'Movement_Log', 'Photo_Report'];
+  const sheetLinks = {};
+  sheetNames.forEach(function(name) {
+    const sheet = spreadsheet.getSheetByName(name);
+    if (sheet) sheetLinks[name] = buildSheetEditUrl_(sheet);
+  });
+
+  return {
+    dashboard: buildPortalDashboard_(rows),
+    assetRows: rows,
+    sheetLinks: sheetLinks,
+    spreadsheetUrl: buildSpreadsheetEditUrl_()
+  };
+}
+
+/**
+ * บันทึกข้อมูล Asset_Master จากหน้า Portal โดยไม่เขียนทับสูตร AA และ AB
+ */
+function saveAssetMasterPortalRow(rowNumber, data) {
+  data = data || {};
+  const jobNo = String(data.jobNo || '').trim().toUpperCase();
+  if (!jobNo) throw new Error('กรุณากรอกเลข Job');
+  if (jobNo.indexOf('JOB-') !== 0) throw new Error('เลข Job ต้องขึ้นต้นด้วย JOB-');
+
+  const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
+
+  let targetRow = Number(rowNumber);
+  if (!targetRow || targetRow < CONFIG.HEADER_ROW) {
+    targetRow = Math.max(sheet.getLastRow() + 1, CONFIG.HEADER_ROW);
+  }
+
+  const existing = getAssetPortalRows_(sheet);
+  if (existing.some(function(item) {
+    return item.rowNumber !== targetRow && String(item.jobNo).toLowerCase() === jobNo.toLowerCase();
+  })) {
+    throw new Error('มีเลข Job นี้อยู่แล้ว: ' + jobNo);
+  }
+
+  const mainValues = [[
+    jobNo,
+    data.setCode || '',
+    data.type || data.assetType || '',
+    data.building || '',
+    data.floor || '',
+    data.department || '',
+    data.room || '',
+    data.contact || '',
+    data.contractNo || '',
+    data.brand || '',
+    data.specs || '',
+    data.aioSn || '',
+    data.mac || '',
+    data.windowsKey || '',
+    data.upsModel || '',
+    data.upsSn || '',
+    toBoolean_(data.deliverAio),
+    toBoolean_(data.deliverUps),
+    data.hubModel || '',
+    toBoolean_(data.deliverHub),
+    toBoolean_(data.deliverKbMouse),
+    toBoolean_(data.deliverAdapter),
+    toBoolean_(data.deliverUpsCord)
+  ]];
+
+  sheet.getRange(targetRow, 1, 1, 23).setValues(mainValues);
+  sheet.getRange(targetRow, 24, 1, 2).setValues([[
+    parsePortalDate_(data.startDate),
+    parsePortalDate_(data.endDate)
+  ]]);
+  sheet.getRange(targetRow, 26).setValue(data.status || data.assetStatus || 'พร้อมส่ง');
+  sheet.getRange(targetRow, 29, 1, 2).setValues([[
+    data.oldComSn || '',
+    data.oldUpsSn || ''
+  ]]);
+
+  // ถ้าเป็นแถวใหม่ ให้คัดลอกสูตรวันคงเหลือและการแจ้งเตือนจากแถวก่อนหน้า
+  if (!sheet.getRange(targetRow, 27).getFormula()) {
+    if (targetRow > CONFIG.HEADER_ROW) {
+      const previous = sheet.getRange(targetRow - 1, 27, 1, 2);
+      previous.copyTo(sheet.getRange(targetRow, 27, 1, 2), SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+    }
+    if (!sheet.getRange(targetRow, 27).getFormula()) {
+      sheet.getRange(targetRow, 27).setFormula('=IF(Y' + targetRow + '="","-",Y' + targetRow + '-TODAY())');
+      sheet.getRange(targetRow, 28).setFormula('=IF(Z' + targetRow + '="พร้อมส่ง","พร้อมส่ง",IF(Z' + targetRow + '="รับคืนแล้ว","ปิดงานแล้ว",IF(Y' + targetRow + '="","-",IF(AA' + targetRow + '<0,"หมดสัญญาแล้ว",IF(AA' + targetRow + '<=30,"เตือน: ใกล้หมดสัญญา","ปกติ")))))');
+    }
+  }
+  SpreadsheetApp.flush();
+
+  return {
+    message: (rowNumber ? 'แก้ไขข้อมูล ' : 'เพิ่มข้อมูล ') + jobNo + ' เรียบร้อยแล้ว',
+    rowNumber: targetRow,
+    jobNo: jobNo
+  };
+}
+
+function getAssetPortalRows_(sheet) {
+  const lastRow = Math.max(sheet.getLastRow(), CONFIG.HEADER_ROW - 1);
+  if (lastRow < CONFIG.HEADER_ROW) return [];
+  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, 30).getValues();
+  return raw.map(function(row, index) {
+    return {
+      rowNumber: CONFIG.HEADER_ROW + index,
+      jobNo: toPortalValue_(row[0]),
+      setCode: toPortalValue_(row[1]),
+      type: toPortalValue_(row[2]),
+      building: toPortalValue_(row[3]),
+      floor: toPortalValue_(row[4]),
+      department: toPortalValue_(row[5]),
+      room: toPortalValue_(row[6]),
+      contact: toPortalValue_(row[7]),
+      contractNo: toPortalValue_(row[8]),
+      brand: toPortalValue_(row[9]),
+      specs: toPortalValue_(row[10]),
+      aioSn: toPortalValue_(row[11]),
+      mac: toPortalValue_(row[12]),
+      windowsKey: toPortalValue_(row[13]),
+      upsModel: toPortalValue_(row[14]),
+      upsSn: toPortalValue_(row[15]),
+      deliverAio: toBoolean_(row[16]),
+      deliverUps: toBoolean_(row[17]),
+      hubModel: toPortalValue_(row[18]),
+      deliverHub: toBoolean_(row[19]),
+      deliverKbMouse: toBoolean_(row[20]),
+      deliverAdapter: toBoolean_(row[21]),
+      deliverUpsCord: toBoolean_(row[22]),
+      startDate: toPortalDate_(row[23]),
+      endDate: toPortalDate_(row[24]),
+      status: toPortalValue_(row[25]),
+      remaining: toPortalValue_(row[26]),
+      alert: toPortalValue_(row[27]),
+      oldComSn: toPortalValue_(row[28]),
+      oldUpsSn: toPortalValue_(row[29])
+    };
+  }).filter(function(row) {
+    return row.jobNo || row.setCode || row.building || row.department;
+  });
+}
+
+function buildPortalDashboard_(rows) {
+  const statuses = ['พร้อมส่ง', 'ติดตั้งแล้ว', 'รับคืนแล้ว', 'ส่งซ่อม', 'ตัดจำหน่าย'];
+  const counts = {};
+  statuses.forEach(function(status) { counts[status] = 0; });
+  rows.forEach(function(row) {
+    if (counts[row.status] === undefined) counts[row.status] = 0;
+    counts[row.status] += 1;
+  });
+  return {
+    total: rows.length,
+    installed: counts['ติดตั้งแล้ว'] || 0,
+    ready: counts['พร้อมส่ง'] || 0,
+    returned: counts['รับคืนแล้ว'] || 0,
+    repair: counts['ส่งซ่อม'] || 0,
+    disposed: counts['ตัดจำหน่าย'] || 0,
+    ups: rows.filter(function(row) { return row.deliverUps; }).length,
+    upsCord: rows.filter(function(row) { return row.deliverUpsCord; }).length,
+    expiring: rows.filter(function(row) { return row.alert === 'เตือน: ใกล้หมดสัญญา'; }).length,
+    statuses: counts
+  };
+}
+
+function toPortalValue_(value) {
+  if (value === null || value === undefined) return '';
+  if (value instanceof Date) return Utilities.formatDate(value, CONFIG.TIME_ZONE, 'yyyy-MM-dd');
+  return value;
+}
+
+function toPortalDate_(value) {
+  if (!value) return '';
+  if (value instanceof Date) return Utilities.formatDate(value, CONFIG.TIME_ZONE, 'yyyy-MM-dd');
+  return String(value);
+}
+
+function parsePortalDate_(value) {
+  if (!value) return '';
+  const match = String(value).match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+  if (!match) return value;
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
+function toBoolean_(value) {
+  if (value === true || value === 1) return true;
+  const text = String(value || '').trim().toLowerCase();
+  return text === 'true' || text === 'มี' || text === '1' || text === 'yes' || text === 'y' || text === '✓';
 }
 
 /**
