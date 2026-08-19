@@ -32,6 +32,14 @@ function onOpen() {
     .addToUi();
 }
 
+/**
+ * Entry point สำหรับการ Deploy เป็น Web App
+ */
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('Sidebar')
+    .setTitle('อัปโหลดรูปภาพ Photo Report');
+}
+
 function showSidebar() {
   const html = HtmlService.createHtmlOutputFromFile('Sidebar')
     .setTitle('อัปโหลดรูปภาพ Photo Report')
