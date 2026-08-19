@@ -218,6 +218,20 @@ function saveJobProgress(jobNo, location) {
 }
 
 /**
+ * คืน URL ของชีทรายงานแยกตาม Job เพื่อเปิดดูหรือสั่งพิมพ์จาก Google Sheets
+ */
+function getJobReportInfo(jobNo) {
+  if (!jobNo) throw new Error('กรุณาระบุ Job');
+  const sheet = ensureJobSheet_(jobNo);
+  const spreadsheet = getSpreadsheet_();
+  SpreadsheetApp.flush();
+  return {
+    sheetName: sheet.getName(),
+    sheetUrl: spreadsheet.getUrl() + '#gid=' + sheet.getSheetId()
+  };
+}
+
+/**
  * สร้าง PDF A4 เฉพาะชีทรายงานของ Job ที่เลือก แล้วเก็บไว้ในโฟลเดอร์ Drive
  */
 function createJobPdf(jobNo) {
@@ -226,10 +240,7 @@ function createJobPdf(jobNo) {
   }
 
   const spreadsheet = getSpreadsheet_();
-  const sheet = spreadsheet.getSheetByName(buildJobSheetName_(jobNo));
-  if (!sheet) {
-    throw new Error('ยังไม่มีงานที่บันทึกสำหรับ Job ' + jobNo);
-  }
+  const sheet = ensureJobSheet_(jobNo);
 
   const exportUrl = 'https://docs.google.com/spreadsheets/d/' + CONFIG.SPREADSHEET_ID + '/export' +
     '?format=pdf' +

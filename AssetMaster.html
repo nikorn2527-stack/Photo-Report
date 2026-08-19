@@ -26,10 +26,10 @@
         line-height: 1.45;
       }
 
-      body { padding: 8px 8px 30px; }
-      .app { width: 100%; max-width: 620px; margin: 0 auto; }
+      body { padding: 8px 8px 28px; }
+      .app { width: 100%; max-width: 1180px; margin: 0 auto; }
       .page {
-        min-height: calc(100vh - 38px);
+        min-height: calc(100vh - 36px);
         padding: 16px;
         border: 1px solid #b9bec6;
         border-radius: 8px;
@@ -40,42 +40,62 @@
       .back-link { display: inline-block; margin-bottom: 12px; color: var(--blue); font-size: 14px; text-decoration: none; }
       .title { margin: 0; font-size: 23px; line-height: 1.25; }
       .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
-      .toolbar { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 15px 0 10px; }
-      .search { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid #9aa0a6; border-radius: 9px; font: inherit; }
-      .button { min-height: 48px; padding: 10px 14px; border: 0; border-radius: 9px; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+      .toolbar { display: flex; align-items: center; gap: 8px; margin: 15px 0 10px; }
+      .search { flex: 1 1 auto; min-height: 48px; padding: 10px 12px; border: 1px solid #9aa0a6; border-radius: 9px; font: inherit; }
+      .button { min-height: 44px; padding: 9px 14px; border: 0; border-radius: 8px; color: #fff; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; }
       .button:disabled { background: #9aa0a6 !important; cursor: wait; }
       .button-add { background: var(--green); }
+      .button-refresh { background: #5f6368; }
       .button-add:hover { background: var(--green-dark); }
-      .button-save { width: 100%; background: var(--green); }
-      .button-cancel { width: 100%; margin-top: 8px; border: 1px solid #9aa0a6; background: #fff; color: var(--text); }
-      .form { margin-bottom: 14px; padding: 14px; border: 1px solid #9aa0a6; border-radius: 10px; background: var(--surface); }
-      .form[hidden] { display: none; }
-      .form-title { margin: 0 0 12px; font-size: 18px; }
+      .table-meta { margin: 0 0 9px; color: var(--muted); font-size: 13px; }
+      .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 9px; -webkit-overflow-scrolling: touch; }
+      table { width: 100%; min-width: 760px; border-collapse: collapse; background: #fff; }
+      th, td { padding: 11px 10px; border-bottom: 1px solid #e2e5e9; text-align: left; vertical-align: middle; }
+      th { position: sticky; top: 0; background: #f1f3f4; color: var(--muted); font-size: 13px; font-weight: 700; white-space: nowrap; }
+      td { font-size: 14px; }
+      tbody tr:last-child td { border-bottom: 0; }
+      tbody tr:hover { background: #f8fafd; }
+      .job-cell { font-weight: 700; white-space: nowrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+      .action { min-height: 38px; padding: 7px 10px; border: 1px solid #9aa0a6; border-radius: 7px; background: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .action-edit { color: var(--blue); }
+      .action-report { color: #5f6368; }
+      .action-print { border-color: var(--green); color: var(--green-dark); }
+      .empty { padding: 26px 12px; color: var(--muted); text-align: center; }
+      .status { min-height: 22px; margin-top: 11px; color: var(--muted); font-size: 14px; text-align: center; }
+      .status.error { color: var(--danger); }
+      .status.success { color: var(--green-dark); }
+      .sheet-link { display: none; margin-top: 8px; color: var(--blue); font-size: 13px; text-align: center; text-decoration: underline; }
+      .sheet-link.is-visible { display: block; }
+
+      .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: none; align-items: flex-end; justify-content: center; background: rgba(32, 33, 36, .52); }
+      .modal-backdrop.is-open { display: flex; }
+      .modal { width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; background: #fff; box-shadow: 0 -4px 18px rgba(0, 0, 0, .2); }
+      .sheet-handle { width: 42px; height: 4px; margin: 0 auto 12px; border-radius: 4px; background: #c6c9ce; }
+      .modal-title { margin: 0; font-size: 19px; }
+      .modal-note { margin: 5px 0 14px; color: var(--muted); font-size: 13px; }
       .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
       .form-field { margin-bottom: 9px; }
       .form-field:first-child { grid-column: 1 / -1; }
       .form-field label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600; }
       .form-field input { width: 100%; min-height: 45px; padding: 9px 10px; border: 1px solid #9aa0a6; border-radius: 7px; background: #fff; font: inherit; }
       .form-actions { margin-top: 3px; }
-      .count { margin: 0 0 9px; color: var(--muted); font-size: 13px; }
-      .list { display: grid; gap: 9px; }
-      .row { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
-      .row-main { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-      .job { color: var(--text); font-size: 16px; font-weight: 700; }
-      .location { margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.4; }
-      .edit { flex: 0 0 auto; min-height: 40px; padding: 8px 12px; border: 1px solid #9aa0a6; border-radius: 7px; background: #fff; color: var(--blue); font: inherit; font-weight: 600; cursor: pointer; }
-      .empty { padding: 22px 12px; color: var(--muted); text-align: center; }
-      .status { min-height: 22px; margin-top: 11px; color: var(--muted); font-size: 14px; text-align: center; }
-      .status.error { color: var(--danger); }
-      .status.success { color: var(--green-dark); }
+      .button-save { width: 100%; background: var(--green); }
+      .button-cancel { width: 100%; margin-top: 8px; border: 1px solid #9aa0a6; background: #fff; color: var(--text); }
       .hidden { display: none; }
 
-      @media (max-width: 380px) {
+      @media (max-width: 640px) {
         body { padding: 6px 6px 24px; }
         .page { padding: 12px; }
-        .toolbar { grid-template-columns: 1fr; }
-        .button-add { width: 100%; }
+        .toolbar { display: grid; grid-template-columns: 1fr 1fr; }
+        .search { grid-column: 1 / -1; }
+        .button { width: 100%; }
+        .table-wrap { margin-left: -1px; margin-right: -1px; width: calc(100% + 2px); }
+      }
+
+      @media (max-width: 380px) {
         .form-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+        .modal { padding-left: 12px; padding-right: 12px; }
       }
     </style>
   </head>
@@ -85,50 +105,70 @@
         <header class="header">
           <a class="back-link" href="?page=report">← กลับหน้า Photo Report</a>
           <h1 class="title">จัดการ Asset_Master</h1>
-          <p class="subtitle">เพิ่ม ค้นหา และแก้ไขข้อมูล Job จากหน้าเว็บแยก</p>
+          <p class="subtitle">ตารางข้อมูล Job สำหรับค้นหา แก้ไข และเปิดชีตเพื่อพิมพ์</p>
         </header>
 
         <div class="toolbar">
           <input id="search" class="search" type="search" placeholder="ค้นหา Job, อาคาร, แผนก หรือห้อง" oninput="filterRows()">
           <button type="button" class="button button-add" onclick="openForm()">+ เพิ่ม Job</button>
+          <button type="button" class="button button-refresh" onclick="loadRows()">รีเฟรช</button>
         </div>
 
-        <section id="form" class="form" hidden>
-          <h2 id="formTitle" class="form-title">เพิ่มข้อมูล Job</h2>
-          <input id="rowNumber" type="hidden">
-          <div class="form-grid">
-            <div class="form-field">
-              <label for="jobNo">เลข Job</label>
-              <input id="jobNo" type="text" placeholder="เช่น JOB-001" autocapitalize="characters">
-            </div>
-            <div class="form-field">
-              <label for="building">อาคาร</label>
-              <input id="building" type="text" placeholder="อาคาร">
-            </div>
-            <div class="form-field">
-              <label for="floor">ชั้น</label>
-              <input id="floor" type="text" placeholder="ชั้น">
-            </div>
-            <div class="form-field">
-              <label for="department">แผนก</label>
-              <input id="department" type="text" placeholder="แผนก">
-            </div>
-            <div class="form-field">
-              <label for="room">ห้อง</label>
-              <input id="room" type="text" placeholder="ห้อง">
-            </div>
-          </div>
-          <div class="form-actions">
-            <button id="saveButton" type="button" class="button button-save" onclick="saveRow()">บันทึกข้อมูล</button>
-            <button type="button" class="button button-cancel" onclick="closeForm()">ยกเลิก</button>
-          </div>
-        </section>
-
-        <p id="count" class="count">กำลังโหลดข้อมูล...</p>
-        <div id="list" class="list"></div>
+        <p id="tableMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>เลข Job</th>
+                <th>อาคาร</th>
+                <th>ชั้น</th>
+                <th>แผนก</th>
+                <th>ห้อง</th>
+                <th>การทำงาน</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
         <div id="status" class="status" role="status" aria-live="polite"></div>
+        <a id="sheetLink" class="sheet-link" href="#" target="_blank" rel="noopener">เปิดชีต Report อีกครั้ง</a>
       </section>
     </main>
+
+    <div id="formModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+      <section class="modal">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <h2 id="formTitle" class="modal-title">เพิ่มข้อมูล Job</h2>
+        <p class="modal-note">กรอกข้อมูลแล้วกดบันทึก ระบบจะเขียนลงชีต Asset_Master</p>
+        <input id="rowNumber" type="hidden">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="jobNo">เลข Job</label>
+            <input id="jobNo" type="text" placeholder="เช่น JOB-001" autocapitalize="characters">
+          </div>
+          <div class="form-field">
+            <label for="building">อาคาร</label>
+            <input id="building" type="text" placeholder="อาคาร">
+          </div>
+          <div class="form-field">
+            <label for="floor">ชั้น</label>
+            <input id="floor" type="text" placeholder="ชั้น">
+          </div>
+          <div class="form-field">
+            <label for="department">แผนก</label>
+            <input id="department" type="text" placeholder="แผนก">
+          </div>
+          <div class="form-field">
+            <label for="room">ห้อง</label>
+            <input id="room" type="text" placeholder="ห้อง">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button id="saveButton" type="button" class="button button-save" onclick="saveRow()">บันทึกข้อมูล</button>
+          <button type="button" class="button button-cancel" onclick="closeForm()">ยกเลิก</button>
+        </div>
+      </section>
+    </div>
 
     <script>
       let rows = [];
@@ -136,6 +176,7 @@
       window.addEventListener('load', loadRows);
 
       function loadRows() {
+        hideSheetLink();
         setStatus('กำลังโหลดข้อมูล Asset_Master...');
         google.script.run
           .withSuccessHandler(function(data) {
@@ -158,52 +199,58 @@
             .indexOf(query) !== -1;
         });
 
-        document.getElementById('count').textContent = 'แสดง ' + filtered.length + ' จาก ' + rows.length + ' รายการ';
-        const list = document.getElementById('list');
-        list.innerHTML = '';
+        document.getElementById('tableMeta').textContent = 'แสดง ' + filtered.length + ' จาก ' + rows.length + ' รายการ';
+        const body = document.getElementById('tableBody');
+        body.innerHTML = '';
 
         if (!filtered.length) {
-          const empty = document.createElement('div');
-          empty.className = 'empty';
-          empty.textContent = query ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูล Job';
-          list.appendChild(empty);
+          const row = document.createElement('tr');
+          const cell = document.createElement('td');
+          cell.colSpan = 6;
+          cell.className = 'empty';
+          cell.textContent = query ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูล Job';
+          row.appendChild(cell);
+          body.appendChild(row);
           return;
         }
 
         filtered.forEach(function(item) {
-          const row = document.createElement('article');
-          row.className = 'row';
-          const main = document.createElement('div');
-          main.className = 'row-main';
+          const row = document.createElement('tr');
+          appendCell(row, item.jobNo, 'job-cell');
+          appendCell(row, item.building);
+          appendCell(row, item.floor);
+          appendCell(row, item.department);
+          appendCell(row, item.room);
 
-          const info = document.createElement('div');
-          const job = document.createElement('div');
-          job.className = 'job';
-          job.textContent = item.jobNo || '(ไม่มีเลข Job)';
-          const location = document.createElement('div');
-          location.className = 'location';
-          location.textContent = [item.building, item.floor, item.department, item.room]
-            .filter(function(value) { return value; })
-            .join('  |  ') || 'ยังไม่มีรายละเอียดสถานที่';
-          info.appendChild(job);
-          info.appendChild(location);
-
-          const edit = document.createElement('button');
-          edit.type = 'button';
-          edit.className = 'edit';
-          edit.textContent = 'แก้ไข';
-          edit.addEventListener('click', function() { openForm(item); });
-
-          main.appendChild(info);
-          main.appendChild(edit);
-          row.appendChild(main);
-          list.appendChild(row);
+          const actions = document.createElement('td');
+          const actionWrap = document.createElement('div');
+          actionWrap.className = 'actions';
+          addAction(actionWrap, 'แก้ไข', 'action action-edit', function() { openForm(item); });
+          addAction(actionWrap, 'เปิดชีต / พิมพ์', 'action action-print', function() { openReport(item.jobNo); });
+          actions.appendChild(actionWrap);
+          row.appendChild(actions);
+          body.appendChild(row);
         });
+      }
+
+      function appendCell(row, value, className) {
+        const cell = document.createElement('td');
+        if (className) cell.className = className;
+        cell.textContent = value || '';
+        row.appendChild(cell);
+      }
+
+      function addAction(parent, label, className, handler) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = className;
+        button.textContent = label;
+        button.addEventListener('click', handler);
+        parent.appendChild(button);
       }
 
       function openForm(item) {
         item = item || {};
-        document.getElementById('form').hidden = false;
         document.getElementById('formTitle').textContent = item.rowNumber ? 'แก้ไขข้อมูล Job' : 'เพิ่มข้อมูล Job';
         document.getElementById('rowNumber').value = item.rowNumber || '';
         document.getElementById('jobNo').value = item.jobNo || '';
@@ -211,12 +258,12 @@
         document.getElementById('floor').value = item.floor || '';
         document.getElementById('department').value = item.department || '';
         document.getElementById('room').value = item.room || '';
-        document.getElementById('form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('formModal').classList.add('is-open');
         document.getElementById('jobNo').focus();
       }
 
       function closeForm() {
-        document.getElementById('form').hidden = true;
+        document.getElementById('formModal').classList.remove('is-open');
         ['rowNumber', 'jobNo', 'building', 'floor', 'department', 'room'].forEach(function(id) {
           document.getElementById(id).value = '';
         });
@@ -257,6 +304,34 @@
               room: document.getElementById('room').value.trim()
             }
           );
+      }
+
+      function openReport(jobNo) {
+        setStatus('กำลังเตรียมชีต Report ของ ' + jobNo + '...');
+        const popup = window.open('about:blank', '_blank');
+        google.script.run
+          .withSuccessHandler(function(result) {
+            showSheetLink(result.sheetUrl);
+            if (popup) popup.location = result.sheetUrl;
+            setStatus('เปิดชีต ' + result.sheetName + ' แล้ว ให้ใช้เมนู File > Print ในชีตเพื่อพิมพ์ A4', false, true);
+          })
+          .withFailureHandler(function(error) {
+            if (popup) popup.close();
+            setStatus('เปิดชีตไม่สำเร็จ: ' + getErrorMessage(error), true);
+          })
+          .getJobReportInfo(jobNo);
+      }
+
+      function showSheetLink(url) {
+        const link = document.getElementById('sheetLink');
+        link.href = url;
+        link.classList.add('is-visible');
+      }
+
+      function hideSheetLink() {
+        const link = document.getElementById('sheetLink');
+        link.href = '#';
+        link.classList.remove('is-visible');
       }
 
       function getErrorMessage(error) {
