@@ -117,6 +117,7 @@
     .status { min-height:23px; margin-top:12px; color:var(--muted); font-size:13px; text-align:center; }
     .status.error { color:var(--danger); }
     .status.success { color:var(--green); }
+    .brand-credit { margin:18px 0 2px; color:#9aa7b7; font-size:11px; font-weight:800; letter-spacing:.12em; text-align:center; }
     .modal-backdrop { position:fixed; z-index:30; inset:0; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(15,23,42,.62); }
     .modal-backdrop.open { display:flex; }
     .viewer-backdrop { position:fixed; z-index:40; inset:0; display:none; flex-direction:column; gap:14px; align-items:center; justify-content:center; padding:18px; background:rgba(0,0,0,.86); }
@@ -281,6 +282,7 @@
         <div class="bottom-actions"><button class="bottom-action" type="button" onclick="openPrintTemplate()">▤ ดูใบงาน A4</button><button class="bottom-action primary" type="button" onclick="startCameraNextEmpty()">▣ ถ่ายรูป</button></div><details class="ios-more"><summary>เครื่องมือเพิ่มเติม</summary><div class="mobile-more-grid"><a id="portalLink" href="#" target="_top">IT Rental Portal</a><a id="photoIndexLink" href="#" target="_blank">ประวัติ URL รูป</a><a id="assetLink" href="#" target="_blank">Asset_Master</a><a id="reportLink" href="#" target="_blank">Template ในชีต</a><a id="printLink" href="#" onclick="openPrintTemplate();return false">ดูใบงาน A4 / พิมพ์</a></div></details>
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
+      <div class="brand-credit">POWER BY PNG TEAM</div>
     </section>
   </main>
 
