@@ -54,10 +54,7 @@
       .summary-actions { display:flex; align-items:center; gap:8px; flex:none; }
       .missing-line { min-width:0; overflow:hidden; color:#8a4b0f; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
       .missing-line.complete { color:var(--green-dark); }
-      .compact-print, .compact-save { min-height:38px; padding:7px 11px; border-radius:8px; font-size:12px; font-weight:900; cursor:pointer; }
-      .compact-save { border:1px solid var(--green); background:var(--green); color:#fff; }
-      .compact-save:disabled { border-color:#a9c8b1; background:#dfeee2; color:#66836d; cursor:not-allowed; }
-      .compact-print { border:1px solid var(--blue); background:#fff; color:var(--blue); }
+      .compact-print { min-height:38px; padding:7px 11px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font-size:12px; font-weight:900; cursor:pointer; }
       .compact-print:disabled { border-color:#c7cbd1; background:#eef0f3; color:#7b8188; cursor:not-allowed; }
       .capture-heading { display:flex; align-items:end; justify-content:space-between; gap:8px; margin:20px 2px 9px; }
       .capture-heading h2 { margin:0; font-size:19px; }
@@ -74,8 +71,9 @@
       .bento-title { margin:12px 0 2px; font-size:21px; line-height:1.1; }
       .bento-note { min-height:36px; margin:0; color:var(--muted); font-size:12px; line-height:1.35; }
       .mosaic { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; flex:1; min-height:190px; margin:11px 0; }
-      .mosaic-tile { display:flex; min-height:84px; align-items:center; justify-content:center; overflow:hidden; border:1px dashed #c7cbd1; border-radius:8px; background:#f5f7fa; color:#9aa0a6; font-size:20px; font-weight:900; }
+      .mosaic-tile { position:relative; display:flex; min-height:84px; align-items:center; justify-content:center; overflow:hidden; border:1px dashed #c7cbd1; border-radius:8px; background:#f5f7fa; color:#9aa0a6; font-size:20px; font-weight:900; }
       .mosaic-tile.filled { border-style:solid; border-color:#a8cbb1; background:#e8f5ec; color:var(--green-dark); }
+      .mosaic-tile.filled::after { content:'บันทึกแล้ว ✓'; position:absolute; right:5px; bottom:5px; padding:3px 6px; border-radius:6px; background:rgba(13,101,45,.88); color:#fff; font-size:10px; line-height:1.1; font-weight:900; }
       .mosaic-tile img { width:100%; height:100%; min-height:51px; object-fit:cover; }
       .bento-footer { display:flex; align-items:center; justify-content:space-between; gap:5px; margin-top:auto; color:var(--blue); font-size:11px; font-weight:900; }
       .bento-footer span:last-child { color:var(--muted); font-weight:700; }
@@ -186,7 +184,7 @@
         .summary-bottom { margin-top:11px; gap:10px; }
         .summary-actions { gap:8px; }
         .missing-line { font-size:16px; }
-        .compact-print, .compact-save { min-height:48px; padding:9px 13px; border-radius:10px; font-size:16px; }
+        .compact-print { min-height:48px; padding:9px 13px; border-radius:10px; font-size:16px; }
         .capture-heading { margin:26px 2px 12px; }
         .capture-heading h2 { font-size:25px; }
         .capture-heading p { font-size:16px; }
@@ -228,7 +226,7 @@
         <header class="brand">
           <p class="eyebrow">IT Rental Photo Report</p>
           <h1 class="title">เก็บรูปหน้างาน</h1>
-          <p class="subtitle">เลือก Job แล้วแตะช่อง ก่อนติดตั้ง หรือ หลังติดตั้ง</p>
+          <p class="subtitle">เลือก Job แล้วแตะช่อง ก่อนติดตั้ง หรือ หลังติดตั้ง — รูปจะบันทึกอัตโนมัติทันที</p>
         </header>
 
         <section class="job-card">
@@ -245,7 +243,7 @@
         <section class="capture-summary">
           <div class="summary-line"><span class="summary-label">รูปที่เก็บแล้ว</span><strong id="progressCount" class="progress-count">0/9</strong></div>
           <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
-          <div class="summary-bottom"><span id="missingLine" class="missing-line">เลือก Job แล้วเริ่มถ่ายรูป</span><div class="summary-actions"><button id="saveJobButton" class="compact-save" type="button" onclick="savePhotoReport()" disabled>บันทึกภาพ</button><button id="printJobButton" class="compact-print" type="button" onclick="printJob()" disabled>พิมพ์เอกสาร</button></div></div>
+          <div class="summary-bottom"><span id="missingLine" class="missing-line">เลือก Job แล้วเริ่มถ่ายรูป — บันทึกอัตโนมัติ</span><div class="summary-actions"><button id="printJobButton" class="compact-print" type="button" onclick="printJob()" disabled>พิมพ์เอกสาร</button></div></div>
         </section>
 
         <div class="capture-heading"><h2>2. เก็บรูป</h2><p>แตะการ์ดเพื่อเพิ่มหลายรูป</p></div>
@@ -405,7 +403,7 @@
         document.getElementById('progressFill').style.width = Math.round(filled.length / total * 100) + '%';
         const missing = allPhotoTypes().filter(function(type) { return filled.indexOf(type) === -1; });
         const line = document.getElementById('missingLine');
-        line.textContent = !getJob() ? 'เลือก Job แล้วเริ่มถ่ายรูป' : (complete ? 'รูปครบแล้ว พร้อมพิมพ์เอกสาร' : 'ยังขาด ' + missing.length + ' รูป');
+        line.textContent = !getJob() ? 'เลือก Job แล้วเริ่มถ่ายรูป — บันทึกอัตโนมัติ' : (complete ? 'รูปครบแล้ว พร้อมพิมพ์เอกสาร' : 'ยังขาด ' + missing.length + ' รูป — แตะช่องเพื่อเพิ่ม ระบบบันทึกอัตโนมัติ');
         line.className = 'missing-line' + (complete ? ' complete' : '');
         if (getJob()) { document.getElementById('jobStatus').textContent = complete ? 'งานนี้ครบ 9/9 รูปแล้ว' : 'กำลังเก็บรูป — มีแล้ว ' + filled.length + '/9 รูป'; document.getElementById('jobStatus').className = 'job-status' + (complete ? ' complete' : ''); }
       }
@@ -459,7 +457,6 @@
         document.getElementById('beforeCard').disabled = !job || uploading;
         document.getElementById('afterCard').disabled = !job || uploading;
         document.getElementById('signageButton').disabled = !job || uploading;
-        document.getElementById('saveJobButton').disabled = !job || uploading;
         document.getElementById('printJobButton').disabled = !job || filled === 0 || uploading;
       }
 
@@ -606,24 +603,6 @@
         if (!window.confirm('ยืนยันลบรูปช่องนี้หรือไม่? ไฟล์ต้นฉบับใน Drive จะยังคงอยู่')) return;
         const button = document.getElementById('deletePhotoButton'); button.disabled = true; button.textContent = 'กำลังลบ...'; uploading = true; updateButtons();
         google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || (currentProgress.filledTypes || []).filter(function(type) { return type !== activeType; }); delete previews[activeType]; delete previewUrls[activeType]; uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; renderAll(); closeModal(); setStatus(result.message, false, true); }).withFailureHandler(function(error) { uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; updateButtons(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error), true); }).deleteImageFromSheet(job.jobNo, job.location, activeType, document.getElementById('installDate').value);
-      }
-
-      function savePhotoReport() {
-        const job = getJob();
-        if (!job) { setStatus('กรุณาเลือก Job ก่อนบันทึกภาพ', true); return; }
-        const button = document.getElementById('saveJobButton');
-        button.disabled = true;
-        button.textContent = 'กำลังบันทึก...';
-        google.script.run.withSuccessHandler(function(result) {
-          button.disabled = false;
-          button.textContent = 'บันทึกแล้ว ✓';
-          setStatus(result.message || 'บันทึกภาพเรียบร้อยแล้ว', false, true);
-          window.setTimeout(function() { button.textContent = 'บันทึกภาพ'; }, 2200);
-        }).withFailureHandler(function(error) {
-          button.disabled = false;
-          button.textContent = 'บันทึกภาพ';
-          setStatus('บันทึกภาพไม่สำเร็จ: ' + errorMessage(error), true);
-        }).saveJobProgress(job.jobNo, job.location, document.getElementById('installDate').value);
       }
 
       function printJob() {
