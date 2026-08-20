@@ -29,6 +29,12 @@
       .card.blue { border-top:4px solid var(--blue); }
       .card.orange { border-top:4px solid var(--orange); }
       .card.gray { border-top:4px solid #5f6368; }
+      .card.red { border-top:4px solid var(--danger); }
+      .prep-select { min-height:36px; min-width:132px; padding:5px 8px; border:1px solid #c7cbd1; border-radius:7px; background:#fff; color:var(--text); font:inherit; font-size:12px; font-weight:800; }
+      .prep-select.prep-received { border-color:#b8c1cb; color:#5f6368; }
+      .prep-select.prep-progress { border-color:#e0b28b; background:#fff8ef; color:#8a4b0f; }
+      .prep-select.prep-ready { border-color:#8bb89a; background:#e8f5ec; color:#137333; }
+      .prep-select.prep-blocked { border-color:#e5a19d; background:#fce8e6; color:var(--danger); }
       .dashboard-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:14px; margin-top:14px; }
       .panel { padding:14px; border:1px solid var(--border); border-radius:10px; background:#fff; }
       .panel-title { margin:0 0 10px; font-size:16px; }
@@ -45,7 +51,7 @@
       .button-outline { border:1px solid #9aa0a6; background:#fff; color:var(--text); }
       .table-meta { margin:0 0 8px; color:var(--muted); font-size:13px; }
       .table-wrap { overflow:auto; border:1px solid var(--border); border-radius:9px; }
-      table { width:100%; min-width:1060px; border-collapse:collapse; }
+      table { width:100%; min-width:1210px; border-collapse:collapse; }
       th,td { padding:10px; border-bottom:1px solid #e4e7eb; text-align:left; vertical-align:middle; font-size:13px; }
       th { position:sticky; top:0; z-index:1; background:#f1f3f4; color:var(--muted); font-size:12px; white-space:nowrap; }
       tr:last-child td { border-bottom:0; }
@@ -111,24 +117,25 @@
           <p class="view-note">สรุปจากข้อมูลใน Asset_Master ตามสถานะชุดอุปกรณ์และการแจ้งเตือนสัญญา</p>
           <div id="summaryCards" class="cards"></div>
           <div class="dashboard-grid">
-            <section class="panel"><h3 class="panel-title">สรุปสถานะชุดอุปกรณ์</h3><div id="statusChart"></div></section>
+            <section class="panel"><h3 class="panel-title">สรุปสถานะเตรียมเครื่อง</h3><div id="statusChart"></div></section>
             <section class="panel"><h3 class="panel-title">ตัวชี้วัดอุปกรณ์</h3><div id="equipmentMetrics"></div></section>
           </div>
         </section>
 
         <section id="assetView" class="view" hidden>
           <h2 class="view-title">Asset_Master</h2>
-          <p class="view-note">ตารางหลักสำหรับค้นหา แก้ไข และเพิ่มข้อมูลชุดเช่า โดยสูตรวันคงเหลือและการแจ้งเตือนจะคงไว้</p>
+          <p class="view-note">ตารางหลักสำหรับค้นหา แก้ไข และเพิ่มข้อมูลชุดเช่า โดยสถานะเตรียมเครื่องแก้ได้ทันทีในตาราง</p>
           <div class="toolbar">
             <input id="assetSearch" class="search" type="search" placeholder="ค้นหา Job, รหัสชุด, สถานที่, รุ่น หรือ S/N" oninput="renderAssetTable()">
-            <select id="statusFilter" class="filter" onchange="renderAssetTable()"><option value="">ทุกสถานะ</option></select>
+            <select id="statusFilter" class="filter" onchange="renderAssetTable()"><option value="">สถานะชุดทั้งหมด</option></select>
+            <select id="prepStatusFilter" class="filter" onchange="renderAssetTable()"><option value="">เตรียมเครื่องทั้งหมด</option></select>
             <button type="button" class="button button-primary" onclick="openAssetEditor()">+ เพิ่มชุด</button>
             <button type="button" class="button button-secondary" onclick="loadPortal()">รีเฟรช</button>
           </div>
           <p id="assetMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>สถานะ</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
+              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>สถานะชุด</th><th>เตรียมเครื่อง</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
               <tbody id="assetTableBody"></tbody>
             </table>
           </div>
@@ -182,6 +189,7 @@
           <div class="field"><label>วันเริ่มเช่า</label><input id="startDate" class="input" type="date"></div>
           <div class="field"><label>วันหมดสัญญา</label><input id="endDate" class="input" type="date"></div>
           <div class="field"><label>สถานะชุด</label><select id="assetStatus" class="select"><option>พร้อมส่ง</option><option>ติดตั้งแล้ว</option><option>รับคืนแล้ว</option><option>ส่งซ่อม</option><option>ตัดจำหน่าย</option></select></div>
+          <div class="field"><label>สถานะเตรียมเครื่อง</label><select id="prepStatus" class="select"><option>รับเข้าแล้ว</option><option>ลง Windows</option><option>ลงโปรแกรม</option><option>รอ Activate</option><option>พร้อมติดตั้ง</option><option>ติดปัญหา</option></select></div>
         </div></div>
         <div class="modal-actions"><button id="saveAssetButton" type="button" class="button button-primary" onclick="saveAsset()">บันทึกข้อมูล</button><button type="button" class="button button-outline" onclick="closeAssetEditor()">ยกเลิก</button></div>
       </section>
@@ -190,7 +198,8 @@
     <script>
       let portalData = { dashboard:{}, assetRows:[], sheetLinks:{} };
       let currentView = 'dashboard';
-      const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','startDate','endDate','assetStatus'];
+      const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดปัญหา'];
+      const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','startDate','endDate','assetStatus','prepStatus'];
       const CHECK_IDS = ['deliverAio','deliverUps','deliverHub','deliverKbMouse','deliverAdapter','deliverUpsCord'];
       const DOCS = [
         ['Dashboard','ภาพรวมสถานะชุดเช่า'],
@@ -228,20 +237,20 @@
       function renderDashboard() {
         const d = portalData.dashboard || {};
         const cards = [
-          ['ชุดทั้งหมด', d.total || 0, 'green'],
-          ['ติดตั้งแล้ว', d.installed || 0, 'blue'],
-          ['พร้อมส่ง', d.ready || 0, 'green'],
-          ['รับคืนแล้ว', d.returned || 0, 'gray'],
-          ['ใกล้หมดสัญญา', d.expiring || 0, 'orange']
+          ['เครื่องทั้งหมด', d.total || 0, 'green'],
+          ['พร้อมติดตั้ง', d.prepReady || 0, 'green'],
+          ['กำลังเตรียม', d.prepInProgress || 0, 'orange'],
+          ['รับเข้าแล้ว', d.prepReceived || 0, 'gray'],
+          ['ติดปัญหา', d.prepBlocked || 0, 'red']
         ];
         document.getElementById('summaryCards').innerHTML = cards.map(function(card) {
           return '<div class="card ' + card[2] + '"><div class="card-label">' + card[0] + '</div><div class="card-value">' + card[1] + '</div></div>';
         }).join('');
 
-        const statuses = ['พร้อมส่ง','ติดตั้งแล้ว','รับคืนแล้ว','ส่งซ่อม','ตัดจำหน่าย'];
+        const statuses = PREP_STATUS_OPTIONS;
         const total = Math.max(1, d.total || 0);
         document.getElementById('statusChart').innerHTML = statuses.map(function(status) {
-          const count = (d.statuses && d.statuses[status]) || 0;
+          const count = (d.prepStatuses && d.prepStatuses[status]) || 0;
           const percent = Math.round(count / total * 100);
           return '<div class="status-line"><span>' + status + '</span><span class="bar"><span style="width:' + percent + '%"></span></span><strong>' + count + '</strong></div>';
         }).join('');
@@ -254,26 +263,31 @@
 
       function renderAssetFilters() {
         const select = document.getElementById('statusFilter');
+        const prepSelect = document.getElementById('prepStatusFilter');
         const current = select.value;
+        const currentPrep = prepSelect.value;
         const statuses = Array.from(new Set((portalData.assetRows || []).map(function(row) { return row.status; }).filter(Boolean))).sort();
-        select.innerHTML = '<option value="">ทุกสถานะ</option>' + statuses.map(function(status) { return '<option>' + escapeHtml(status) + '</option>'; }).join('');
+        select.innerHTML = '<option value="">สถานะชุดทั้งหมด</option>' + statuses.map(function(status) { return '<option>' + escapeHtml(status) + '</option>'; }).join('');
+        prepSelect.innerHTML = '<option value="">เตรียมเครื่องทั้งหมด</option>' + PREP_STATUS_OPTIONS.map(function(status) { return '<option>' + escapeHtml(status) + '</option>'; }).join('');
         select.value = current;
+        prepSelect.value = currentPrep;
       }
 
       function renderAssetTable() {
         const query = document.getElementById('assetSearch').value.trim().toLowerCase();
         const status = document.getElementById('statusFilter').value;
+        const prepStatus = document.getElementById('prepStatusFilter').value;
         const rows = (portalData.assetRows || []).filter(function(row) {
-          const text = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.upsSn].join(' ').toLowerCase();
-          return (!query || text.indexOf(query) !== -1) && (!status || row.status === status);
+          const text = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.upsSn,row.prepStatus].join(' ').toLowerCase();
+          return (!query || text.indexOf(query) !== -1) && (!status || row.status === status) && (!prepStatus || row.prepStatus === prepStatus);
         });
         document.getElementById('assetMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + (portalData.assetRows || []).length + ' รายการ';
         const body = document.getElementById('assetTableBody');
         body.innerHTML = '';
-        if (!rows.length) { body.innerHTML = '<tr><td colspan="9" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
+        if (!rows.length) { body.innerHTML = '<tr><td colspan="10" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + statusBadge(row.status) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + statusBadge(row.status) + '</td><td>' + prepStatusControl(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
           body.appendChild(tr);
         });
       }
@@ -285,8 +299,20 @@
         if (text === 'พร้อมส่ง') cls = 'status-ready';
         if (text === 'ติดตั้งแล้ว') cls = 'status-installed';
         if (text.indexOf('เตือน') !== -1) cls = 'status-warning';
-        if (text.indexOf('หมด') !== -1 || text === 'ส่งซ่อม') cls = 'status-danger';
+        if (text.indexOf('หมด') !== -1 || text === 'ส่งซ่อม' || text === 'ติดปัญหา') cls = 'status-danger';
         return '<span class="status-badge ' + cls + '">' + escapeHtml(text) + '</span>';
+      }
+
+      function prepStatusControl(row) {
+        const current = row.prepStatus || PREP_STATUS_OPTIONS[0];
+        const cls = current === 'พร้อมติดตั้ง' ? 'prep-ready' : (current === 'ติดปัญหา' ? 'prep-blocked' : (current === 'รับเข้าแล้ว' ? 'prep-received' : 'prep-progress'));
+        const options = PREP_STATUS_OPTIONS.map(function(status) { return '<option value="' + escapeHtml(status) + '"' + (status === current ? ' selected' : '') + '>' + escapeHtml(status) + '</option>'; }).join('');
+        return '<select class="prep-select ' + cls + '" aria-label="สถานะเตรียมเครื่อง ' + escapeHtml(row.jobNo) + '" onchange="updatePrepStatus(' + row.rowNumber + ', this.value)">' + options + '</select>';
+      }
+
+      function updatePrepStatus(rowNumber, prepStatus) {
+        setStatus('กำลังอัปเดตสถานะเตรียมเครื่อง...');
+        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตสถานะไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetPreparationStatus(rowNumber, prepStatus);
       }
 
       function renderDocuments() {
@@ -309,7 +335,7 @@
         item = item || {};
         document.getElementById('modalTitle').textContent = item.rowNumber ? 'แก้ไขชุดอุปกรณ์' : 'เพิ่มชุดอุปกรณ์';
         document.getElementById('assetRowNumber').value = item.rowNumber || '';
-        FIELD_IDS.forEach(function(id) { const element = document.getElementById(id); if (element) element.value = item[id] || ''; });
+        FIELD_IDS.forEach(function(id) { const element = document.getElementById(id); if (element) element.value = item[id] || (id === 'prepStatus' ? PREP_STATUS_OPTIONS[0] : ''); });
         CHECK_IDS.forEach(function(id) { document.getElementById(id).checked = !!item[id]; });
         document.getElementById('assetModal').classList.add('open');
       }

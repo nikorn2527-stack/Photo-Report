@@ -38,6 +38,16 @@ const CONFIG = Object.freeze({
     'after3',
     'before4',
     'after4'
+  ]),
+  PREP_STATUS_COLUMN: 31,
+  PREP_STATUS_HEADER: 'สถานะเตรียมเครื่อง',
+  PREP_STATUS_OPTIONS: Object.freeze([
+    'รับเข้าแล้ว',
+    'ลง Windows',
+    'ลงโปรแกรม',
+    'รอ Activate',
+    'พร้อมติดตั้ง',
+    'ติดปัญหา'
   ])
 });
 
@@ -321,6 +331,7 @@ function getWorkbookPortalData() {
   const spreadsheet = getSpreadsheet_();
   const assetSheet = spreadsheet.getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
   if (!assetSheet) throw new Error('ไม่พบชีต Asset_Master');
+  ensurePreparationStatusColumn_(assetSheet);
 
   const rows = getAssetPortalRows_(assetSheet);
   const sheetNames = ['Dashboard', 'Asset_Master', 'Delivery_Form', 'Return_Form', 'Movement_Log', 'Photo_Report'];
@@ -349,6 +360,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
 
   const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
   if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
+  ensurePreparationStatusColumn_(sheet);
 
   let targetRow = Number(rowNumber);
   if (!targetRow || targetRow < CONFIG.HEADER_ROW) {
@@ -361,6 +373,8 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   })) {
     throw new Error('มีเลข Job นี้อยู่แล้ว: ' + jobNo);
   }
+  const existingRow = existing.find(function(item) { return item.rowNumber === targetRow; });
+  const prepStatus = normalizePreparationStatus_(data.prepStatus || (existingRow && existingRow.prepStatus));
 
   const mainValues = [[
     jobNo,
@@ -394,6 +408,8 @@ function saveAssetMasterPortalRow(rowNumber, data) {
     parsePortalDate_(data.endDate)
   ]]);
   sheet.getRange(targetRow, 26).setValue(data.status || data.assetStatus || 'พร้อมส่ง');
+  ensurePreparationStatusColumn_(sheet);
+  sheet.getRange(targetRow, CONFIG.PREP_STATUS_COLUMN).setValue(prepStatus);
   sheet.getRange(targetRow, 29, 1, 2).setValues([[
     data.oldComSn || '',
     data.oldUpsSn || ''
@@ -422,7 +438,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
 function getAssetPortalRows_(sheet) {
   const lastRow = Math.max(sheet.getLastRow(), CONFIG.HEADER_ROW - 1);
   if (lastRow < CONFIG.HEADER_ROW) return [];
-  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, 30).getValues();
+  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.PREP_STATUS_COLUMN).getValues();
   return raw.map(function(row, index) {
     return {
       rowNumber: CONFIG.HEADER_ROW + index,
@@ -455,20 +471,58 @@ function getAssetPortalRows_(sheet) {
       remaining: toPortalValue_(row[26]),
       alert: toPortalValue_(row[27]),
       oldComSn: toPortalValue_(row[28]),
-      oldUpsSn: toPortalValue_(row[29])
+      oldUpsSn: toPortalValue_(row[29]),
+      prepStatus: toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) || CONFIG.PREP_STATUS_OPTIONS[0]
     };
   }).filter(function(row) {
     return row.jobNo || row.setCode || row.building || row.department;
   });
 }
 
+function ensurePreparationStatusColumn_(sheet) {
+  const requiredColumns = CONFIG.PREP_STATUS_COLUMN;
+  const currentColumns = sheet.getMaxColumns();
+  if (currentColumns < requiredColumns) sheet.insertColumnsAfter(currentColumns, requiredColumns - currentColumns);
+  const headerCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.PREP_STATUS_COLUMN);
+  if (!headerCell.getDisplayValue()) headerCell.setValue(CONFIG.PREP_STATUS_HEADER);
+}
+
+function normalizePreparationStatus_(value) {
+  const text = String(value || '').trim();
+  return CONFIG.PREP_STATUS_OPTIONS.indexOf(text) !== -1 ? text : CONFIG.PREP_STATUS_OPTIONS[0];
+}
+
+function updateAssetPreparationStatus(rowNumber, prepStatus) {
+  const targetRow = Number(rowNumber);
+  if (!targetRow || targetRow < CONFIG.HEADER_ROW) throw new Error('ไม่พบแถว Asset_Master ที่ต้องการแก้ไข');
+  if (CONFIG.PREP_STATUS_OPTIONS.indexOf(String(prepStatus || '').trim()) === -1) throw new Error('สถานะเตรียมเครื่องไม่ถูกต้อง');
+
+  const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    ensurePreparationStatusColumn_(sheet);
+    sheet.getRange(targetRow, CONFIG.PREP_STATUS_COLUMN).setValue(String(prepStatus).trim());
+    SpreadsheetApp.flush();
+    return { message: 'อัปเดตสถานะเตรียมเครื่องแล้ว', rowNumber: targetRow, prepStatus: String(prepStatus).trim() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function buildPortalDashboard_(rows) {
   const statuses = ['พร้อมส่ง', 'ติดตั้งแล้ว', 'รับคืนแล้ว', 'ส่งซ่อม', 'ตัดจำหน่าย'];
   const counts = {};
   statuses.forEach(function(status) { counts[status] = 0; });
+  const prepCounts = {};
+  CONFIG.PREP_STATUS_OPTIONS.forEach(function(status) { prepCounts[status] = 0; });
   rows.forEach(function(row) {
     if (counts[row.status] === undefined) counts[row.status] = 0;
     counts[row.status] += 1;
+    const prepStatus = row.prepStatus || CONFIG.PREP_STATUS_OPTIONS[0];
+    if (prepCounts[prepStatus] === undefined) prepCounts[prepStatus] = 0;
+    prepCounts[prepStatus] += 1;
   });
   return {
     total: rows.length,
@@ -477,10 +531,15 @@ function buildPortalDashboard_(rows) {
     returned: counts['รับคืนแล้ว'] || 0,
     repair: counts['ส่งซ่อม'] || 0,
     disposed: counts['ตัดจำหน่าย'] || 0,
+    prepReady: prepCounts['พร้อมติดตั้ง'] || 0,
+    prepInProgress: (prepCounts['ลง Windows'] || 0) + (prepCounts['ลงโปรแกรม'] || 0) + (prepCounts['รอ Activate'] || 0),
+    prepReceived: prepCounts['รับเข้าแล้ว'] || 0,
+    prepBlocked: prepCounts['ติดปัญหา'] || 0,
     ups: rows.filter(function(row) { return row.deliverUps; }).length,
     upsCord: rows.filter(function(row) { return row.deliverUpsCord; }).length,
     expiring: rows.filter(function(row) { return row.alert === 'เตือน: ใกล้หมดสัญญา'; }).length,
-    statuses: counts
+    statuses: counts,
+    prepStatuses: prepCounts
   };
 }
 
