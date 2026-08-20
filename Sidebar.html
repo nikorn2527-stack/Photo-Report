@@ -235,11 +235,11 @@
     .print-preview-note { max-width:210mm; margin:8px auto 0; color:#68707a; font-size:12px; text-align:center; }
     @media print {
       @page { size:A4 portrait; margin:0; }
-      html,body { width:210mm; min-height:297mm; background:#fff; }
+      html,body { width:210mm; height:297mm; min-height:0; margin:0; overflow:hidden; background:#fff; }
       body > main, body > .modal-backdrop { display:none !important; }
-      .print-preview { position:static; display:block !important; width:210mm; min-height:297mm; padding:0; overflow:visible; background:#fff; }
+      .print-preview { position:static; display:block !important; width:210mm; height:297mm; min-height:0; padding:0; overflow:hidden; background:#fff; }
       .print-toolbar, .print-preview-note { display:none !important; }
-      .print-page { width:210mm; height:297mm; min-height:0; margin:0; padding:6mm 7mm; overflow:hidden; box-shadow:none; }
+      .print-page { width:210mm; height:297mm; min-height:0; margin:0; padding:6mm 7mm; overflow:hidden; page-break-after:avoid; break-after:avoid; box-shadow:none; }
     }
     @media (max-width:520px), (pointer:coarse) {
       .page { width:100%; max-width:none; padding:8px 6px calc(20px + env(safe-area-inset-bottom)); }
