@@ -96,8 +96,8 @@
     .mobile-slot.after { border-color:#a8d8b9; background:#f2fbf5; }
     .mobile-slot.has-image { background:#e9edf2; }
     .mobile-slot:active { transform:scale(.985); }
-    .mobile-slot img { width:100%; height:100%; min-height:138px; object-fit:cover; pointer-events:none; }
-    .mobile-slot.signage img { min-height:91px; }
+    .mobile-slot img { width:100%; height:100%; min-height:138px; object-fit:contain; pointer-events:none; background:#e9edf2; }
+    .mobile-slot.signage img { min-height:91px; object-fit:contain; }
     .mobile-slot-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px; text-align:center; }
     .mobile-slot-icon { display:flex; width:40px; height:40px; align-items:center; justify-content:center; border-radius:12px; background:#eef2f6; color:#7a8795; font-size:24px; font-weight:800; }
     .mobile-slot.before .mobile-slot-icon { background:var(--before-soft); color:var(--before); }
@@ -148,7 +148,7 @@
     .hidden { display:none !important; }
     /* iPhone-native capture surface */
     body { background:#f2f2f7; }
-    .phone-shell { max-width:480px !important; margin:0 auto !important; padding:0 14px calc(22px + env(safe-area-inset-bottom)) !important; }
+    .phone-shell { width:100% !important; max-width:680px !important; margin:0 auto !important; padding:0 14px calc(22px + env(safe-area-inset-bottom)) !important; }
     .ios-header { display:flex; align-items:center; justify-content:space-between; min-height:70px; padding:10px 0 8px; }
     .ios-back { width:36px; height:36px; padding:0; border:0; border-radius:18px; background:#fff; color:var(--blue); font-size:33px; line-height:30px; cursor:pointer; }
     .ios-title { min-width:0; flex:1; padding:0 10px; text-align:center; }
@@ -186,7 +186,7 @@
     .ios-more { margin:10px 0 0; }
     .ios-more summary { padding:8px 2px; color:#8e8e93; font-size:11px; text-align:center; cursor:pointer; }
     .status { margin-top:8px; font-size:12px; }
-    @media (min-width:521px) { .phone-shell { max-width:480px !important; } }
+    @media (min-width:521px) { .phone-shell { max-width:680px !important; } }
 
     .print-preview { position:fixed; z-index:50; inset:0; display:none; overflow:auto; padding:12px; background:#eef1f5; }
     .print-preview.open { display:block; }
@@ -253,7 +253,7 @@
 
       <section class="ios-search-panel">
         <label class="ios-label" for="jobSearch">ค้นหา Job</label>
-        <div class="ios-search-row"><input id="jobSearch" class="ios-search" type="search" inputmode="search" autocomplete="off" placeholder="เช่น 031 หรือ JOB-031"><button id="clearSearch" class="ios-clear" type="button" onclick="clearSearch()" aria-label="ล้างการค้นหา">×</button></div>
+        <div class="ios-search-row"><input id="jobSearch" class="ios-search" type="search" inputmode="search" autocomplete="off" placeholder="ค้นหา Job"><button id="clearSearch" class="ios-clear" type="button" onclick="clearSearch()" aria-label="ล้างการค้นหา">×</button></div>
         <div id="searchHint" class="ios-hint">พิมพ์เลขบางส่วนเพื่อค้นหา</div>
         <div id="searchResults" class="search-results"></div>
         <select id="jobSelect" class="hidden" aria-hidden="true" tabindex="-1"></select>
