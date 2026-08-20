@@ -165,10 +165,35 @@ function getJobData() {
   const sheet = spreadsheet.getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
   if (!sheet) return [];
 
-  const reportSheets = {};
+  // ใช้ Photo_File_Index เป็นดัชนีจำนวนรูป แทนการสแกน getImages()
+  // ของทุกชีต REPORT_ ซึ่งทำให้หน้า Web App ค้างเมื่อมีหลาย Job
+  const filledCounts = {};
+  const photoIndex = spreadsheet.getSheetByName(CONFIG.PHOTO_FILE_INDEX_SHEET_NAME);
+  if (photoIndex && photoIndex.getLastRow() > 1) {
+    const indexValues = photoIndex.getRange(
+      2,
+      2,
+      photoIndex.getLastRow() - 1,
+      CONFIG.PHOTO_FILE_INDEX_HEADERS.length - 1
+    ).getDisplayValues();
+    indexValues.forEach(function(row) {
+      const jobNo = String(row[0] || '').trim();
+      if (!jobNo) return;
+      let count = 0;
+      for (let column = 1; column < row.length; column += 1) {
+        if (String(row[column] || '').trim()) count += 1;
+      }
+      filledCounts[jobNo] = count;
+    });
+  }
+
+  const reportNames = {};
   spreadsheet.getSheets().forEach(function(reportSheet) {
-    if (reportSheet.getName().indexOf('REPORT_') === 0) reportSheets[reportSheet.getName()] = reportSheet;
+    if (reportSheet.getName().indexOf('REPORT_') === 0) {
+      reportNames[reportSheet.getName()] = true;
+    }
   });
+
   const values = sheet.getDataRange().getValues();
   const jobs = [];
 
@@ -188,15 +213,15 @@ function getJobData() {
       return value !== '' && value !== null && value !== undefined;
     });
 
-    const reportSheet = reportSheets[buildJobSheetName_(jobText)];
-    const filledCount = reportSheet ? getFilledImageTypes_(reportSheet).length : 0;
+    const filledCount = filledCounts[jobText] || 0;
+    const hasReport = !!reportNames[buildJobSheetName_(jobText)];
     jobs.push({
       jobNo: jobText,
       location: locationParts.join(' '),
       filledCount: filledCount,
       requiredCount: CONFIG.IMAGE_TYPES.length,
       complete: filledCount === CONFIG.IMAGE_TYPES.length,
-      hasReport: !!reportSheet
+      hasReport: hasReport
     });
   }
 
