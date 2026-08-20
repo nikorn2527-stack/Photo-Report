@@ -4,224 +4,202 @@
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <style>
-      :root { --green:#188038; --green-dark:#0d652d; --blue:#1967d2; --text:#202124; --muted:#5f6368; --border:#d1d5db; --surface:#f4f6f8; --danger:#b3261e; --orange:#b45f16; }
+      :root { --ink:#202124; --muted:#68707a; --line:#d9dee5; --surface:#f5f7fa; --blue:#1967d2; --green:#188038; --green-dark:#0d652d; --orange:#b45f16; --danger:#b3261e; }
       * { box-sizing:border-box; }
-      html,body { margin:0; min-height:100%; background:#eef1f5; color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; font-size:16px; line-height:1.4; }
-      body { padding:8px; }
-      .app { width:100%; max-width:680px; margin:0 auto; }
-      .page { padding:14px; border:1px solid #b8bec7; border-radius:12px; background:#fff; box-shadow:0 2px 8px rgba(60,64,67,.15); }
-      .brand { padding:2px 2px 12px; text-align:center; }
-      .company { margin:0; color:var(--muted); font-size:11px; font-weight:700; }
-      .title { margin:4px 0 0; font-size:23px; line-height:1.2; }
-      .subtitle { margin:4px 0 0; color:var(--muted); font-size:12px; }
-      .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin:0 0 12px; padding:4px; border-radius:9px; background:#e8ebef; }
-      .step { padding:7px 4px; border-radius:7px; color:var(--muted); font-size:11px; font-weight:700; text-align:center; }
-      .step.active { background:#fff; color:var(--blue); box-shadow:0 1px 4px rgba(60,64,67,.15); }
-      .job-panel { padding:13px; border:1px solid #9aa0a6; border-radius:10px; background:#fff; }
-      .panel-label { display:block; margin-bottom:6px; font-size:14px; font-weight:800; }
-      .job-row { display:grid; grid-template-columns:1fr auto; gap:8px; }
-      select,input[type="date"] { width:100%; min-height:50px; padding:11px 12px; border:1px solid #8a9098; border-radius:9px; background:#fff; color:var(--text); font:inherit; }
-      select:focus,input:focus,button:focus-visible { outline:3px solid rgba(25,103,210,.25); outline-offset:2px; }
-      .refresh { min-width:50px; min-height:50px; border:1px solid #8a9098; border-radius:9px; background:#f8fafc; color:var(--text); font-size:20px; cursor:pointer; }
-      .job-info { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:9px; }
-      .info-box { min-width:0; padding:9px; border-radius:8px; background:var(--surface); }
-      .info-label { display:block; color:var(--muted); font-size:11px; }
-      .info-value { display:block; margin-top:2px; overflow:hidden; font-size:14px; font-weight:700; text-overflow:ellipsis; white-space:nowrap; }
-      .job-status { display:block; margin-top:9px; padding:8px 10px; border-radius:8px; background:#fff7ed; color:#8a4b0f; font-size:13px; font-weight:700; text-align:center; }
-      .job-status.complete { background:#e8f5ec; color:#17663e; }
-      .section { margin-top:14px; }
-      .section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:8px; }
-      .section-title { margin:0; font-size:18px; }
-      .section-note { margin:3px 0 0; color:var(--muted); font-size:12px; }
-      .next-button { min-height:40px; padding:7px 10px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font:inherit; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap; }
-      .progress { padding:11px; border:1px solid #c7cbd1; border-radius:9px; background:#f8fafc; }
-      .progress-line { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; font-weight:800; }
-      .progress-count { color:var(--blue); font-size:15px; }
-      .progress-track { height:10px; margin-top:8px; overflow:hidden; border-radius:8px; background:#e1e5ea; }
-      .progress-fill { height:100%; width:0; border-radius:8px; background:var(--green); transition:width .2s ease; }
-      .missing-line { margin:8px 0 0; color:#8a4b0f; font-size:12px; }
-      .missing-line.complete { color:#17663e; }
-      .group-title { margin:14px 0 7px; font-size:14px; }
-      .photo-list { display:grid; gap:8px; }
-      .photo-card { display:grid; grid-template-columns:58px 1fr auto; gap:9px; align-items:center; min-height:86px; padding:8px; border:1px solid #c7cbd1; border-radius:10px; background:#fff; }
-      .photo-card.done { border-color:#7bb58d; background:#f7fcf8; }
-      .photo-thumb { display:flex; width:58px; height:58px; align-items:center; justify-content:center; overflow:hidden; border:1px solid #c7cbd1; border-radius:8px; background:#f1f3f4; color:var(--muted); font-size:22px; }
-      .photo-thumb img { width:100%; height:100%; object-fit:cover; }
-      .photo-name { font-size:14px; font-weight:800; }
-      .photo-status { margin-top:3px; color:#8a4b0f; font-size:12px; }
-      .photo-card.done .photo-status { color:#17663e; }
-      .photo-action { min-width:82px; min-height:44px; padding:8px 10px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font:inherit; font-size:12px; font-weight:800; cursor:pointer; }
-      .photo-card.done .photo-action { border-color:var(--green); color:var(--green-dark); }
-      .bottom-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid #c7cbd1; }
-      .bottom-button { min-height:52px; border:0; border-radius:10px; font:inherit; font-size:15px; font-weight:800; cursor:pointer; }
-      .save-button { background:var(--green); color:#fff; }
-      .print-button { background:var(--blue); color:#fff; }
-      .bottom-button:disabled { background:#d8dce1; color:#7b8188; cursor:not-allowed; }
-      .links { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
-      .link-button { display:flex; min-height:42px; align-items:center; justify-content:center; padding:8px; border:1px solid #9aa0a6; border-radius:8px; color:var(--blue); font-size:12px; font-weight:700; text-align:center; text-decoration:none; }
+      html,body { margin:0; min-height:100%; background:#eef1f5; color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; font-size:16px; line-height:1.4; }
+      body { padding:0; }
+      button,select,input { font:inherit; }
+      button:focus-visible,select:focus-visible,input:focus-visible { outline:3px solid rgba(25,103,210,.25); outline-offset:2px; }
+      .app { width:100%; max-width:720px; min-height:100vh; margin:0 auto; background:#fff; }
+      .page { min-height:100vh; padding:18px 14px calc(30px + env(safe-area-inset-bottom)); }
+      .brand { padding:2px 2px 16px; }
+      .eyebrow { margin:0 0 4px; color:var(--blue); font-size:12px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
+      .title { margin:0; font-size:25px; line-height:1.15; }
+      .subtitle { margin:5px 0 0; color:var(--muted); font-size:14px; }
+      .job-card { position:sticky; top:0; z-index:5; padding:13px; border:1px solid #b8c0ca; border-radius:14px; background:rgba(255,255,255,.97); box-shadow:0 4px 15px rgba(32,33,36,.1); backdrop-filter:blur(8px); }
+      .job-label { display:block; margin-bottom:7px; font-size:15px; font-weight:900; }
+      .job-row { display:grid; grid-template-columns:1fr 50px; gap:8px; }
+      select { width:100%; min-height:54px; padding:11px 12px; border:1px solid #8a9098; border-radius:10px; background:#fff; color:var(--ink); font-size:17px; }
+      .refresh { min-height:54px; border:1px solid #8a9098; border-radius:10px; background:#f8fafc; color:var(--ink); font-size:21px; cursor:pointer; }
+      .job-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:9px; color:var(--muted); font-size:13px; }
+      .job-location { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .job-date { color:var(--muted); font-size:12px; white-space:nowrap; }
+      .job-status { margin-top:9px; padding:8px 10px; border-radius:9px; background:#fff7ed; color:#8a4b0f; font-size:13px; font-weight:800; text-align:center; }
+      .job-status.complete { background:#e8f5ec; color:var(--green-dark); }
+      .capture-summary { margin-top:13px; padding:12px 13px; border:1px solid var(--line); border-radius:13px; background:var(--surface); }
+      .summary-line { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+      .summary-label { color:var(--muted); font-size:13px; font-weight:800; }
+      .progress-count { color:var(--blue); font-size:20px; font-weight:900; }
+      .progress-track { height:9px; margin-top:8px; overflow:hidden; border-radius:9px; background:#e1e5ea; }
+      .progress-fill { height:100%; width:0; border-radius:9px; background:var(--green); transition:width .2s ease; }
+      .summary-bottom { display:flex; align-items:center; justify-content:space-between; gap:9px; margin-top:8px; }
+      .missing-line { min-width:0; overflow:hidden; color:#8a4b0f; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
+      .missing-line.complete { color:var(--green-dark); }
+      .compact-print { flex:none; min-height:38px; padding:7px 11px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font-size:12px; font-weight:900; cursor:pointer; }
+      .compact-print:disabled { border-color:#c7cbd1; background:#eef0f3; color:#7b8188; cursor:not-allowed; }
+      .capture-heading { display:flex; align-items:end; justify-content:space-between; gap:8px; margin:20px 2px 9px; }
+      .capture-heading h2 { margin:0; font-size:19px; }
+      .capture-heading p { margin:0; color:var(--muted); font-size:12px; }
+      .bento-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+      .bento-card { display:flex; min-height:245px; flex-direction:column; padding:12px; border:1px solid #c7cbd1; border-radius:17px; background:#fff; color:var(--ink); text-align:left; box-shadow:0 3px 10px rgba(60,64,67,.08); cursor:pointer; transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease; }
+      .bento-card:active { transform:scale(.985); }
+      .bento-card.ready { border-color:#8bb89a; background:#fbfffc; }
+      .bento-card:disabled { opacity:.55; cursor:not-allowed; }
+      .bento-top { display:flex; align-items:center; justify-content:space-between; gap:5px; }
+      .bento-number { color:var(--muted); font-size:11px; font-weight:900; letter-spacing:.08em; }
+      .bento-count { padding:4px 7px; border-radius:999px; background:#eef2f6; color:var(--muted); font-size:11px; font-weight:900; white-space:nowrap; }
+      .bento-card.ready .bento-count { background:#e8f5ec; color:var(--green-dark); }
+      .bento-title { margin:12px 0 2px; font-size:21px; line-height:1.1; }
+      .bento-note { min-height:36px; margin:0; color:var(--muted); font-size:12px; line-height:1.35; }
+      .mosaic { display:grid; grid-template-columns:1fr 1fr; gap:5px; flex:1; min-height:108px; margin:11px 0; }
+      .mosaic-tile { display:flex; min-height:51px; align-items:center; justify-content:center; overflow:hidden; border:1px dashed #c7cbd1; border-radius:8px; background:#f5f7fa; color:#9aa0a6; font-size:20px; font-weight:900; }
+      .mosaic-tile.filled { border-style:solid; border-color:#a8cbb1; background:#e8f5ec; color:var(--green-dark); }
+      .mosaic-tile img { width:100%; height:100%; min-height:51px; object-fit:cover; }
+      .bento-footer { display:flex; align-items:center; justify-content:space-between; gap:5px; margin-top:auto; color:var(--blue); font-size:11px; font-weight:900; }
+      .bento-footer span:last-child { color:var(--muted); font-weight:700; }
+      .signage-card { display:flex; align-items:center; gap:10px; margin-top:10px; padding:10px 11px; border:1px solid var(--line); border-radius:12px; background:#fafbfc; }
+      .signage-icon { display:flex; width:42px; height:42px; flex:none; align-items:center; justify-content:center; border-radius:10px; background:#e9eef7; color:var(--blue); font-size:20px; }
+      .signage-copy { min-width:0; flex:1; }
+      .signage-title { font-size:14px; font-weight:900; }
+      .signage-status { margin-top:2px; color:var(--muted); font-size:12px; }
+      .signage-button { min-height:38px; padding:6px 9px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font-size:12px; font-weight:900; cursor:pointer; }
+      .more-tools { margin-top:19px; border-top:1px solid var(--line); }
+      .more-tools summary { padding:13px 2px; color:var(--muted); font-size:13px; font-weight:800; cursor:pointer; }
+      .links { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding-bottom:4px; }
+      .link-button { display:flex; min-height:43px; align-items:center; justify-content:center; padding:8px; border:1px solid #9aa0a6; border-radius:8px; color:var(--blue); font-size:12px; font-weight:800; text-align:center; text-decoration:none; }
       .status { min-height:22px; margin-top:10px; color:var(--muted); font-size:13px; text-align:center; }
       .status.error { color:var(--danger); }
       .status.success { color:var(--green-dark); }
-      .modal-backdrop { position:fixed; z-index:20; inset:0; display:none; align-items:center; justify-content:center; padding:14px; background:rgba(32,33,36,.62); }
+      .modal-backdrop { position:fixed; z-index:20; inset:0; display:none; align-items:center; justify-content:center; padding:13px; background:rgba(32,33,36,.62); }
       .modal-backdrop.open { display:flex; }
-      .modal { width:min(94vw,560px); max-height:88vh; overflow:auto; padding:18px; border:1px solid #c7cbd1; border-radius:18px; background:#fff; box-shadow:0 12px 35px rgba(0,0,0,.3); }
+      .modal { width:min(95vw,560px); max-height:90vh; overflow:auto; padding:18px; border:1px solid #c7cbd1; border-radius:18px; background:#fff; box-shadow:0 12px 35px rgba(0,0,0,.3); }
       .modal-handle { width:42px; height:4px; margin:0 auto 12px; border-radius:4px; background:#c5c9cf; }
       .modal-title { margin:0; font-size:22px; }
-      .modal-note { margin:5px 0 15px; color:var(--muted); font-size:14px; }
+      .modal-note { margin:5px 0 13px; color:var(--muted); font-size:13px; }
+      .slot-picker { display:none; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px; }
+      .slot-picker.visible { display:grid; }
+      .slot-button { min-height:42px; border:1px solid #c7cbd1; border-radius:8px; background:#f8fafc; color:var(--muted); font-size:12px; font-weight:900; cursor:pointer; }
+      .slot-button.filled { border-color:#9bc3a6; background:#e8f5ec; color:var(--green-dark); }
       .source-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
-      .modal-button { min-height:54px; border:0; border-radius:10px; color:#fff; font:inherit; font-size:15px; font-weight:800; cursor:pointer; }
+      .modal-button { min-height:52px; border:0; border-radius:10px; color:#fff; font-size:15px; font-weight:900; cursor:pointer; }
       .gallery-button { background:var(--blue); }
       .camera-button { background:#5f6368; }
-      .existing-box { display:none; margin-bottom:12px; padding:11px; border:1px solid #e0b28b; border-radius:9px; background:#fff7ed; color:#8a4b0f; font-size:13px; font-weight:700; }
+      .existing-box { display:none; margin-bottom:12px; padding:10px; border:1px solid #e0b28b; border-radius:9px; background:#fff7ed; color:#8a4b0f; font-size:12px; font-weight:800; }
       .existing-box.visible { display:block; }
-      .delete-button { width:100%; min-height:48px; margin-top:8px; border:0; border-radius:9px; background:var(--danger); color:#fff; font:inherit; font-weight:800; cursor:pointer; }
-      .pending { display:none; margin-top:14px; }
+      .pending { display:none; margin-top:13px; }
       .pending.visible { display:block; }
-      .pending img { display:block; width:100%; max-height:270px; object-fit:contain; border:1px solid var(--border); border-radius:9px; background:#f1f3f4; }
-      .pending-name { margin-top:6px; color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
-      .save-photo { width:100%; min-height:52px; margin-top:12px; border:0; border-radius:10px; background:var(--green); color:#fff; font:inherit; font-size:15px; font-weight:800; cursor:pointer; }
-      .cancel-button { width:100%; min-height:48px; margin-top:8px; border:1px solid #9aa0a6; border-radius:10px; background:#fff; color:var(--text); font:inherit; font-weight:800; cursor:pointer; }
-      .hidden { display:none; }
+      .pending-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+      .pending-grid img { width:100%; aspect-ratio:1; object-fit:cover; border:1px solid var(--line); border-radius:8px; background:#f1f3f4; }
+      .pending-name { margin-top:6px; color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
+      .uploading-note { margin-top:8px; color:var(--blue); font-size:13px; font-weight:800; }
+      .delete-button { width:100%; min-height:47px; margin-top:10px; border:0; border-radius:9px; background:var(--danger); color:#fff; font-size:14px; font-weight:900; cursor:pointer; }
+      .cancel-button { width:100%; min-height:47px; margin-top:8px; border:1px solid #9aa0a6; border-radius:10px; background:#fff; color:var(--ink); font-weight:900; cursor:pointer; }
+      .hidden { display:none !important; }
       .fullscreen-viewer { position:fixed; z-index:40; inset:0; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(0,0,0,.88); }
       .fullscreen-viewer.open { display:flex; }
       .fullscreen-image { display:block; max-width:96vw; max-height:84vh; object-fit:contain; border-radius:8px; }
       .viewer-caption { position:absolute; right:62px; bottom:22px; left:22px; color:#fff; font-size:15px; text-align:center; }
       .viewer-close { position:absolute; top:calc(12px + env(safe-area-inset-top)); right:14px; width:50px; height:50px; border:1px solid rgba(255,255,255,.65); border-radius:50%; background:rgba(0,0,0,.45); color:#fff; font-size:28px; cursor:pointer; }
-      .photo-thumb.has-preview { cursor:zoom-in; }
-      @media (max-width:680px) {
-        html, body { font-size:18px; }
-        body { padding:0; }
-        .app { max-width:none; }
-        .page { min-height:100vh; padding:18px 12px 24px; border:0; border-radius:0; box-shadow:none; }
-        .brand { padding-bottom:16px; }
-        .company { font-size:13px; }
-        .title { font-size:25px; }
-        .subtitle { font-size:14px; }
-        .steps { gap:6px; margin-bottom:14px; padding:5px; }
-        .step { min-height:38px; display:flex; align-items:center; justify-content:center; font-size:13px; }
-        .job-panel { padding:15px; border-radius:12px; }
-        .panel-label { font-size:17px; }
-        select, input[type="date"] { min-height:58px; font-size:18px; }
-        .refresh { min-width:58px; min-height:58px; }
-        .job-info { grid-template-columns:1fr; gap:9px; }
-        .info-box { padding:11px; }
-        .info-label { font-size:13px; }
-        .info-value { font-size:17px; }
-        .job-status { padding:10px; font-size:15px; }
-        .section-title { font-size:21px; }
-        .section-note { font-size:14px; }
-        .next-button { min-height:46px; font-size:13px; }
-        .progress { padding:14px; }
-        .progress-line { font-size:16px; }
-        .progress-count { font-size:18px; }
-        .missing-line { font-size:14px; }
-        .group-title { margin-top:18px; font-size:17px; }
-        .photo-card { grid-template-columns:76px 1fr auto; gap:11px; min-height:106px; padding:11px; border-radius:12px; }
-        .photo-thumb { width:76px; height:76px; border-radius:10px; font-size:28px; }
-        .photo-name { font-size:17px; }
-        .photo-status { font-size:14px; }
-        .photo-action { min-width:96px; min-height:56px; padding:9px 10px; font-size:14px; }
-        .bottom-actions { gap:10px; margin:14px 0 0; padding-top:12px; }
-        .bottom-button { min-height:62px; font-size:17px; }
-        .links { grid-template-columns:1fr; gap:9px; }
-        .link-button { min-height:50px; font-size:14px; }
-        .modal-backdrop { padding:10px; }
-        .modal { width:96vw; max-height:90vh; padding:20px 16px; }
-        .modal-title { font-size:24px; }
-        .modal-note { font-size:16px; }
-        .source-grid { grid-template-columns:1fr; gap:11px; }
-        .modal-button, .save-photo, .delete-button, .cancel-button { min-height:60px; font-size:17px; }
-      }
-
-      @media (max-width:420px) {
+      @media (max-width:390px) {
         .page { padding-left:10px; padding-right:10px; }
-        .photo-card { grid-template-columns:68px 1fr; }
-        .photo-thumb { width:68px; height:68px; }
-        .photo-action { grid-column:1 / -1; width:100%; min-height:58px; }
-        .bottom-actions { grid-template-columns:1fr; }
+        .bento-card { min-height:225px; padding:10px; }
+        .bento-title { font-size:19px; }
+        .bento-note { font-size:11px; }
+        .bento-footer { font-size:10px; }
+        .job-meta { font-size:12px; }
       }
-      @media print { .bottom-actions,.links,.status,.steps,.job-panel,.section-note,.next-button{display:none!important} }
+      @media print { .job-card,.capture-summary,.capture-heading,.bento-grid,.signage-card,.more-tools,.status,.modal-backdrop,.fullscreen-viewer { display:none !important; } }
     </style>
   </head>
   <body>
-    <noscript><div class="status error">กรุณาเปิดใช้งาน JavaScript เพื่อใช้งานหน้า Photo Report</div></noscript>
     <main class="app">
       <section class="page">
         <header class="brand">
-          <p class="company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p>
-          <h1 class="title">บันทึกภาพหน้างาน</h1>
-          <p class="subtitle">Photo Report — เลือกงาน แล้วเติมเฉพาะรูปที่ยังขาด</p>
+          <p class="eyebrow">IT Rental Photo Report</p>
+          <h1 class="title">เก็บรูปหน้างาน</h1>
+          <p class="subtitle">เลือก Job แล้วแตะช่อง ก่อนติดตั้ง หรือ หลังติดตั้ง</p>
         </header>
 
-        <div class="steps"><div class="step active">1 เลือก Job</div><div class="step active">2 เติมรูป</div><div class="step">3 บันทึก/พิมพ์</div></div>
-
-        <section class="job-panel">
-          <label class="panel-label" for="jobSelect">เลือก Job ที่จะทำ</label>
+        <section class="job-card">
+          <label class="job-label" for="jobSelect">1. เลือก Job</label>
           <div class="job-row"><select id="jobSelect"><option value="">กำลังโหลดรายการ Job...</option></select><button id="refreshButton" class="refresh" type="button" onclick="loadJobs()" aria-label="รีเฟรชรายการ Job">↻</button></div>
-          <div class="job-info">
-            <div class="info-box"><span class="info-label">สถานที่ติดตั้ง</span><span id="locationValue" class="info-value">-</span></div>
-            <div class="info-box"><span class="info-label">วันที่ติดตั้ง</span><input id="installDate" type="date"></div>
-          </div>
-          <div id="jobStatus" class="job-status">เลือก Job เพื่อเริ่มงาน</div>
+          <div class="job-meta"><span id="locationValue" class="job-location">ยังไม่ได้เลือกสถานที่</span><span id="installDateText" class="job-date">วันนี้</span></div>
+          <input id="installDate" class="hidden" type="date">
+          <div id="jobStatus" class="job-status">เลือก Job เพื่อเริ่มเก็บรูป</div>
         </section>
 
-        <section class="section">
-          <div class="section-head"><div><h2 class="section-title">รายการรูปที่ต้องส่ง</h2><p class="section-note">ทุกคนเลือก Job เดิมแล้วช่วยเติมช่องที่ยังขาดได้</p></div><button id="nextButton" class="next-button" type="button" onclick="openNextMissing()" disabled>ไปช่องถัดไป</button></div>
-          <div class="progress"><div class="progress-line"><span>ความคืบหน้า</span><span id="progressCount" class="progress-count">0/9</span></div><div class="progress-track"><div id="progressFill" class="progress-fill"></div></div><p id="missingLine" class="missing-line">ยังไม่เลือก Job</p></div>
+        <section class="capture-summary">
+          <div class="summary-line"><span class="summary-label">รูปที่เก็บแล้ว</span><strong id="progressCount" class="progress-count">0/9</strong></div>
+          <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+          <div class="summary-bottom"><span id="missingLine" class="missing-line">เลือก Job แล้วเริ่มถ่ายรูป</span><button id="printJobButton" class="compact-print" type="button" onclick="printJob()" disabled>พิมพ์เอกสาร</button></div>
         </section>
 
-        <section id="photoGroups" class="section"></section>
-        <div class="links"><a id="assetLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Asset_Master</a><a id="reportLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a></div>
+        <div class="capture-heading"><h2>2. เก็บรูป</h2><p>แตะการ์ดเพื่อเพิ่มหลายรูป</p></div>
+        <section class="bento-grid" aria-label="ช่องเก็บรูปก่อนและหลังติดตั้ง">
+          <button id="beforeCard" class="bento-card" type="button" onclick="openGroupModal('before')" disabled>
+            <span class="bento-top"><span class="bento-number">01 / BEFORE</span><span id="beforeCount" class="bento-count">0/4 รูป</span></span>
+            <strong class="bento-title">ก่อนติดตั้ง</strong>
+            <span class="bento-note">เก็บสภาพหน้างานก่อนเริ่มงาน</span>
+            <span id="beforeMosaic" class="mosaic" aria-hidden="true"></span>
+            <span class="bento-footer"><span>แตะเพื่อเพิ่มรูป</span><span>เปิดกล้อง / คลังรูป →</span></span>
+          </button>
+          <button id="afterCard" class="bento-card" type="button" onclick="openGroupModal('after')" disabled>
+            <span class="bento-top"><span class="bento-number">02 / AFTER</span><span id="afterCount" class="bento-count">0/4 รูป</span></span>
+            <strong class="bento-title">หลังติดตั้ง</strong>
+            <span class="bento-note">เก็บผลงานหลังทำงานเสร็จ</span>
+            <span id="afterMosaic" class="mosaic" aria-hidden="true"></span>
+            <span class="bento-footer"><span>แตะเพื่อเพิ่มรูป</span><span>เปิดกล้อง / คลังรูป →</span></span>
+          </button>
+        </section>
+
+        <section class="signage-card">
+          <span class="signage-icon">⌖</span>
+          <div class="signage-copy"><div class="signage-title">รูปหัวตาราง / จุดติดตั้ง</div><div id="signageStatus" class="signage-status">ถ้ามีรูปป้ายหรือจุดติดตั้ง ให้เพิ่ม 1 รูป</div></div>
+          <button id="signageButton" class="signage-button" type="button" onclick="openSingleSlot('signage')" disabled>เพิ่มรูป</button>
+        </section>
+
+        <details class="more-tools"><summary>เครื่องมือเพิ่มเติม</summary><div class="links"><a id="assetLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Asset_Master</a><a id="reportLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a></div></details>
         <div id="status" class="status" role="status" aria-live="polite"></div>
       </section>
     </main>
 
-    <div class="bottom-actions"><button id="saveJobButton" class="bottom-button save-button" type="button" onclick="saveJob()" disabled>บันทึกงาน</button><button id="printJobButton" class="bottom-button print-button" type="button" onclick="printJob()" disabled>พิมพ์งาน</button></div>
-
     <div id="photoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <section class="modal">
         <div class="modal-handle"></div>
-        <h2 id="modalTitle" class="modal-title">ใส่รูป</h2>
-        <p id="modalNote" class="modal-note">เลือกรูปจากคลังหรือถ่ายรูปใหม่</p>
-        <div id="existingBox" class="existing-box">ช่องนี้มีรูปแล้ว หากต้องการแก้ไขให้เลือกรูปใหม่ หรือกดลบรูป</div>
-        <div class="source-grid"><button class="modal-button gallery-button" type="button" onclick="chooseGallery()">เลือกรูปจากคลัง</button><button class="modal-button camera-button" type="button" onclick="chooseCamera()">ถ่ายรูปด้วยกล้อง</button></div>
+        <h2 id="modalTitle" class="modal-title">เพิ่มรูป</h2>
+        <p id="modalNote" class="modal-note">เลือกรูปจากคลังหรือถ่ายรูปใหม่ ระบบจะบันทึกให้อัตโนมัติ</p>
+        <div id="slotPicker" class="slot-picker"></div>
+        <div id="existingBox" class="existing-box">ช่องนี้มีรูปแล้ว เลือกรูปใหม่เพื่อแทนที่ หรือกดลบรูป</div>
+        <div class="source-grid"><button id="galleryButton" class="modal-button gallery-button" type="button" onclick="chooseGallery()">เลือกรูปจากคลัง</button><button id="cameraButton" class="modal-button camera-button" type="button" onclick="chooseCamera()">ถ่ายรูปด้วยกล้อง</button></div>
         <input id="galleryFile" class="hidden" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
         <input id="cameraFile" class="hidden" type="file" accept="image/*" capture="environment">
-        <div id="pending" class="pending"><img id="pendingImage" alt="ตัวอย่างรูปที่เลือก"><div id="pendingName" class="pending-name"></div></div>
-        <button id="savePhotoButton" class="save-photo" type="button" onclick="savePhoto()" disabled>บันทึกรูปช่องนี้</button>
-        <button id="deletePhotoButton" class="delete-button" type="button" onclick="deletePhoto()" hidden>ลบรูปช่องนี้</button>
-        <button class="cancel-button" type="button" onclick="closeModal()">ยกเลิก</button>
+        <div id="pending" class="pending"><div id="pendingGrid" class="pending-grid"></div><div id="pendingName" class="pending-name"></div><div id="uploadingNote" class="uploading-note"></div></div>
+        <button id="deletePhotoButton" class="delete-button" type="button" onclick="deletePhoto()" hidden>ลบรูปนี้</button>
+        <button class="cancel-button" type="button" onclick="closeModal()">ปิด</button>
       </section>
     </div>
 
-    <div id="fullscreenViewer" class="fullscreen-viewer" role="dialog" aria-modal="true" aria-label="ดูรูปเต็มจอ">
-      <button class="viewer-close" type="button" onclick="closeViewer()" aria-label="ปิดการดูรูป">×</button>
-      <img id="fullscreenImage" class="fullscreen-image" alt="รูปภาพเต็มจอ">
-      <div id="viewerCaption" class="viewer-caption"></div>
-    </div>
+    <div id="fullscreenViewer" class="fullscreen-viewer" role="dialog" aria-modal="true" aria-label="ดูรูปเต็มจอ"><button class="viewer-close" type="button" onclick="closeViewer()" aria-label="ปิดการดูรูป">×</button><img id="fullscreenImage" class="fullscreen-image" alt="รูปภาพเต็มจอ"><div id="viewerCaption" class="viewer-caption"></div></div>
 
     <script>
       const MAX_FILE_SIZE = 2 * 1024 * 1024;
       const LAST_JOB_KEY = 'photoReport.lastJob';
       const PHOTO_LABELS = { signage:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง', before1:'ก่อนติดตั้ง 1', after1:'หลังติดตั้ง 1', before2:'ก่อนติดตั้ง 2', after2:'หลังติดตั้ง 2', before3:'ก่อนติดตั้ง 3', after3:'หลังติดตั้ง 3', before4:'ก่อนติดตั้ง 4', after4:'หลังติดตั้ง 4' };
-      const GROUPS = [{ key:'signage', title:'หัวตาราง / จุดติดตั้ง', button:'เลือกรูปหัวตาราง', types:['signage'], multiple:false }, { key:'before', title:'รูปก่อนติดตั้ง', button:'เลือกรูปก่อนติดตั้งหลายรูป', types:['before1','before2','before3','before4'], multiple:true }, { key:'after', title:'รูปหลังติดตั้ง', button:'เลือกรูปหลังติดตั้งหลายรูป', types:['after1','after2','after3','after4'], multiple:true }];
+      const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'เก็บสภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'เก็บผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
       let jobs = [];
       let currentProgress = { filledTypes:[], complete:false };
       let activeType = '';
       let activeGroupKey = '';
-      let activeMode = 'single';
-      let pendingFile = null;
-      let pendingFiles = [];
-      let pendingDataUrl = '';
+      let activeMode = 'group';
       let previews = {};
+      let uploading = false;
 
       window.addEventListener('load', function() {
         document.getElementById('galleryFile').addEventListener('change', handleFile);
         document.getElementById('cameraFile').addEventListener('change', handleFile);
         document.getElementById('jobSelect').addEventListener('change', handleJobChange);
         document.getElementById('installDate').value = todayString();
-        document.getElementById('pendingImage').addEventListener('click', function() { if (this.src) openViewer(this.src, 'ตัวอย่างรูปที่เลือก'); });
-        renderGroups();
+        renderAll();
         loadSheetLinks();
         loadJobs();
       });
@@ -229,6 +207,7 @@
       function todayString() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
       function getJob() { const value = document.getElementById('jobSelect').value; return value === '' ? null : jobs[Number(value)]; }
       function isFilled(type) { return (currentProgress.filledTypes || []).indexOf(type) !== -1; }
+      function allPhotoTypes() { return Object.keys(PHOTO_LABELS); }
 
       function loadJobs() {
         setStatus('กำลังโหลดรายการ Job...');
@@ -249,173 +228,190 @@
         const job = getJob();
         previews = {};
         currentProgress = { filledTypes:[], complete:false };
-        document.getElementById('locationValue').textContent = job ? (job.location || '-') : '-';
-        document.getElementById('jobStatus').textContent = job ? 'กำลังโหลดความคืบหน้า...' : 'เลือก Job เพื่อเริ่มงาน';
-        document.getElementById('jobStatus').className = 'job-status';
+        document.getElementById('locationValue').textContent = job ? (job.location || 'ไม่ระบุสถานที่') : 'ยังไม่ได้เลือกสถานที่';
         document.getElementById('installDate').value = todayString();
-        renderProgress(); renderGroups(); updateButtons();
+        document.getElementById('installDateText').textContent = 'วันที่ ' + formatDate(document.getElementById('installDate').value);
+        document.getElementById('jobStatus').textContent = job ? 'กำลังโหลดรูป...' : 'เลือก Job เพื่อเริ่มเก็บรูป';
+        document.getElementById('jobStatus').className = 'job-status';
+        renderAll();
         if (!job) { localStorage.removeItem(LAST_JOB_KEY); return; }
         localStorage.setItem(LAST_JOB_KEY, job.jobNo);
         setStatus('กำลังโหลดรูปของ ' + job.jobNo + '...');
-        google.script.run.withSuccessHandler(function(progress) { currentProgress = progress || { filledTypes:[] }; if (progress && progress.date) document.getElementById('installDate').value = progress.date; renderProgress(); renderGroups(); updateButtons(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรูปไม่สำเร็จ: ' + errorMessage(error), true); }).getJobProgress(job.jobNo);
+        google.script.run.withSuccessHandler(function(progress) { currentProgress = progress || { filledTypes:[] }; if (progress && progress.date) { document.getElementById('installDate').value = normalizeDate(progress.date); document.getElementById('installDateText').textContent = 'วันที่ ' + formatDate(document.getElementById('installDate').value); } renderAll(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรูปไม่สำเร็จ: ' + errorMessage(error), true); }).getJobProgress(job.jobNo);
       }
+
+      function renderAll() { renderProgress(); renderBento(); updateButtons(); }
 
       function renderProgress() {
         const filled = currentProgress.filledTypes || [];
-        const total = Object.keys(PHOTO_LABELS).length;
+        const total = allPhotoTypes().length;
         const complete = filled.length === total;
         document.getElementById('progressCount').textContent = filled.length + '/' + total;
         document.getElementById('progressFill').style.width = Math.round(filled.length / total * 100) + '%';
-        const missing = Object.keys(PHOTO_LABELS).filter(function(type) { return filled.indexOf(type) === -1; });
+        const missing = allPhotoTypes().filter(function(type) { return filled.indexOf(type) === -1; });
         const line = document.getElementById('missingLine');
-        line.textContent = !getJob() ? 'ยังไม่เลือก Job' : (complete ? 'ครบทุกช่องแล้ว พร้อมพิมพ์' : 'ยังขาด ' + missing.length + ' ช่อง: ' + missing.map(function(type) { return PHOTO_LABELS[type]; }).join(', '));
+        line.textContent = !getJob() ? 'เลือก Job แล้วเริ่มถ่ายรูป' : (complete ? 'รูปครบแล้ว พร้อมพิมพ์เอกสาร' : 'ยังขาด ' + missing.length + ' รูป');
         line.className = 'missing-line' + (complete ? ' complete' : '');
-        if (getJob()) { document.getElementById('jobStatus').textContent = complete ? 'งานนี้ครบ 9/9 ช่องแล้ว' : 'งานนี้มีรูปแล้ว ' + filled.length + '/9 ช่อง'; document.getElementById('jobStatus').className = 'job-status' + (complete ? ' complete' : ''); }
+        if (getJob()) { document.getElementById('jobStatus').textContent = complete ? 'งานนี้ครบ 9/9 รูปแล้ว' : 'กำลังเก็บรูป — มีแล้ว ' + filled.length + '/9 รูป'; document.getElementById('jobStatus').className = 'job-status' + (complete ? ' complete' : ''); }
       }
 
-      function renderGroups() {
-        const root = document.getElementById('photoGroups');
+      function renderBento() {
+        Object.keys(GROUPS).forEach(function(key) {
+          const group = GROUPS[key];
+          const filledCount = group.types.filter(isFilled).length;
+          document.getElementById(key + 'Count').textContent = filledCount + '/4 รูป';
+          document.getElementById(key + 'Card').className = 'bento-card' + (filledCount ? ' ready' : '');
+          renderMosaic(document.getElementById(key + 'Mosaic'), group.types);
+        });
+        const signageDone = isFilled('signage');
+        document.getElementById('signageStatus').textContent = signageDone ? 'มีรูปแล้ว — แตะเพิ่มเพื่อเปลี่ยนรูป' : 'ถ้ามีรูปป้ายหรือจุดติดตั้ง ให้เพิ่ม 1 รูป';
+        document.getElementById('signageButton').textContent = signageDone ? 'เปลี่ยนรูป' : 'เพิ่มรูป';
+      }
+
+      function renderMosaic(root, types) {
         root.innerHTML = '';
-        GROUPS.forEach(function(group) {
-          const section = document.createElement('section');
-          section.className = 'section';
-          const head = document.createElement('div');
-          head.className = 'section-head';
-          const heading = document.createElement('h3');
-          heading.className = 'group-title';
-          heading.textContent = group.title;
-          const uploadButton = document.createElement('button');
-          uploadButton.type = 'button';
-          uploadButton.className = 'next-button';
-          uploadButton.textContent = group.button;
-          uploadButton.disabled = !getJob();
-          uploadButton.addEventListener('click', function() { openGroupModal(group.key); });
-          head.appendChild(heading);
-          head.appendChild(uploadButton);
-          section.appendChild(head);
-          const list = document.createElement('div');
-          list.className = 'photo-list';
-          group.types.forEach(function(type) { list.appendChild(createPhotoCard(type)); });
-          section.appendChild(list);
-          root.appendChild(section);
+        types.forEach(function(type, index) {
+          const tile = document.createElement('span');
+          tile.className = 'mosaic-tile' + (isFilled(type) ? ' filled' : '');
+          if (previews[type]) { const image = document.createElement('img'); image.src = previews[type]; image.alt = PHOTO_LABELS[type]; tile.appendChild(image); tile.addEventListener('click', function(event) { event.preventDefault(); event.stopPropagation(); openViewer(previews[type], PHOTO_LABELS[type]); }); } else { tile.textContent = isFilled(type) ? '✓' : String(index + 1); }
+          root.appendChild(tile);
         });
       }
 
-      function createPhotoCard(type) {
-        const done = isFilled(type); const card = document.createElement('article'); card.className = 'photo-card' + (done ? ' done' : '');
-        const thumb = document.createElement('div'); thumb.className = 'photo-thumb';
-        if (previews[type]) { const img = document.createElement('img'); img.src = previews[type]; img.alt = PHOTO_LABELS[type]; thumb.appendChild(img); thumb.classList.add('has-preview'); thumb.addEventListener('click', function() { openViewer(previews[type], PHOTO_LABELS[type]); }); } else { thumb.textContent = done ? '✓' : '＋'; }
-        const text = document.createElement('div'); const name = document.createElement('div'); name.className = 'photo-name'; name.textContent = PHOTO_LABELS[type]; const status = document.createElement('div'); status.className = 'photo-status'; status.textContent = done ? 'มีรูปแล้ว — แตะเพื่อเปลี่ยนหรือลบ' : 'ยังขาด — แตะเพื่อใส่รูป'; text.appendChild(name); text.appendChild(status);
-        const button = document.createElement('button'); button.type = 'button'; button.className = 'photo-action'; button.textContent = done ? 'จัดการรูป' : 'ใส่รูป'; button.addEventListener('click', function() { openModal(type); });
-        card.appendChild(thumb); card.appendChild(text); card.appendChild(button); return card;
+      function updateButtons() {
+        const job = getJob();
+        const filled = (currentProgress.filledTypes || []).length;
+        document.getElementById('beforeCard').disabled = !job || uploading;
+        document.getElementById('afterCard').disabled = !job || uploading;
+        document.getElementById('signageButton').disabled = !job || uploading;
+        document.getElementById('printJobButton').disabled = !job || filled === 0 || uploading;
       }
 
-      function openNextMissing() { const next = Object.keys(PHOTO_LABELS).find(function(type) { return !isFilled(type); }); if (next) { const group = GROUPS.find(function(item) { return item.types.indexOf(next) !== -1; }); openGroupModal(group.key); } }
-      function openModal(type) {
-        if (!getJob()) { setStatus('กรุณาเลือก Job ก่อน', true); return; }
-        activeMode = 'single'; activeGroupKey = ''; activeType = type; resetPending();
+      function openGroupModal(groupKey) {
+        if (!getJob() || uploading) { if (!getJob()) setStatus('กรุณาเลือก Job ก่อน', true); return; }
+        const group = GROUPS[groupKey];
+        if (!group) return;
+        activeMode = 'group'; activeGroupKey = groupKey; activeType = '';
+        resetPending();
+        document.getElementById('modalTitle').textContent = group.title;
+        document.getElementById('modalNote').textContent = group.note + ' เลือกหลายรูปพร้อมกันได้ ระบบจะเรียงลงช่องว่างให้อัตโนมัติ';
+        document.getElementById('existingBox').classList.remove('visible');
+        document.getElementById('deletePhotoButton').hidden = true;
+        document.getElementById('slotPicker').classList.add('visible');
+        renderSlotPicker(group.types);
+        document.getElementById('galleryFile').setAttribute('multiple', 'multiple');
+        document.getElementById('photoModal').classList.add('open');
+      }
+
+      function openSingleSlot(type) {
+        if (!getJob() || uploading) { if (!getJob()) setStatus('กรุณาเลือก Job ก่อน', true); return; }
+        activeMode = 'single'; activeGroupKey = ''; activeType = type;
+        resetPending();
         const done = isFilled(type);
-        document.getElementById('modalTitle').textContent = done ? 'จัดการรูป: ' + PHOTO_LABELS[type] : 'ใส่รูป: ' + PHOTO_LABELS[type];
-        document.getElementById('modalNote').textContent = done ? 'เลือกรูปใหม่เพื่อแทนรูปเดิม หรือกดลบรูป' : 'เลือกหนึ่งรูปเพื่อใส่ในช่องนี้';
+        document.getElementById('modalTitle').textContent = done ? 'เปลี่ยนรูป: ' + PHOTO_LABELS[type] : 'เพิ่มรูป: ' + PHOTO_LABELS[type];
+        document.getElementById('modalNote').textContent = 'เลือกรูปจากคลังหรือถ่ายรูปใหม่ ระบบจะบันทึกให้อัตโนมัติ';
         document.getElementById('existingBox').classList.toggle('visible', done);
         document.getElementById('deletePhotoButton').hidden = !done;
+        document.getElementById('slotPicker').classList.remove('visible');
         document.getElementById('galleryFile').removeAttribute('multiple');
         document.getElementById('photoModal').classList.add('open');
       }
-      function openGroupModal(groupKey) {
-        if (!getJob()) { setStatus('กรุณาเลือก Job ก่อน', true); return; }
-        const group = GROUPS.find(function(item) { return item.key === groupKey; });
-        if (!group) return;
-        activeMode = 'group'; activeGroupKey = groupKey; activeType = ''; resetPending();
-        const missingCount = group.types.filter(function(type) { return !isFilled(type); }).length;
-        document.getElementById('modalTitle').textContent = group.title;
-        document.getElementById('modalNote').textContent = group.multiple ? 'เลือกรูปหลายรูปพร้อมกัน ระบบจะเรียงลงช่องว่าง 1–4 ให้อัตโนมัติ (ขาด ' + missingCount + ' ช่อง)' : 'เลือกรูป 1 รูปสำหรับหัวตาราง';
-        document.getElementById('existingBox').classList.remove('visible');
-        document.getElementById('deletePhotoButton').hidden = true;
-        if (group.multiple) document.getElementById('galleryFile').setAttribute('multiple', 'multiple'); else document.getElementById('galleryFile').removeAttribute('multiple');
-        document.getElementById('photoModal').classList.add('open');
-      }
-      function closeModal() { resetPending(); document.getElementById('photoModal').classList.remove('open'); activeType = ''; activeGroupKey = ''; activeMode = 'single'; }
-      function openViewer(url, caption) { if (!url) return; document.getElementById('fullscreenImage').src = url; document.getElementById('viewerCaption').textContent = caption || ''; document.getElementById('fullscreenViewer').classList.add('open'); }
-      function closeViewer() { document.getElementById('fullscreenViewer').classList.remove('open'); document.getElementById('fullscreenImage').removeAttribute('src'); }
 
-      function chooseGallery() { document.getElementById('galleryFile').click(); }
-      function chooseCamera() { document.getElementById('cameraFile').click(); }
+      function renderSlotPicker(types) {
+        const root = document.getElementById('slotPicker');
+        root.innerHTML = '';
+        types.forEach(function(type, index) { const button = document.createElement('button'); button.type = 'button'; button.className = 'slot-button' + (isFilled(type) ? ' filled' : ''); button.textContent = 'ช่อง ' + (index + 1) + (isFilled(type) ? ' ✓' : ''); button.addEventListener('click', function() { openSingleSlot(type); }); root.appendChild(button); });
+      }
+
+      function closeModal() { if (uploading) return; resetPending(); document.getElementById('photoModal').classList.remove('open'); activeType = ''; activeGroupKey = ''; activeMode = 'group'; }
+      function resetPending() { document.getElementById('galleryFile').value = ''; document.getElementById('cameraFile').value = ''; document.getElementById('pendingGrid').innerHTML = ''; document.getElementById('pendingName').textContent = ''; document.getElementById('uploadingNote').textContent = ''; document.getElementById('pending').classList.remove('visible'); }
+      function chooseGallery() { if (!uploading) document.getElementById('galleryFile').click(); }
+      function chooseCamera() { if (!uploading) document.getElementById('cameraFile').click(); }
 
       function handleFile(event) {
         const files = Array.from(event.target.files || []);
-        if (!files.length) return;
+        if (!files.length || uploading) return;
         const invalid = files.find(function(file) { return !['image/jpeg','image/png','image/gif','image/webp'].includes(file.type) || file.size > MAX_FILE_SIZE; });
-        if (invalid) { setStatus('ทุกไฟล์ต้องเป็น JPG, PNG, GIF หรือ WEBP และไม่เกิน 2 MB ต่อไฟล์', true); return; }
-        const group = activeMode === 'group' ? GROUPS.find(function(item) { return item.key === activeGroupKey; }) : null;
-        const limit = group ? group.types.filter(function(type) { return !isFilled(type); }).length : 1;
-        if (files.length > limit) { setStatus('เลือกได้ไม่เกิน ' + limit + ' รูปตามช่องที่ยังว่าง', true); return; }
-        pendingFiles = files;
-        pendingFile = files[0];
-        document.getElementById('pendingName').textContent = files.length === 1 ? files[0].name : 'เลือกแล้ว ' + files.length + ' รูป: ' + files.map(function(file) { return file.name; }).join(', ');
-        readFileAsDataUrl(files[0]).then(function(dataUrl) {
-          pendingDataUrl = dataUrl;
-          document.getElementById('pendingImage').src = dataUrl;
-          document.getElementById('pending').classList.add('visible');
-          document.getElementById('savePhotoButton').disabled = false;
-          document.getElementById('savePhotoButton').textContent = files.length > 1 ? 'บันทึกรูปทั้ง ' + files.length + ' ช่อง' : 'บันทึกรูปช่องนี้';
-        }).catch(function() { setStatus('อ่านไฟล์รูปไม่สำเร็จ', true); });
-      }
-      function readFileAsDataUrl(file) {
-        return new Promise(function(resolve, reject) { const reader = new FileReader(); reader.onload = function(event) { resolve(event.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); });
+        if (invalid) { setStatus('ทุกไฟล์ต้องเป็น JPG, PNG, GIF หรือ WEBP และไม่เกิน 2 MB ต่อไฟล์', true); event.target.value = ''; return; }
+        if (activeMode === 'group') {
+          const group = GROUPS[activeGroupKey];
+          const emptyTypes = group.types.filter(function(type) { return !isFilled(type); });
+          if (!emptyTypes.length) { setStatus('ช่อง ' + group.title + ' เต็มแล้ว แตะหมายเลขช่องเพื่อเปลี่ยนรูป', true); event.target.value = ''; return; }
+          if (files.length > emptyTypes.length) { setStatus('เลือกได้อีกไม่เกิน ' + emptyTypes.length + ' รูป', true); event.target.value = ''; return; }
+        } else if (files.length > 1) {
+          setStatus('ช่องนี้รับได้ครั้งละ 1 รูป', true); event.target.value = ''; return;
+        }
+        showPending(files);
+        savePendingPhotos(files);
       }
 
-      function savePhoto() {
-        if (activeMode === 'group') return saveGroupPhotos();
-        const job = getJob();
-        if (!job || !activeType || !pendingFile || !pendingDataUrl) { setStatus('กรุณาเลือก Job และรูปก่อนบันทึก', true); return; }
-        const button = document.getElementById('savePhotoButton');
-        button.disabled = true; button.textContent = 'กำลังบันทึก...';
-        google.script.run.withSuccessHandler(function(message) {
-          previews[activeType] = pendingDataUrl;
-          if (!isFilled(activeType)) currentProgress.filledTypes = (currentProgress.filledTypes || []).concat(activeType);
-          renderProgress(); renderGroups(); updateButtons(); closeModal(); setStatus(message, false, true); button.textContent = 'บันทึกรูปช่องนี้';
-        }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'บันทึกรูปช่องนี้'; setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error), true); }).uploadImageToSheet(job.jobNo, job.location, activeType, pendingDataUrl, pendingFile.name, document.getElementById('installDate').value);
+      function showPending(files) {
+        const root = document.getElementById('pendingGrid');
+        root.innerHTML = '';
+        document.getElementById('pendingName').textContent = files.length === 1 ? files[0].name : 'เลือกแล้ว ' + files.length + ' รูป';
+        document.getElementById('uploadingNote').textContent = 'กำลังบันทึกรูปอัตโนมัติ...';
+        document.getElementById('pending').classList.add('visible');
+        files.forEach(function(file) { const image = document.createElement('img'); image.alt = file.name; root.appendChild(image); readFileAsDataUrl(file).then(function(dataUrl) { image.src = dataUrl; }).catch(function() {}); });
       }
-      async function saveGroupPhotos() {
+
+      async function savePendingPhotos(files) {
         const job = getJob();
-        const group = GROUPS.find(function(item) { return item.key === activeGroupKey; });
-        if (!job || !group || !pendingFiles.length) { setStatus('กรุณาเลือกรูปก่อนบันทึก', true); return; }
-        const emptyTypes = group.types.filter(function(type) { return !isFilled(type); });
-        if (pendingFiles.length > emptyTypes.length) { setStatus('รูปเกินจำนวนช่องที่ว่าง', true); return; }
-        const button = document.getElementById('savePhotoButton');
-        button.disabled = true; button.textContent = 'กำลังบันทึก ' + pendingFiles.length + ' รูป...';
+        if (!job) { setStatus('กรุณาเลือก Job ก่อน', true); return; }
+        uploading = true; updateButtons();
         try {
-          for (let index = 0; index < pendingFiles.length; index += 1) {
-            const file = pendingFiles[index];
-            const dataUrl = index === 0 && pendingDataUrl ? pendingDataUrl : await readFileAsDataUrl(file);
-            const type = emptyTypes[index];
-            await uploadOne(job, type, dataUrl, file.name);
-            previews[type] = dataUrl;
-            if (!isFilled(type)) currentProgress.filledTypes.push(type);
+          if (activeMode === 'single') {
+            const dataUrl = await readFileAsDataUrl(files[0]);
+            await uploadOne(job, activeType, dataUrl, files[0].name);
+            previews[activeType] = dataUrl;
+            markFilled(activeType);
+            finishUpload('บันทึกรูปเรียบร้อยแล้ว');
+          } else {
+            const group = GROUPS[activeGroupKey];
+            const emptyTypes = group.types.filter(function(type) { return !isFilled(type); });
+            for (let index = 0; index < files.length; index += 1) {
+              const dataUrl = await readFileAsDataUrl(files[index]);
+              await uploadOne(job, emptyTypes[index], dataUrl, files[index].name);
+              previews[emptyTypes[index]] = dataUrl;
+              markFilled(emptyTypes[index]);
+            }
+            finishUpload('บันทึกรูป ' + files.length + ' รูปเรียบร้อยแล้ว');
           }
-          renderProgress(); renderGroups(); updateButtons(); closeModal(); setStatus('บันทึกรูป ' + pendingFiles.length + ' รูปลงช่องเรียบร้อยแล้ว', false, true);
-        } catch (error) { setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error), true); }
-        button.disabled = false; button.textContent = 'บันทึกรูปช่องนี้';
-      }
-      function uploadOne(job, type, dataUrl, filename) {
-        return new Promise(function(resolve, reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadImageToSheet(job.jobNo, job.location, type, dataUrl, filename, document.getElementById('installDate').value); });
+        } catch (error) {
+          uploading = false; updateButtons(); document.getElementById('uploadingNote').textContent = ''; setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error), true);
+        }
       }
 
-      function deletePhoto() { const job = getJob(); if (!job || !activeType) return; if (!window.confirm('ยืนยันลบรูปช่องนี้หรือไม่? ไฟล์ต้นฉบับใน Drive จะยังคงอยู่')) return; const button = document.getElementById('deletePhotoButton'); button.disabled = true; button.textContent = 'กำลังลบ...'; google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || (currentProgress.filledTypes || []).filter(function(type) { return type !== activeType; }); delete previews[activeType]; renderProgress(); renderGroups(); updateButtons(); closeModal(); button.disabled = false; button.textContent = 'ลบรูปช่องนี้'; setStatus(result.message, false, true); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'ลบรูปช่องนี้'; setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error), true); }).deleteImageFromSheet(job.jobNo, job.location, activeType, document.getElementById('installDate').value); }
+      function finishUpload(message) { uploading = false; renderAll(); closeModal(); setStatus(message, false, true); }
+      function markFilled(type) { if (!isFilled(type)) currentProgress.filledTypes = (currentProgress.filledTypes || []).concat(type); }
+      function readFileAsDataUrl(file) { return new Promise(function(resolve, reject) { const reader = new FileReader(); reader.onload = function(event) { resolve(event.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); }); }
+      function uploadOne(job, type, dataUrl, filename) { return new Promise(function(resolve, reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadImageToSheet(job.jobNo, job.location, type, dataUrl, filename, document.getElementById('installDate').value); }); }
 
-      function saveJob() { const job = getJob(); if (!job) { setStatus('กรุณาเลือก Job ก่อน', true); return; } const button = document.getElementById('saveJobButton'); button.disabled = true; button.textContent = 'กำลังบันทึก...'; google.script.run.withSuccessHandler(function(result) { button.disabled = false; button.textContent = 'บันทึกงาน'; currentProgress.filledTypes = result.filledTypes || currentProgress.filledTypes; currentProgress.complete = !!result.complete; renderProgress(); renderGroups(); updateButtons(); setStatus(result.message, false, true); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'บันทึกงาน'; setStatus('บันทึกงานไม่สำเร็จ: ' + errorMessage(error), true); }).saveJobProgress(job.jobNo, job.location, document.getElementById('installDate').value); }
+      function deletePhoto() {
+        const job = getJob();
+        if (!job || !activeType || uploading) return;
+        if (!window.confirm('ยืนยันลบรูปช่องนี้หรือไม่? ไฟล์ต้นฉบับใน Drive จะยังคงอยู่')) return;
+        const button = document.getElementById('deletePhotoButton'); button.disabled = true; button.textContent = 'กำลังลบ...'; uploading = true; updateButtons();
+        google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || (currentProgress.filledTypes || []).filter(function(type) { return type !== activeType; }); delete previews[activeType]; uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; renderAll(); closeModal(); setStatus(result.message, false, true); }).withFailureHandler(function(error) { uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; updateButtons(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error), true); }).deleteImageFromSheet(job.jobNo, job.location, activeType, document.getElementById('installDate').value);
+      }
 
-      function printJob() { const job = getJob(); if (!job) { setStatus('กรุณาเลือก Job ก่อน', true); return; } const button = document.getElementById('printJobButton'); button.disabled = true; button.textContent = 'กำลังสร้าง PDF...'; const popup = window.open('about:blank','_blank'); google.script.run.withSuccessHandler(function(result) { button.disabled = false; button.textContent = currentProgress.complete ? 'พิมพ์งาน' : 'พิมพ์งานค้าง'; if (popup) popup.location = result.fileUrl; setStatus(result.message, false, true); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'พิมพ์งาน'; if (popup) popup.close(); setStatus('พิมพ์ไม่สำเร็จ: ' + errorMessage(error), true); }).createJobPdf(job.jobNo); }
+      function printJob() {
+        const job = getJob();
+        if (!job) { setStatus('กรุณาเลือก Job ก่อน', true); return; }
+        const button = document.getElementById('printJobButton'); button.disabled = true; button.textContent = 'กำลังสร้าง...';
+        const popup = window.open('about:blank','_blank');
+        google.script.run.withSuccessHandler(function(result) { button.disabled = false; button.textContent = 'พิมพ์เอกสาร'; if (popup) popup.location = result.fileUrl; setStatus(result.message, false, true); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'พิมพ์เอกสาร'; if (popup) popup.close(); setStatus('พิมพ์ไม่สำเร็จ: ' + errorMessage(error), true); }).createJobPdf(job.jobNo);
+      }
 
-      function updateButtons() { const job = getJob(); const filled = (currentProgress.filledTypes || []).length; document.getElementById('saveJobButton').disabled = !job; document.getElementById('printJobButton').disabled = !job || filled === 0; document.getElementById('printJobButton').textContent = currentProgress.complete ? 'พิมพ์งาน' : 'พิมพ์งานค้าง'; document.getElementById('nextButton').disabled = !job || currentProgress.complete; }
-      function resetPending() { pendingFile = null; pendingFiles = []; pendingDataUrl = ''; document.getElementById('galleryFile').value = ''; document.getElementById('cameraFile').value = ''; document.getElementById('pendingImage').removeAttribute('src'); document.getElementById('pendingName').textContent = ''; document.getElementById('pending').classList.remove('visible'); document.getElementById('savePhotoButton').disabled = true; document.getElementById('savePhotoButton').textContent = 'บันทึกรูปช่องนี้'; }
       function loadSheetLinks() { google.script.run.withSuccessHandler(function(links) { document.getElementById('assetLink').href = links.assetMasterUrl; document.getElementById('reportLink').href = links.templateUrl; }).withFailureHandler(function(error) { setStatus('โหลดลิงก์ชีตไม่สำเร็จ: ' + errorMessage(error), true); }).getSheetEditLinks(); }
+      function normalizeDate(value) { if (!value) return todayString(); const parsed = new Date(value); if (isNaN(parsed.getTime())) return todayString(); return parsed.getFullYear() + '-' + String(parsed.getMonth()+1).padStart(2,'0') + '-' + String(parsed.getDate()).padStart(2,'0'); }
+      function formatDate(value) { if (!value) return 'วันนี้'; const parts = value.split('-'); return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : value; }
+      function openViewer(url, caption) { if (!url) return; document.getElementById('fullscreenImage').src = url; document.getElementById('viewerCaption').textContent = caption || ''; document.getElementById('fullscreenViewer').classList.add('open'); }
+      function closeViewer() { document.getElementById('fullscreenViewer').classList.remove('open'); document.getElementById('fullscreenImage').removeAttribute('src'); }
       function errorMessage(error) { return error && error.message ? error.message : String(error || 'ไม่ทราบสาเหตุ'); }
       function setStatus(message, isError, isSuccess) { const status = document.getElementById('status'); status.textContent = message || ''; status.className = 'status' + (isError ? ' error' : '') + (isSuccess ? ' success' : ''); }
-      document.getElementById('photoModal').addEventListener('click', function(event) { if (event.target === this) closeModal(); });
+      document.getElementById('photoModal').addEventListener('click', function(event) { if (event.target === this && !uploading) closeModal(); });
       document.getElementById('fullscreenViewer').addEventListener('click', function(event) { if (event.target === this) closeViewer(); });
-      document.addEventListener('keydown', function(event) { if (event.key === 'Escape') { closeViewer(); closeModal(); } });
+      document.addEventListener('keydown', function(event) { if (event.key === 'Escape') { closeViewer(); if (!uploading) closeModal(); } });
     </script>
   </body>
 </html>
