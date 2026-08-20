@@ -7,8 +7,9 @@
       (function() {
         var ua = navigator.userAgent || '';
         var mobileUa = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini|Mobile/i.test(ua);
-        var touchPhone = navigator.maxTouchPoints > 0 && Math.min(screen.width || 9999, screen.height || 9999) <= 1400;
-        if (mobileUa || touchPhone) document.documentElement.classList.add('mobile-runtime');
+        var touchPhone = navigator.maxTouchPoints > 0 && Math.min(screen.width || 9999, screen.height || 9999) <= 1600;
+        var compactViewport = (window.innerWidth || 9999) <= 1400;
+        if (mobileUa || touchPhone || compactViewport) document.documentElement.classList.add('mobile-runtime');
       }());
     </script>
     <style>
@@ -109,7 +110,7 @@
       .viewer-caption { position:absolute; right:62px; bottom:22px; left:22px; color:#fff; font-size:15px; text-align:center; }
       .viewer-close { position:absolute; top:calc(12px + env(safe-area-inset-top)); right:14px; width:50px; height:50px; border:1px solid rgba(255,255,255,.65); border-radius:50%; background:rgba(0,0,0,.45); color:#fff; font-size:28px; cursor:pointer; }
       /* Responsive เฉพาะมือถือ: คงดีไซน์เดิม แต่จัดใหม่ให้พอดีจอ 6.7–6.9 นิ้ว */
-      /* ครอบคลุมมือถือที่เบราว์เซอร์รายงานความกว้างแบบ Desktop site ราว 858–980px */
+      /* ครอบคลุมมือถือที่เบราว์เซอร์รายงานความกว้างแบบ Desktop site ได้ถึงราว 1400px */
       html.mobile-runtime, html.mobile-runtime body { min-height:0; background:#fff; }
       html.mobile-runtime .app { width:100%; max-width:none !important; min-height:0; margin:0; }
       html.mobile-runtime .page { width:100%; min-height:0; padding:12px 10px calc(24px + env(safe-area-inset-bottom)); }
@@ -120,7 +121,7 @@
       html.mobile-runtime .mosaic { grid-template-columns:repeat(4,1fr); gap:6px; min-height:76px; }
       html.mobile-runtime .source-grid { grid-template-columns:1fr; }
       html.mobile-runtime .modal { width:100%; max-width:none; }
-      @media (max-width:1024px), (pointer:coarse) {
+      @media (max-width:1400px), (pointer:coarse) {
         html,body { min-height:0; background:#fff; }
         .app { width:100%; max-width:none !important; min-height:0; margin:0; }
         .page { width:100%; min-height:0; padding:12px 10px calc(24px + env(safe-area-inset-bottom)); }
