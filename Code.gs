@@ -269,7 +269,13 @@ function getJobProgress(jobNo) {
 
   const sheetName = buildJobSheetName_(jobNo);
   const sheet = getSpreadsheet_().getSheetByName(sheetName);
-  const filledTypes = sheet ? getFilledImageTypes_(sheet) : [];
+  const indexRecord = getPhotoFileIndexRecord_(jobNo);
+  const asset = getAssetMasterJobInfo_(jobNo);
+  const sheetFilledTypes = sheet ? getFilledImageTypes_(sheet) : [];
+  const indexedTypes = CONFIG.IMAGE_TYPES.filter(function(imageType) { return !!indexRecord.urls[imageType]; });
+  const filledTypes = CONFIG.IMAGE_TYPES.filter(function(imageType) {
+    return sheetFilledTypes.indexOf(imageType) !== -1 || indexedTypes.indexOf(imageType) !== -1;
+  });
   const missingTypes = CONFIG.IMAGE_TYPES.filter(function(imageType) {
     return filledTypes.indexOf(imageType) === -1;
   });
@@ -278,8 +284,8 @@ function getJobProgress(jobNo) {
     exists: !!sheet,
     sheetName: sheetName,
     jobNo: String(jobNo),
-    location: sheet ? sheet.getRange(CONFIG.LOCATION_CELL).getDisplayValue() : '',
-    date: sheet ? sheet.getRange(CONFIG.DATE_CELL).getDisplayValue() : '',
+    location: sheet ? sheet.getRange(CONFIG.LOCATION_CELL).getDisplayValue() : asset.location,
+    date: sheet ? sheet.getRange(CONFIG.DATE_CELL).getDisplayValue() : indexRecord.updatedAt,
     filledTypes: filledTypes,
     previewUrls: getPhotoPreviewUrls_(jobNo, filledTypes),
     missingTypes: missingTypes,
@@ -293,6 +299,30 @@ function getJobProgress(jobNo) {
  * คืน URL thumbnail ของรูปไฟล์ล่าสุดของแต่ละช่องจากโฟลเดอร์รูป
  * ใช้ชื่อไฟล์รูปแบบ JOB_imageType_timestamp_originalName
  */
+function getPhotoFileIndexRecord_(jobNo) {
+  const sheet = getSpreadsheet_().getSheetByName(CONFIG.PHOTO_FILE_INDEX_SHEET_NAME);
+  const result = { updatedAt: '', urls: {} };
+  if (!sheet || sheet.getLastRow() < 2) return result;
+  const values = sheet.getDataRange().getDisplayValues();
+  const target = String(jobNo || '').trim().toLowerCase();
+  for (let i = values.length - 1; i >= 1; i -= 1) {
+    if (String(values[i][1] || '').trim().toLowerCase() !== target) continue;
+    result.updatedAt = values[i][0] || '';
+    CONFIG.IMAGE_TYPES.forEach(function(imageType, index) {
+      result.urls[imageType] = values[i][3 + index] || '';
+    });
+    return result;
+  }
+  return result;
+}
+
+function getAssetMasterJobInfo_(jobNo) {
+  const target = String(jobNo || '').trim().toLowerCase();
+  const row = getAssetMasterRows().find(function(item) { return String(item.jobNo || '').trim().toLowerCase() === target; });
+  if (!row) return { location: '' };
+  return { location: [row.building, row.floor, row.department, row.room].filter(function(value) { return String(value || '').trim(); }).join(' ') };
+}
+
 function getPhotoPreviewUrls_(jobNo, activeTypes) {
   const safeJobNo = String(jobNo || '').replace(/[^a-zA-Z0-9ก-๙_-]/g, '_');
   const previewUrls = {};
