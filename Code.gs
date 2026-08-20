@@ -260,7 +260,7 @@ function getJobProgress(jobNo) {
     location: sheet ? sheet.getRange(CONFIG.LOCATION_CELL).getDisplayValue() : '',
     date: sheet ? sheet.getRange(CONFIG.DATE_CELL).getDisplayValue() : '',
     filledTypes: filledTypes,
-    previewUrls: getPhotoPreviewUrls_(jobNo),
+    previewUrls: getPhotoPreviewUrls_(jobNo, filledTypes),
     missingTypes: missingTypes,
     filledCount: filledTypes.length,
     requiredCount: CONFIG.IMAGE_TYPES.length,
@@ -272,10 +272,12 @@ function getJobProgress(jobNo) {
  * คืน URL thumbnail ของรูปไฟล์ล่าสุดของแต่ละช่องจากโฟลเดอร์รูป
  * ใช้ชื่อไฟล์รูปแบบ JOB_imageType_timestamp_originalName
  */
-function getPhotoPreviewUrls_(jobNo) {
+function getPhotoPreviewUrls_(jobNo, activeTypes) {
   const safeJobNo = String(jobNo || '').replace(/[^a-zA-Z0-9ก-๙_-]/g, '_');
   const previewUrls = {};
   if (!safeJobNo) return previewUrls;
+  const activeTypeSet = {};
+  (activeTypes || CONFIG.IMAGE_TYPES).forEach(function(imageType) { activeTypeSet[imageType] = true; });
 
   const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
   const files = folder.searchFiles("trashed = false and title contains '" + safeJobNo + "_'");
@@ -284,6 +286,7 @@ function getPhotoPreviewUrls_(jobNo) {
     const file = files.next();
     const name = file.getName();
     CONFIG.IMAGE_TYPES.forEach(function(imageType) {
+      if (!activeTypeSet[imageType]) return;
       const prefix = safeJobNo + '_' + imageType + '_';
       if (name.indexOf(prefix) === 0) {
         const created = file.getDateCreated().getTime();
@@ -925,10 +928,19 @@ function getRangePixelTop_(sheet, range) {
 }
 
 function removeImageAtAnchor_(sheet, a1Notation) {
+  const requestedRange = sheet.getRange(a1Notation);
+  const mergedRanges = requestedRange.getMergedRanges();
+  const imageArea = mergedRanges.length > 0 ? mergedRanges[0] : requestedRange;
+  const minRow = imageArea.getRow();
+  const minColumn = imageArea.getColumn();
+  const maxRow = minRow + imageArea.getNumRows() - 1;
+  const maxColumn = minColumn + imageArea.getNumColumns() - 1;
+
   sheet.getImages().forEach(function(image) {
     const anchor = image.getAnchorCell();
-    if (anchor && anchor.getA1Notation() === a1Notation) {
-      image.remove();
-    }
+    if (!anchor) return;
+    const row = anchor.getRow();
+    const column = anchor.getColumn();
+    if (row >= minRow && row <= maxRow && column >= minColumn && column <= maxColumn) image.remove();
   });
 }
