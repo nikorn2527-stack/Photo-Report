@@ -165,65 +165,34 @@ function getJobData() {
   const sheet = spreadsheet.getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
   if (!sheet) return [];
 
-  // ใช้ Photo_File_Index เป็นดัชนีจำนวนรูป แทนการสแกน getImages()
-  // ของทุกชีต REPORT_ ซึ่งทำให้หน้า Web App ค้างเมื่อมีหลาย Job
-  const filledCounts = {};
-  const photoIndex = spreadsheet.getSheetByName(CONFIG.PHOTO_FILE_INDEX_SHEET_NAME);
-  if (photoIndex && photoIndex.getLastRow() > 1) {
-    const indexValues = photoIndex.getRange(
-      2,
-      2,
-      photoIndex.getLastRow() - 1,
-      CONFIG.PHOTO_FILE_INDEX_HEADERS.length - 1
-    ).getDisplayValues();
-    indexValues.forEach(function(row) {
-      const jobNo = String(row[0] || '').trim();
-      if (!jobNo) return;
-      let count = 0;
-      for (let column = 1; column < row.length; column += 1) {
-        if (String(row[column] || '').trim()) count += 1;
-      }
-      filledCounts[jobNo] = count;
-    });
-  }
-
-  const reportNames = {};
-  spreadsheet.getSheets().forEach(function(reportSheet) {
-    if (reportSheet.getName().indexOf('REPORT_') === 0) {
-      reportNames[reportSheet.getName()] = true;
-    }
-  });
-
-  const values = sheet.getDataRange().getValues();
+  // หน้าเริ่มต้นใช้เฉพาะข้อมูลสำหรับค้นหาเท่านั้น
+  // สถานะรูปจริงจะโหลดเมื่อผู้ใช้เลือก Job ผ่าน getJobProgress()
+  const lastRow = sheet.getLastRow();
+  if (lastRow < CONFIG.HEADER_ROW) return [];
+  const values = sheet.getRange(
+    CONFIG.HEADER_ROW,
+    1,
+    lastRow - CONFIG.HEADER_ROW + 1,
+    7
+  ).getDisplayValues();
   const jobs = [];
 
-  for (let row = CONFIG.HEADER_ROW - 1; row < values.length; row += 1) {
-    const jobNo = values[row][0];
-    if (!jobNo) continue;
+  values.forEach(function(row) {
+    const jobText = String(row[0] || '').trim();
+    if (!jobText || jobText.indexOf('JOB-') === -1) return;
 
-    const jobText = String(jobNo).trim();
-    if (jobText.indexOf('JOB-') === -1) continue;
-
-    const locationParts = [
-      values[row][3],
-      values[row][4],
-      values[row][5],
-      values[row][6]
-    ].filter(function(value) {
-      return value !== '' && value !== null && value !== undefined;
+    const locationParts = [row[3], row[4], row[5], row[6]].filter(function(value) {
+      return String(value || '').trim() !== '';
     });
-
-    const filledCount = filledCounts[jobText] || 0;
-    const hasReport = !!reportNames[buildJobSheetName_(jobText)];
     jobs.push({
       jobNo: jobText,
       location: locationParts.join(' '),
-      filledCount: filledCount,
+      filledCount: 0,
       requiredCount: CONFIG.IMAGE_TYPES.length,
-      complete: filledCount === CONFIG.IMAGE_TYPES.length,
-      hasReport: hasReport
+      complete: false,
+      hasReport: false
     });
-  }
+  });
 
   return jobs;
 }
