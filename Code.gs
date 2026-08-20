@@ -11,13 +11,18 @@ const CONFIG = Object.freeze({
   ASSET_MASTER_SHEET_NAME: 'Asset_Master',
   PHOTO_FILE_INDEX_SHEET_NAME: 'Photo_File_Index',
   PHOTO_FILE_INDEX_HEADERS: Object.freeze([
-    'วันที่บันทึก',
+    'วันที่อัปเดต',
     'Job No.',
-    'ประเภทภาพ',
-    'ชื่อไฟล์เดิม',
-    'Drive File ID',
-    'Drive URL',
-    'ชีตรายงาน'
+    'ชีตรายงาน',
+    'signage',
+    'before1',
+    'after1',
+    'before2',
+    'after2',
+    'before3',
+    'after3',
+    'before4',
+    'after4'
   ]),
   PHOTO_FOLDER_ID: '1CU2xREGuoBjzjDVYMfra_KylHGpUd1Re',
   PDF_FOLDER_ID: '1CU2xREGuoBjzjDVYMfra_KylHGpUd1Re',
@@ -779,63 +784,86 @@ function checkPhotoReportSetup() {
 function ensurePhotoFileIndexSheet_() {
   const spreadsheet = getSpreadsheet_();
   let sheet = spreadsheet.getSheetByName(CONFIG.PHOTO_FILE_INDEX_SHEET_NAME);
-  if (sheet) return sheet;
+  if (!sheet) sheet = spreadsheet.insertSheet(CONFIG.PHOTO_FILE_INDEX_SHEET_NAME);
 
-  sheet = spreadsheet.insertSheet(CONFIG.PHOTO_FILE_INDEX_SHEET_NAME);
-  sheet.getRange(1, 1, 1, CONFIG.PHOTO_FILE_INDEX_HEADERS.length)
-    .setValues([CONFIG.PHOTO_FILE_INDEX_HEADERS])
+  const expectedHeaders = CONFIG.PHOTO_FILE_INDEX_HEADERS;
+  const currentHeaders = sheet.getLastColumn() > 0
+    ? sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), expectedHeaders.length)).getValues()[0]
+    : [];
+  const headerMatches = expectedHeaders.every(function(header, index) {
+    return currentHeaders[index] === header;
+  });
+  if (!headerMatches) sheet.clearContents();
+
+  sheet.getRange(1, 1, 1, expectedHeaders.length)
+    .setValues([expectedHeaders])
     .setFontWeight('bold')
     .setBackground('#d9eaf7');
   sheet.setFrozenRows(1);
-  sheet.autoResizeColumns(1, CONFIG.PHOTO_FILE_INDEX_HEADERS.length);
+  sheet.autoResizeColumns(1, expectedHeaders.length);
   return sheet;
 }
 
-function appendPhotoFileIndex_(jobNo, imageType, originalFilename, file, reportSheetName) {
+function getPhotoFileIndexColumnIndex_(imageType) {
+  const index = CONFIG.PHOTO_FILE_INDEX_HEADERS.indexOf(imageType);
+  if (index < 0) throw new Error('ไม่พบคอลัมน์ประเภทรูปใน Photo_File_Index: ' + imageType);
+  return index;
+}
+
+function findPhotoFileIndexRow_(sheet, jobNo) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return 0;
+  const targetJobNo = String(jobNo || '');
+  const jobs = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+  for (let index = 0; index < jobs.length; index += 1) {
+    if (String(jobs[index][0] || '') === targetJobNo) return index + 2;
+  }
+  return 0;
+}
+
+function upsertPhotoFileIndexUrl_(jobNo, imageType, fileUrl, reportSheetName, updatedAt) {
   const sheet = ensurePhotoFileIndexSheet_();
-  sheet.appendRow([
-    new Date(),
-    String(jobNo || ''),
-    String(imageType || ''),
-    String(originalFilename || ''),
-    file.getId(),
-    file.getUrl(),
-    String(reportSheetName || '')
-  ]);
+  let rowNumber = findPhotoFileIndexRow_(sheet, jobNo);
+  let row;
+  if (rowNumber) {
+    row = sheet.getRange(rowNumber, 1, 1, CONFIG.PHOTO_FILE_INDEX_HEADERS.length).getValues()[0];
+  } else {
+    rowNumber = sheet.getLastRow() + 1;
+    row = Array(CONFIG.PHOTO_FILE_INDEX_HEADERS.length).fill('');
+  }
+  row[0] = updatedAt || new Date();
+  row[1] = String(jobNo || '');
+  row[2] = String(reportSheetName || buildJobSheetName_(jobNo));
+  row[getPhotoFileIndexColumnIndex_(imageType)] = String(fileUrl || '');
+  sheet.getRange(rowNumber, 1, 1, CONFIG.PHOTO_FILE_INDEX_HEADERS.length).setValues([row]);
+  return rowNumber;
+}
+
+function appendPhotoFileIndex_(jobNo, imageType, originalFilename, file, reportSheetName) {
+  upsertPhotoFileIndexUrl_(jobNo, imageType, file.getUrl(), reportSheetName, new Date());
 }
 
 /**
  * สร้าง/อัปเดตประวัติ URL จากไฟล์รูปเก่าที่มีอยู่ในโฟลเดอร์ Drive
- * ใช้ File ID กันการเพิ่มข้อมูลซ้ำ จึงเรียกซ้ำได้เมื่อมีรูปเก่าเพิ่มเข้ามา
+ * จะรวมไฟล์ล่าสุดของแต่ละช่องไว้ในหนึ่งแถวต่อ Job
  */
 function backfillPhotoFileIndex() {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    const added = backfillPhotoFileIndex_();
-    SpreadsheetApp.getUi().alert('อัปเดตประวัติไฟล์รูปแล้ว ' + added + ' รายการ');
+    const updated = backfillPhotoFileIndex_();
+    SpreadsheetApp.getUi().alert('อัปเดต URL รูปใน Photo_File_Index แล้ว ' + updated + ' ช่อง');
   } finally {
     lock.releaseLock();
   }
 }
 
 function backfillPhotoFileIndex_() {
-  const sheet = ensurePhotoFileIndexSheet_();
-  const existingIds = {};
-  const lastRow = sheet.getLastRow();
-  if (lastRow > 1) {
-    sheet.getRange(2, 5, lastRow - 1, 1).getValues().forEach(function(row) {
-      if (row[0]) existingIds[String(row[0])] = true;
-    });
-  }
-
-  const rows = [];
+  const latestByJob = {};
   const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
   const files = folder.searchFiles('trashed = false');
   while (files.hasNext()) {
     const file = files.next();
-    const fileId = file.getId();
-    if (existingIds[fileId]) continue;
     const name = file.getName();
     let imageType = '';
     let jobNo = '';
@@ -848,22 +876,27 @@ function backfillPhotoFileIndex_() {
       return true;
     });
     if (!jobNo || !imageType) continue;
-    rows.push([
-      file.getDateCreated(),
-      jobNo,
-      imageType,
-      name,
-      fileId,
-      file.getUrl(),
-      buildJobSheetName_(jobNo)
-    ]);
+    const created = file.getDateCreated();
+    latestByJob[jobNo] = latestByJob[jobNo] || {};
+    if (!latestByJob[jobNo][imageType] || created.getTime() > latestByJob[jobNo][imageType].created.getTime()) {
+      latestByJob[jobNo][imageType] = { url: file.getUrl(), created: created };
+    }
   }
 
-  if (rows.length) {
-    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, CONFIG.PHOTO_FILE_INDEX_HEADERS.length).setValues(rows);
-    sheet.autoResizeColumns(1, CONFIG.PHOTO_FILE_INDEX_HEADERS.length);
-  }
-  return rows.length;
+  let updated = 0;
+  Object.keys(latestByJob).forEach(function(jobNo) {
+    Object.keys(latestByJob[jobNo]).forEach(function(imageType) {
+      const sheet = ensurePhotoFileIndexSheet_();
+      const rowNumber = findPhotoFileIndexRow_(sheet, jobNo);
+      const columnIndex = getPhotoFileIndexColumnIndex_(imageType);
+      const currentUrl = rowNumber ? sheet.getRange(rowNumber, columnIndex + 1).getDisplayValue() : '';
+      const fileInfo = latestByJob[jobNo][imageType];
+      if (currentUrl === fileInfo.url) return;
+      upsertPhotoFileIndexUrl_(jobNo, imageType, fileInfo.url, buildJobSheetName_(jobNo), fileInfo.created);
+      updated += 1;
+    });
+  });
+  return updated;
 }
 
 function ensureJobSheet_(jobNo) {
