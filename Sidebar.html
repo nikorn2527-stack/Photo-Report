@@ -12,7 +12,7 @@
     button,input { font:inherit; }
     button:focus-visible,input:focus-visible { outline:3px solid rgba(23,105,224,.25); outline-offset:2px; }
     .app { width:100%; min-height:100vh; }
-    .page { width:100%; max-width:760px; margin:0 auto; padding:16px 14px calc(30px + env(safe-area-inset-bottom)); }
+    .page { width:100%; max-width:none; margin:0; padding:12px 8px calc(24px + env(safe-area-inset-bottom)); }
     .brand { padding:4px 2px 8px; }
     .brand .subtitle { display:none; }
     .eyebrow { margin:0 0 3px; color:var(--blue); font-size:12px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
@@ -117,9 +117,9 @@
     .status { min-height:23px; margin-top:12px; color:var(--muted); font-size:13px; text-align:center; }
     .status.error { color:var(--danger); }
     .status.success { color:var(--green); }
-    .modal-backdrop { position:fixed; z-index:30; inset:0; display:none; align-items:flex-end; justify-content:center; padding:10px; background:rgba(15,23,42,.62); }
+    .modal-backdrop { position:fixed; z-index:30; inset:0; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(15,23,42,.62); }
     .modal-backdrop.open { display:flex; }
-    .modal { width:100%; max-width:560px; max-height:88vh; overflow:auto; padding:19px 16px calc(20px + env(safe-area-inset-bottom)); border-radius:22px 22px 14px 14px; background:#fff; box-shadow:0 -8px 30px rgba(0,0,0,.24); }
+    .modal { width:100%; max-width:560px; max-height:86vh; overflow:auto; margin:auto; padding:19px 16px calc(20px + env(safe-area-inset-bottom)); border-radius:18px; background:#fff; box-shadow:0 12px 36px rgba(0,0,0,.28); }
     .modal-handle { width:42px; height:4px; margin:0 auto 12px; border-radius:4px; background:#cbd5e1; }
     .modal-title { margin:0; font-size:23px; }
     .modal-note { margin:5px 0 14px; color:var(--muted); font-size:13px; }
@@ -183,7 +183,9 @@
       .print-page { width:210mm; min-height:297mm; margin:0; padding:10mm 9mm; box-shadow:none; }
     }
     @media (max-width:520px), (pointer:coarse) {
-      .page { padding:12px 10px calc(24px + env(safe-area-inset-bottom)); }
+      .page { width:100%; max-width:none; padding:8px 6px calc(20px + env(safe-area-inset-bottom)); }
+      .job-card, .mobile-photo-card { width:100%; }
+      .mobile-job-bar { margin-top:10px; }
       .mobile-photo-card { padding:9px; }
       .mobile-slot { min-height:133px; }
       .mobile-slot img { min-height:133px; }
