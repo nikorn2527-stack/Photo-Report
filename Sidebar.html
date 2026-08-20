@@ -314,10 +314,10 @@
 
     <script>
       const MAX_FILE_SIZE = 10 * 1024 * 1024;
-      // Google Sheets insertImage จำกัด Blob ประมาณ 2 MB และ 1 ล้านพิกเซล จึงเผื่อความปลอดภัยไว้ต่ำกว่าเพดาน
-      const MAX_UPLOAD_BYTES = 1.6 * 1024 * 1024;
-      const MAX_IMAGE_PIXELS = 900000;
-      const MAX_IMAGE_DIMENSION = 1400;
+      // ตั้งเพดานเผื่อความปลอดภัยมากกว่าข้อจำกัด Google Sheets: 1.2 MB และ 600,000 พิกเซล
+      const MAX_UPLOAD_BYTES = 1.2 * 1024 * 1024;
+      const MAX_IMAGE_PIXELS = 600000;
+      const MAX_IMAGE_DIMENSION = 1000;
       const LAST_JOB_KEY = 'photoReport.lastJob';
       const PHOTO_LABELS = { signage:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง', before1:'ก่อนติดตั้ง 1', after1:'หลังติดตั้ง 1', before2:'ก่อนติดตั้ง 2', after2:'หลังติดตั้ง 2', before3:'ก่อนติดตั้ง 3', after3:'หลังติดตั้ง 3', before4:'ก่อนติดตั้ง 4', after4:'หลังติดตั้ง 4' };
       const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'เก็บสภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'เก็บผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
@@ -610,9 +610,21 @@
       function markFilled(type) { if (!isFilled(type)) currentProgress.filledTypes = (currentProgress.filledTypes || []).concat(type); }
       function readFileAsDataUrl(file) { return new Promise(function(resolve, reject) { const reader = new FileReader(); reader.onload = function(event) { resolve(event.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); }); }
 
+      function estimateDataUrlBytes(dataUrl) {
+        const comma = String(dataUrl || '').indexOf(',');
+        return comma < 0 ? Infinity : Math.ceil((dataUrl.length - comma - 1) * 0.75);
+      }
+
       function prepareUploadDataUrl(file) {
-        // ต้องประมวลผลทุกไฟล์ แม้ไฟล์เดิมจะเล็กกว่า 2 MB เพราะจำนวนพิกเซลอาจเกิน 1 ล้านพิกเซล
-        return readFileAsDataUrl(file).then(compressImageDataUrl);
+        // ต้องย่อทุกไฟล์ แม้ไฟล์เดิมจะเล็กกว่า 2 MB เพราะจำนวนพิกเซลอาจเกิน 1 ล้านพิกเซล
+        return readFileAsDataUrl(file).then(function(originalDataUrl) {
+          return compressImageDataUrl(originalDataUrl).then(function(safeDataUrl) {
+            if (!/^data:image\/jpeg;base64,/.test(safeDataUrl) || estimateDataUrlBytes(safeDataUrl) > MAX_UPLOAD_BYTES) {
+              throw new Error('ระบบย่อรูปให้เล็กพอสำหรับชีตไม่ได้ กรุณาเลือกภาพอื่น');
+            }
+            return safeDataUrl;
+          });
+        });
       }
 
       function compressImageDataUrl(dataUrl) {
@@ -625,22 +637,26 @@
             const sourcePixels = Math.max(1, sourceWidth * sourceHeight);
             const pixelScale = Math.sqrt(MAX_IMAGE_PIXELS / sourcePixels);
             let scale = Math.min(1, MAX_IMAGE_DIMENSION / longestSide, pixelScale);
-            let quality = 0.82;
+            let quality = 0.68;
             let result = '';
             const canvas = document.createElement('canvas');
-            for (let attempt = 0; attempt < 8; attempt += 1) {
-              canvas.width = Math.max(1, Math.round(sourceWidth * scale));
-              canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+            for (let attempt = 0; attempt < 14; attempt += 1) {
+              canvas.width = Math.max(1, Math.floor(sourceWidth * scale));
+              canvas.height = Math.max(1, Math.floor(sourceHeight * scale));
               const context = canvas.getContext('2d', { alpha:false });
               context.fillStyle = '#fff';
               context.fillRect(0, 0, canvas.width, canvas.height);
               context.drawImage(image, 0, 0, canvas.width, canvas.height);
               result = canvas.toDataURL('image/jpeg', quality);
-              const estimatedBytes = Math.ceil((result.length - result.indexOf(',') - 1) * 0.75);
+              const estimatedBytes = estimateDataUrlBytes(result);
               const pixelCount = canvas.width * canvas.height;
               if (estimatedBytes <= MAX_UPLOAD_BYTES && pixelCount <= MAX_IMAGE_PIXELS) break;
-              if (quality > 0.56) quality -= 0.06;
-              else scale *= 0.82;
+              if (quality > 0.42) quality -= 0.08;
+              else scale *= 0.72;
+            }
+            if (estimateDataUrlBytes(result) > MAX_UPLOAD_BYTES || canvas.width * canvas.height > MAX_IMAGE_PIXELS) {
+              reject(new Error('ภาพมีขนาดหรือความละเอียดเกินข้อจำกัดของชีต'));
+              return;
             }
             resolve(result);
           };
