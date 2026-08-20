@@ -125,30 +125,30 @@
     .viewer-actions { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; width:100%; max-width:520px; }
     .viewer-actions button { min-height:48px; border:0; border-radius:12px; background:#fff; color:#071d49; font-weight:900; }
     .viewer-actions .danger { background:#fff0f0; color:var(--danger); }
-    .modal { width:100%; max-width:560px; max-height:86vh; overflow:auto; margin:auto; padding:19px 16px calc(20px + env(safe-area-inset-bottom)); border-radius:18px; background:#fff; box-shadow:0 12px 36px rgba(0,0,0,.28); }
+    .modal { width:100%; max-width:640px; max-height:90vh; overflow:auto; margin:auto; padding:28px 22px calc(28px + env(safe-area-inset-bottom)); border-radius:24px; background:#fff; box-shadow:0 16px 42px rgba(0,0,0,.30); }
     .modal-handle { width:42px; height:4px; margin:0 auto 12px; border-radius:4px; background:#cbd5e1; }
-    .modal-title { margin:0; font-size:23px; }
-    .modal-note { margin:5px 0 14px; color:var(--muted); font-size:13px; }
+    .modal-title { margin:0; font-size:32px; }
+    .modal-note { margin:8px 0 18px; color:var(--muted); font-size:20px; }
     .slot-picker { display:none; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
     .slot-picker.open { display:grid; }
-    .slot-button { min-height:62px; padding:9px; border:1px solid #cbd5e1; border-radius:13px; background:#fff; color:var(--ink); font-size:15px; font-weight:900; cursor:pointer; }
+    .slot-button { min-height:76px; padding:12px; border:1px solid #cbd5e1; border-radius:16px; background:#fff; color:var(--ink); font-size:22px; font-weight:900; cursor:pointer; }
     .slot-button.filled { border-color:#9bd0ad; background:var(--green-soft); color:var(--green); }
-    .existing-box { display:none; margin-bottom:12px; padding:11px; border-radius:11px; background:var(--orange-soft); color:#8a4b0f; font-size:13px; font-weight:800; }
+    .existing-box { display:none; margin-bottom:14px; padding:14px; border-radius:14px; background:var(--orange-soft); color:#8a4b0f; font-size:18px; font-weight:800; }
     .existing-box.open { display:block; }
     .source-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
-    .source-button { min-height:65px; border:0; border-radius:13px; color:#fff; font-size:16px; font-weight:950; cursor:pointer; }
+    .source-button { min-height:82px; border:0; border-radius:16px; color:#fff; font-size:22px; font-weight:950; cursor:pointer; }
     .source-button.gallery { background:var(--blue); }
     .source-button.camera { background:#4b5563; }
     .pending { display:none; margin-top:13px; }
     .pending.open { display:block; }
     .pending-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
     .pending-grid img { width:100%; aspect-ratio:1; object-fit:cover; border:1px solid var(--line); border-radius:8px; }
-    .pending-name { margin-top:6px; color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
-    .upload-note { margin-top:7px; color:var(--blue); font-size:12px; font-weight:800; }
+    .pending-name { margin-top:8px; color:var(--muted); font-size:16px; overflow-wrap:anywhere; }
+    .upload-note { margin-top:9px; color:var(--blue); font-size:18px; font-weight:900; }
     .modal-actions { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:13px; }
     .save-button { grid-column:1 / -1; min-height:61px; border:0; border-radius:12px; background:var(--green); color:#fff; font-size:18px; font-weight:950; cursor:pointer; }
     .save-button:disabled { background:#c6ced8; cursor:not-allowed; }
-    .delete-button,.cancel-button { min-height:55px; border:0; border-radius:12px; font-size:16px; font-weight:900; cursor:pointer; }
+    .delete-button,.cancel-button { min-height:68px; border:0; border-radius:14px; font-size:22px; font-weight:900; cursor:pointer; }
     .delete-button { background:#fff0f0; color:var(--danger); }
     .cancel-button { border:1px solid #b9c4d2; background:#fff; color:var(--ink); }
     .hidden { display:none !important; }
@@ -159,45 +159,45 @@
     .ios-back { width:44px; height:44px; padding:0; border:0; border-radius:22px; background:transparent; color:#071d49; font-size:42px; line-height:36px; cursor:pointer; }
     .ios-title { min-width:0; flex:1; padding:0 10px; text-align:center; }
     .ios-kicker { display:block; color:var(--blue); font-size:9px; font-weight:950; letter-spacing:.09em; }
-    .ios-title h1 { margin:1px 0 0; color:#071d49; font-size:34px; letter-spacing:-.04em; }
-    .ios-portal { min-height:38px; padding:6px 10px; border:1px solid #cfe0ff; border-radius:14px; background:#fff; color:var(--blue); font-size:14px; font-weight:950; cursor:pointer; box-shadow:0 2px 8px rgba(7,29,73,.08); }
+    .ios-title h1 { margin:1px 0 0; color:#071d49; font-size:38px; letter-spacing:-.04em; }
+    .ios-portal { min-height:44px; padding:8px 12px; border:1px solid #cfe0ff; border-radius:14px; background:#fff; color:var(--blue); font-size:16px; font-weight:950; cursor:pointer; box-shadow:0 2px 8px rgba(7,29,73,.08); }
     .ios-search-panel { padding:13px 0 10px; border-bottom:0; }
-    .ios-label { display:block; margin:0 0 7px 2px; color:#3c3c43; font-size:16px; font-weight:900; }
+    .ios-label { display:block; margin:0 0 8px 2px; color:#3c3c43; font-size:18px; font-weight:900; }
     .ios-search-row { position:relative; display:block; }
-    .ios-search { width:100%; min-height:70px; padding:28px 62px 9px 74px; border:2px solid var(--blue); border-radius:16px; background:#fff; color:#071d49; font-size:28px; line-height:1; box-shadow:0 3px 10px rgba(7,29,73,.10); }
+    .ios-search { width:100%; min-height:78px; padding:31px 66px 10px 78px; border:2px solid var(--blue); border-radius:16px; background:#fff; color:#071d49; font-size:34px; line-height:1; box-shadow:0 3px 10px rgba(7,29,73,.10); }
     .ios-search::placeholder { color:#1769e0; opacity:1; }
     .ios-search-row::before { content:"⌕"; position:absolute; left:24px; top:50%; z-index:1; transform:translateY(-50%); color:#071d49; font-size:48px; line-height:1; pointer-events:none; }
-    .ios-search-row::after { content:"ค้นหา Job"; position:absolute; left:74px; top:13px; z-index:1; color:#1769e0; font-size:18px; font-weight:800; line-height:1; pointer-events:none; }
+    .ios-search-row::after { content:"ค้นหา Job"; position:absolute; left:78px; top:13px; z-index:1; color:#1769e0; font-size:20px; font-weight:800; line-height:1; pointer-events:none; }
     .ios-clear { position:absolute; right:14px; top:50%; width:42px; height:42px; min-height:0; padding:0; transform:translateY(-50%); border:0; border-radius:50%; background:#eef1f6; color:#071d49; font-size:34px; line-height:38px; cursor:pointer; }
-    .ios-hint { min-height:18px; margin:6px 2px 0; color:#6f7785; font-size:14px; }
+    .ios-hint { min-height:22px; margin:7px 2px 0; color:#6f7785; font-size:16px; }
     .ios-job-strip { display:flex; align-items:center; gap:16px; margin-top:14px; padding:14px 16px; border-radius:14px; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.10); }
     .ios-job-strip::before { content:"▣"; color:var(--blue); font-size:38px; line-height:1; }
     .ios-job-strip > div { min-width:0; flex:1; }
-    .ios-job-strip strong { display:block; color:#071d49; font-size:28px; line-height:1.05; }
-    .ios-job-strip span:not(.ios-saved) { display:block; margin-top:3px; overflow:hidden; color:#6f7785; font-size:14px; text-overflow:ellipsis; white-space:nowrap; }
-    .ios-job-strip b { color:#1769e0; font-size:16px; }
-    .ios-saved { display:flex; flex:none; align-items:center; gap:5px; color:#16834b; font-size:14px; font-weight:900; white-space:nowrap; }
+    .ios-job-strip strong { display:block; color:#071d49; font-size:34px; line-height:1.05; }
+    .ios-job-strip span:not(.ios-saved) { display:block; margin-top:4px; overflow:hidden; color:#6f7785; font-size:16px; text-overflow:ellipsis; white-space:nowrap; }
+    .ios-job-strip b { color:#1769e0; font-size:18px; }
+    .ios-saved { display:flex; flex:none; align-items:center; gap:5px; color:#16834b; font-size:16px; font-weight:900; white-space:nowrap; }
     .ios-saved i { display:inline-flex; width:16px; height:16px; align-items:center; justify-content:center; border-radius:50%; background:#34c759; color:#fff; font-style:normal; font-size:10px; }
     .ios-capture-area { margin-top:18px; padding:0 0 12px; border-radius:0; background:transparent; box-shadow:none; }
     .ios-capture-heading { display:none; }
     .mobile-photo-grid { gap:12px 14px; }
-    .mobile-section-label { padding:6px 4px 2px; font-size:26px; letter-spacing:.01em; }
+    .mobile-section-label { padding:8px 4px 3px; font-size:30px; letter-spacing:.01em; }
     .mobile-slot { height:clamp(210px, 24vh, 270px); min-height:0; border:2px dashed #cbd5e1; border-radius:16px; background:#fff; box-shadow:none; }
     .mobile-slot img { width:100%; height:100%; min-height:0; object-fit:cover; }
     .mobile-slot.signage { height:clamp(210px, 24vh, 280px); min-height:0; }
     .mobile-slot.signage img { height:100%; min-height:0; object-fit:cover; }
     .mobile-slot-empty { gap:4px; }
     .mobile-slot-icon { width:64px; height:64px; border-radius:50%; font-size:44px; font-weight:400; }
-    .mobile-slot-label { position:absolute; left:22px; top:14px; padding:4px 13px; border-radius:10px; font-size:22px; }
+    .mobile-slot-label { position:absolute; left:22px; top:14px; padding:5px 14px; border-radius:10px; font-size:26px; }
     .mobile-slot.before { color:var(--orange); }
     .mobile-slot.after { color:var(--green); }
     .mobile-slot.signage { color:var(--blue); }
-    .mobile-slot-note { color:currentColor; font-size:22px; font-weight:800; }
+    .mobile-slot-note { color:currentColor; font-size:26px; font-weight:850; }
     .mobile-slot-x { width:42px; height:42px; font-size:36px; }
-    .ios-hint-bottom { margin:12px 0 0; color:#6f7785; font-size:18px; text-align:center; }
+    .ios-hint-bottom { margin:12px 0 0; color:#6f7785; font-size:20px; text-align:center; }
     .bottom-actions { position:fixed; right:0; bottom:0; left:0; z-index:12; display:none; grid-template-columns:1fr 1fr; gap:16px; padding:14px 16px calc(14px + env(safe-area-inset-bottom)); border-top:1px solid #d9dee8; border-radius:16px 16px 0 0; background:rgba(255,255,255,.96); box-shadow:0 -4px 18px rgba(7,29,73,.10); }
     .workspace.open .bottom-actions { display:grid; }
-    .bottom-action { min-height:60px; border:2px solid var(--blue); border-radius:12px; background:#fff; color:var(--blue); font-size:24px; font-weight:950; cursor:pointer; }
+    .bottom-action { min-height:66px; border:2px solid var(--blue); border-radius:12px; background:#fff; color:var(--blue); font-size:26px; font-weight:950; cursor:pointer; }
     .bottom-action.primary { background:var(--blue); color:#fff; }
     .ios-more { margin:10px 0 0; }
     .ios-more summary { padding:8px 2px; color:#8e8e93; font-size:11px; text-align:center; cursor:pointer; }
@@ -297,7 +297,7 @@
     const MAX_IMAGE_DIMENSION = 1000;
     const PHOTO_LABELS = { signage:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง', before1:'ก่อนติดตั้ง 1', after1:'หลังติดตั้ง 1', before2:'ก่อนติดตั้ง 2', after2:'หลังติดตั้ง 2', before3:'ก่อนติดตั้ง 3', after3:'หลังติดตั้ง 3', before4:'ก่อนติดตั้ง 4', after4:'หลังติดตั้ง 4' };
     const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'สภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'ผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
-    let jobs = [], currentJob = null, currentProgress = { filledTypes:[], missingTypes:[] }, previewUrls = {}, previews = {}, pendingFiles = [], activeType = '', activeGroupKey = '', activeMode = 'group', uploading = false;
+    let jobs = [], currentJob = null, currentProgress = { filledTypes:[], missingTypes:[] }, previewUrls = {}, previews = {}, pendingFiles = [], activeType = '', activeGroupKey = '', activeMode = 'group', uploading = false, canceledUploads = {};
 
     window.addEventListener('load', function() { document.getElementById('jobSearch').value = ''; document.getElementById('galleryFile').addEventListener('change', handleFile); document.getElementById('cameraFile').addEventListener('change', handleFile); document.getElementById('jobSearch').addEventListener('input', renderSearch); loadSheetLinks(); loadJobs(); });
     function allTypes() { return Object.keys(PHOTO_LABELS); }
@@ -337,10 +337,12 @@
     function showPending(files) { pendingFiles = files; const root = document.getElementById('pendingGrid'); root.innerHTML = ''; document.getElementById('pendingName').textContent = files.length === 1 ? files[0].name : 'เลือกแล้ว ' + files.length + ' รูป'; document.getElementById('uploadNote').textContent = 'กำลังบันทึกอัตโนมัติ...'; document.getElementById('pending').classList.add('open'); document.getElementById('saveButton').disabled = true; files.forEach(function(file) { const img = document.createElement('img'); root.appendChild(img); readFileAsDataUrl(file).then(function(url) { img.src = url; }); }); }
     function saveSelectedPhotos() { if (!pendingFiles.length || uploading) return; savePendingPhotos(pendingFiles); }
     async function savePendingPhotos(files) { if (!currentJob) return; const jobNo = currentJob.jobNo, location = currentJob.location, mode = activeMode, groupKey = activeGroupKey, type = activeType; document.getElementById('saveButton').disabled = true; document.getElementById('uploadNote').textContent = 'กำลังเตรียมรูป...'; try { if (mode === 'single') { const originalData = await readFileAsDataUrl(files[0]); previews[type] = originalData; if (!isFilled(type)) currentProgress.filledTypes.push(type); closeModal(); renderStage(); setStatus('แสดงรูปแล้ว กำลังอัปโหลดพื้นหลัง...',false,true); uploadPreparedPhoto(jobNo, location, type, files[0], originalData); } else { const empty = GROUPS[groupKey].types.filter(function(slotType) { return !isFilled(slotType); }); closeModal(); for (let i=0;i<files.length;i++) { const slotType = empty[i], originalData = await readFileAsDataUrl(files[i]); previews[slotType] = originalData; if (!isFilled(slotType)) currentProgress.filledTypes.push(slotType); renderStage(); uploadPreparedPhoto(jobNo, location, slotType, files[i], originalData); } setStatus('แสดงรูปแล้ว กำลังอัปโหลดพื้นหลัง...',false,true); } } catch (error) { document.getElementById('saveButton').disabled = false; document.getElementById('saveButton').style.display = 'block'; document.getElementById('saveButton').textContent = 'ลองอีกครั้ง'; document.getElementById('uploadNote').textContent = 'เตรียมรูปไม่สำเร็จ กดลองอีกครั้ง'; renderStage(); setStatus('เตรียมรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
-    async function uploadPreparedPhoto(jobNo, location, type, file, originalData) { try { const data = await compressImage(originalData); await uploadOneForJob(jobNo,location,type,data,file.name,originalData); previews[type] = data; renderStage(); setStatus('บันทึกรูปอัตโนมัติเรียบร้อยแล้ว',false,true); } catch (error) { setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
+    async function uploadPreparedPhoto(jobNo, location, type, file, originalData) { const key = uploadKey(jobNo,type); delete canceledUploads[key]; try { const data = await compressImage(originalData); await uploadOneForJob(jobNo,location,type,data,file.name,originalData); if (canceledUploads[key]) { await deleteImageForJob(jobNo,location,type); delete previews[type]; renderStage(); return; } previews[type] = data; renderStage(); setStatus('บันทึกรูปอัตโนมัติเรียบร้อยแล้ว',false,true); } catch (error) { if (!canceledUploads[key]) setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
+    function uploadKey(jobNo,type) { return String(jobNo || '') + '::' + String(type || ''); }
     function uploadOneForJob(jobNo,location,type,data,filename,originalData) { return new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadImageToSheet(jobNo,location,type,data,filename,todayString(),originalData); }); }
     function uploadOne(type,data,filename,originalData) { return uploadOneForJob(currentJob.jobNo,currentJob.location,type,data,filename,originalData); }
-    function deletePhoto() { if (!currentJob || !activeType || uploading) return; uploading = true; document.getElementById('deleteButton').disabled = true; renderStage(); google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || currentProgress.filledTypes.filter(function(type) { return type !== activeType; }); delete previews[activeType]; delete previewUrls[activeType]; uploading = false; closeModal(); renderStage(); setStatus(result.message,false,true); }).withFailureHandler(function(error) { uploading = false; document.getElementById('deleteButton').disabled = false; renderStage(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error),true); }).deleteImageFromSheet(currentJob.jobNo,currentJob.location,activeType,todayString()); }
+    function deleteImageForJob(jobNo,location,type) { return new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).deleteImageFromSheet(jobNo,location,type,todayString()); }); }
+    function deletePhoto() { if (!currentJob || !activeType || uploading) return; const deletingType = activeType; canceledUploads[uploadKey(currentJob.jobNo,deletingType)] = true; uploading = true; document.getElementById('deleteButton').disabled = true; renderStage(); google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || currentProgress.filledTypes.filter(function(type) { return type !== deletingType; }); delete previews[deletingType]; delete previewUrls[deletingType]; uploading = false; closeModal(); renderStage(); setStatus(result.message,false,true); }).withFailureHandler(function(error) { uploading = false; document.getElementById('deleteButton').disabled = false; renderStage(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error),true); }).deleteImageFromSheet(currentJob.jobNo,currentJob.location,deletingType,todayString()); }
     function readFileAsDataUrl(file) { return new Promise(function(resolve,reject) { const reader = new FileReader(); reader.onload = function(e) { resolve(e.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); }); }
     function estimateBytes(data) { const comma = String(data || '').indexOf(','); return comma < 0 ? Infinity : Math.ceil((data.length - comma - 1) * .75); }
     function prepareUpload(file) { return readFileAsDataUrl(file).then(compressImage); }
