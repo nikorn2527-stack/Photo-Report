@@ -5,58 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <style>
       :root {
-        --green: #188038;
-        --green-dark: #0d652d;
-        --blue: #1967d2;
-        --text: #202124;
-        --muted: #5f6368;
-        --border: #c7cbd1;
-        --surface: #f6f8fb;
-        --danger: #b3261e;
+        --ink: #172033;
+        --muted: #687386;
+        --line: #dfe5ec;
+        --blue: #1769e0;
+        --blue-soft: #edf4ff;
+        --green: #16834b;
+        --green-soft: #eaf8f0;
+        --orange: #b96a18;
+        --orange-soft: #fff3e3;
+        --danger: #c62828;
+        --surface: #f5f7fa;
+        --text: #172033;
+        --border: #dfe5ec;
+        --green-dark: #12683c;
       }
 
       * { box-sizing: border-box; }
       html, body {
-        margin: 0;
+        width: 100%;
         min-height: 100%;
-        background: #eef1f5;
-        color: var(--text);
+        margin: 0;
+        background: var(--surface);
+        color: var(--ink);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         font-size: 16px;
-        line-height: 1.45;
+        line-height: 1.4;
+        -webkit-text-size-adjust: 100%;
       }
 
-      body { padding: 8px 8px 28px; }
-      .app { width: 100%; max-width: 1180px; margin: 0 auto; }
+      body { overflow-x: hidden; }
+      button, input { font: inherit; }
+      button:focus-visible, input:focus-visible { outline: 3px solid rgba(23,105,224,.25); outline-offset: 2px; }
+      .app { width: 100%; min-height: 100vh; }
       .page {
-        min-height: calc(100vh - 36px);
-        padding: 16px;
-        border: 1px solid #b9bec6;
-        border-radius: 8px;
-        background: #fff;
-        box-shadow: 0 2px 8px rgba(60, 64, 67, .15);
+        width: 100%;
+        max-width: 680px;
+        min-height: 100vh;
+        margin: 0 auto;
+        padding: 12px 14px calc(24px + env(safe-area-inset-bottom));
       }
-      .header { padding-bottom: 13px; border-bottom: 2px solid #202124; }
-      .back-link { display: inline-block; margin-bottom: 12px; color: var(--blue); font-size: 14px; text-decoration: none; }
+      .header { padding: 4px 2px 12px; border-bottom: 1px solid #dedee3; }
+      .back-link { display: inline-block; margin-bottom: 8px; color: var(--blue); font-size: 13px; font-weight: 800; text-decoration: none; }
       .back-link.is-disabled { pointer-events: none; opacity: .55; }
-      .title { margin: 0; font-size: 23px; line-height: 1.25; }
-      .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
-      .sheet-access { margin-top: 12px; padding: 12px; border: 1px solid #d9dde3; border-radius: 10px; background: #f8fafc; }
+      .title { margin: 0; color: var(--ink); font-size: 28px; line-height: 1.1; letter-spacing: -.02em; }
+      .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+      .sheet-access { margin-top: 13px; padding: 14px; border: 1px solid var(--line); border-radius: 17px; background: #fff; box-shadow: 0 2px 11px rgba(0,0,0,.06); }
       .sheet-access-title { margin: 0 0 8px; font-size: 13px; font-weight: 700; }
       .sheet-access-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      .sheet-access-link { display: flex; min-height: 42px; align-items: center; justify-content: center; padding: 8px 10px; border: 1px solid #9aa0a6; border-radius: 8px; background: #fff; color: var(--blue); font-size: 13px; font-weight: 700; text-align: center; text-decoration: none; }
+      .sheet-access-link { display: flex; min-height: 49px; align-items: center; justify-content: center; padding: 9px 10px; border: 1px solid #b9c4d2; border-radius: 13px; background: #fff; color: var(--blue); font-size: 13px; font-weight: 900; text-align: center; text-decoration: none; }
       .sheet-access-link.primary { border-color: var(--green); background: var(--green); color: #fff; }
       .sheet-access-link.is-disabled { pointer-events: none; opacity: .55; }
       .sheet-access-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
-      .toolbar { display: flex; align-items: center; gap: 8px; margin: 15px 0 10px; }
-      .search { flex: 1 1 auto; min-height: 48px; padding: 10px 12px; border: 1px solid #9aa0a6; border-radius: 9px; font: inherit; }
-      .button { min-height: 44px; padding: 9px 14px; border: 0; border-radius: 8px; color: #fff; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .toolbar { display: flex; align-items: center; gap: 8px; margin: 14px 0 11px; }
+      .search { flex: 1 1 auto; min-height: 52px; padding: 12px 14px; border: 1px solid #d1d1d6; border-radius: 13px; background: #fff; color: var(--ink); font: inherit; font-size: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+      .button { min-height: 52px; padding: 10px 14px; border: 0; border-radius: 13px; color: #fff; font: inherit; font-weight: 900; cursor: pointer; white-space: nowrap; }
       .button:disabled { background: #9aa0a6 !important; cursor: wait; }
       .button-add { background: var(--green); }
       .button-refresh { background: #5f6368; }
       .button-add:hover { background: var(--green-dark); }
       .table-meta { margin: 0 0 9px; color: var(--muted); font-size: 13px; }
-      .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 9px; -webkit-overflow-scrolling: touch; }
+      .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 17px; background: #fff; box-shadow: 0 2px 11px rgba(0,0,0,.06); -webkit-overflow-scrolling: touch; }
       table { width: 100%; min-width: 760px; border-collapse: collapse; background: #fff; }
       th, td { padding: 11px 10px; border-bottom: 1px solid #e2e5e9; text-align: left; vertical-align: middle; }
       th { position: sticky; top: 0; background: #f1f3f4; color: var(--muted); font-size: 13px; font-weight: 700; white-space: nowrap; }
@@ -76,9 +85,9 @@
       .sheet-link { display: none; margin-top: 8px; color: var(--blue); font-size: 13px; text-align: center; text-decoration: underline; }
       .sheet-link.is-visible { display: block; }
 
-      .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: none; align-items: flex-end; justify-content: center; background: rgba(32, 33, 36, .52); }
+      .modal-backdrop { position: fixed; z-index: 30; inset: 0; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(15,23,42,.62); }
       .modal-backdrop.is-open { display: flex; }
-      .modal { width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; background: #fff; box-shadow: 0 -4px 18px rgba(0, 0, 0, .2); }
+      .modal { width: 100%; max-width: 560px; max-height: 86vh; overflow-y: auto; margin: auto; padding: 19px 16px calc(20px + env(safe-area-inset-bottom)); border-radius: 18px; background: #fff; box-shadow: 0 12px 36px rgba(0,0,0,.28); }
       .sheet-handle { width: 42px; height: 4px; margin: 0 auto 12px; border-radius: 4px; background: #c6c9ce; }
       .modal-title { margin: 0; font-size: 19px; }
       .modal-note { margin: 5px 0 14px; color: var(--muted); font-size: 13px; }
