@@ -42,7 +42,7 @@
       .return-cell { min-width:150px; color:var(--muted); font-size:12px; white-space:nowrap; }
       .return-sn { display:block; margin-top:2px; color:var(--text); font-weight:800; }
       .ip-cell { min-width:125px; white-space:nowrap; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
-      .dashboard-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:14px; margin-top:14px; }
+      .dashboard-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:14px; }
       .panel { padding:14px; border:1px solid var(--border); border-radius:10px; background:#fff; }
       .panel-title { margin:0 0 10px; font-size:16px; }
       .status-line { display:grid; grid-template-columns:140px 1fr 56px; gap:8px; align-items:center; margin:9px 0; font-size:13px; }
@@ -128,7 +128,8 @@
           <p class="view-note">สรุปจากข้อมูลใน Asset_Master ตามสถานะชุดอุปกรณ์และการแจ้งเตือนสัญญา</p>
           <div id="summaryCards" class="cards"></div>
           <div class="dashboard-grid">
-            <section class="panel"><h3 class="panel-title">สรุปสถานะเตรียมเครื่อง</h3><div id="statusChart"></div></section>
+            <section class="panel"><h3 class="panel-title">สถานะชุดอุปกรณ์</h3><div id="assetStatusChart"></div></section>
+            <section class="panel"><h3 class="panel-title">สถานะเตรียมเครื่อง</h3><div id="prepStatusChart"></div></section>
             <section class="panel"><h3 class="panel-title">ตัวชี้วัดอุปกรณ์</h3><div id="equipmentMetrics"></div></section>
           </div>
         </section>
@@ -252,19 +253,25 @@
         const d = portalData.dashboard || {};
         const cards = [
           ['เครื่องทั้งหมด', d.total || 0, 'green'],
-          ['ลง Windows', d.prepWindows || 0, 'blue'],
-          ['พร้อมติดตั้ง', d.prepReady || 0, 'green'],
-          ['ติดตั้งเสร็จ', d.prepInstalled || 0, 'blue'],
-          ['รับคืนแล้ว', d.prepReturned || 0, 'gray'],
-          ['ติดปัญหา', d.prepBlocked || 0, 'red']
+          ['สถานะชุด: พร้อมส่ง', d.ready || 0, 'green'],
+          ['สถานะชุด: ติดตั้งแล้ว', d.installed || 0, 'blue'],
+          ['สถานะชุด: รับคืนแล้ว', d.returned || 0, 'gray'],
+          ['เตรียมเครื่อง: พร้อมติดตั้ง', d.prepReady || 0, 'green'],
+          ['เตรียมเครื่อง: ติดตั้งเสร็จ', d.prepInstalled || 0, 'blue'],
+          ['เตรียมเครื่อง: ติดปัญหา', d.prepBlocked || 0, 'red']
         ];
         document.getElementById('summaryCards').innerHTML = cards.map(function(card) {
           return '<div class="card ' + card[2] + '"><div class="card-label">' + card[0] + '</div><div class="card-value">' + card[1] + '</div></div>';
         }).join('');
 
-        const statuses = PREP_STATUS_OPTIONS;
         const total = Math.max(1, d.total || 0);
-        document.getElementById('statusChart').innerHTML = statuses.map(function(status) {
+        const assetStatuses = ['พร้อมส่ง', 'ติดตั้งแล้ว', 'รับคืนแล้ว', 'ส่งซ่อม', 'ตัดจำหน่าย'];
+        document.getElementById('assetStatusChart').innerHTML = assetStatuses.map(function(status) {
+          const count = (d.statuses && d.statuses[status]) || 0;
+          const percent = Math.round(count / total * 100);
+          return '<div class="status-line"><span>' + status + '</span><span class="bar"><span style="width:' + percent + '%"></span></span><strong>' + count + '</strong></div>';
+        }).join('');
+        document.getElementById('prepStatusChart').innerHTML = PREP_STATUS_OPTIONS.map(function(status) {
           const count = (d.prepStatuses && d.prepStatuses[status]) || 0;
           const percent = Math.round(count / total * 100);
           return '<div class="status-line"><span>' + status + '</span><span class="bar"><span style="width:' + percent + '%"></span></span><strong>' + count + '</strong></div>';

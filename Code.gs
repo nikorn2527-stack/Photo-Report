@@ -606,7 +606,6 @@ function buildPortalDashboard_(rows) {
     prepWindows: prepCounts['ลง Windows'] || 0,
     prepReady: prepCounts['พร้อมติดตั้ง'] || 0,
     prepInstalled: prepCounts['ติดตั้งเสร็จ'] || 0,
-    prepReturned: rows.filter(function(row) { return !!row.oldComSn; }).length,
     prepInProgress: (prepCounts['ลงโปรแกรม'] || 0) + (prepCounts['รอ Activate'] || 0),
     prepReceived: prepCounts['รับเข้าแล้ว'] || 0,
     prepBlocked: prepCounts['ติดปัญหา'] || 0,
