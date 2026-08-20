@@ -715,7 +715,7 @@ function createJobPdf(jobNo) {
  * รับรูปจาก Sidebar บันทึกลงโฟลเดอร์ Drive และแทรกรูปลงเทมเพลต Photo_Report
  * รูปจะถูกแทรกเป็น Over-grid image จึงไม่จำเป็นต้องเปิดไฟล์เป็นสาธารณะ
  */
-function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFilename, installDate) {
+function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFilename, installDate, originalBase64Data) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
@@ -725,13 +725,16 @@ function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFile
 
     const sheet = ensureJobSheet_(jobNo);
     const imageBlob = dataUrlToImageBlob_(base64Data, originalFilename);
+    const originalBlob = originalBase64Data
+      ? dataUrlToImageBlob_(originalBase64Data, originalFilename)
+      : imageBlob;
     sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
     sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
     sheet.getRange(CONFIG.DATE_CELL).setValue(parsePortalDate_(installDate) || new Date());
     // รูปที่ผ่านการย่อจะถูกแทรกลงชีตเพื่อพิมพ์ A4 ก่อน จากนั้นจึงเก็บไฟล์และ URL ลงดัชนีประวัติ
     insertImageInTemplate_(sheet, imageBlob, targetCell);
     const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
-    const savedFile = folder.createFile(imageBlob);
+    const savedFile = folder.createFile(originalBlob);
     savedFile.setName(buildPhotoFilename_(jobNo, imageType, originalFilename));
     const replacedDriveResult = trashPhotoFilesForSlot_(jobNo, imageType, savedFile.getId());
     if (replacedDriveResult.error) throw new Error('ย้ายไฟล์รูปเดิมใน Drive ลงถังขยะไม่สำเร็จ: ' + replacedDriveResult.error);
