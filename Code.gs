@@ -41,12 +41,15 @@ const CONFIG = Object.freeze({
   ]),
   PREP_STATUS_COLUMN: 31,
   PREP_STATUS_HEADER: 'สถานะเตรียมเครื่อง',
+  PREP_STATUS_DEFAULT: 'ลง Windows',
+  PREP_STATUS_NEW_DEFAULT: 'รับเข้าแล้ว',
   PREP_STATUS_OPTIONS: Object.freeze([
     'รับเข้าแล้ว',
     'ลง Windows',
     'ลงโปรแกรม',
     'รอ Activate',
     'พร้อมติดตั้ง',
+    'รับคืนแล้ว',
     'ติดปัญหา'
   ])
 });
@@ -374,7 +377,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
     throw new Error('มีเลข Job นี้อยู่แล้ว: ' + jobNo);
   }
   const existingRow = existing.find(function(item) { return item.rowNumber === targetRow; });
-  const prepStatus = normalizePreparationStatus_(data.prepStatus || (existingRow && existingRow.prepStatus));
+  const prepStatus = normalizePreparationStatus_(data.prepStatus || (existingRow && existingRow.prepStatus) || CONFIG.PREP_STATUS_NEW_DEFAULT);
 
   const mainValues = [[
     jobNo,
@@ -472,7 +475,7 @@ function getAssetPortalRows_(sheet) {
       alert: toPortalValue_(row[27]),
       oldComSn: toPortalValue_(row[28]),
       oldUpsSn: toPortalValue_(row[29]),
-      prepStatus: toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) || CONFIG.PREP_STATUS_OPTIONS[0]
+      prepStatus: toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) || (toPortalValue_(row[28]) ? 'รับคืนแล้ว' : CONFIG.PREP_STATUS_DEFAULT),
     };
   }).filter(function(row) {
     return row.jobNo || row.setCode || row.building || row.department;
@@ -489,7 +492,7 @@ function ensurePreparationStatusColumn_(sheet) {
 
 function normalizePreparationStatus_(value) {
   const text = String(value || '').trim();
-  return CONFIG.PREP_STATUS_OPTIONS.indexOf(text) !== -1 ? text : CONFIG.PREP_STATUS_OPTIONS[0];
+  return CONFIG.PREP_STATUS_OPTIONS.indexOf(text) !== -1 ? text : CONFIG.PREP_STATUS_NEW_DEFAULT;
 }
 
 function updateAssetPreparationStatus(rowNumber, prepStatus) {
@@ -531,8 +534,10 @@ function buildPortalDashboard_(rows) {
     returned: counts['รับคืนแล้ว'] || 0,
     repair: counts['ส่งซ่อม'] || 0,
     disposed: counts['ตัดจำหน่าย'] || 0,
+    prepWindows: prepCounts['ลง Windows'] || 0,
     prepReady: prepCounts['พร้อมติดตั้ง'] || 0,
-    prepInProgress: (prepCounts['ลง Windows'] || 0) + (prepCounts['ลงโปรแกรม'] || 0) + (prepCounts['รอ Activate'] || 0),
+    prepReturned: prepCounts['รับคืนแล้ว'] || 0,
+    prepInProgress: (prepCounts['ลงโปรแกรม'] || 0) + (prepCounts['รอ Activate'] || 0),
     prepReceived: prepCounts['รับเข้าแล้ว'] || 0,
     prepBlocked: prepCounts['ติดปัญหา'] || 0,
     ups: rows.filter(function(row) { return row.deliverUps; }).length,
