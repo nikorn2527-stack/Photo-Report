@@ -125,7 +125,10 @@
       .pending-name { margin-top:6px; color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
       .uploading-note { margin-top:8px; color:var(--blue); font-size:13px; font-weight:800; }
       .modal-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+      .save-button { grid-column:1 / -1; width:100%; min-height:60px; border:0; border-radius:11px; background:var(--green); color:#fff; font-size:18px; font-weight:900; cursor:pointer; }
+      .save-button:disabled { background:#b8c0ca; color:#f1f3f4; cursor:not-allowed; }
       .delete-button { width:100%; min-height:56px; margin-top:0; border:0; border-radius:11px; background:var(--danger); color:#fff; font-size:16px; font-weight:900; cursor:pointer; }
+      .delete-button[hidden] + .cancel-button { grid-column:1 / -1; }
       .cancel-button { width:100%; min-height:56px; margin-top:0; border:1px solid #9aa0a6; border-radius:11px; background:#fff; color:var(--ink); font-size:16px; font-weight:900; cursor:pointer; }
       .hidden { display:none !important; }
       .fullscreen-viewer { position:fixed; z-index:40; inset:0; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(0,0,0,.88); }
@@ -230,6 +233,7 @@
         .source-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
         .modal-button { min-height:68px; padding:12px 10px; border-radius:13px; font-size:19px; }
         .modal-actions { grid-template-columns:1fr 1fr; gap:10px; margin-top:13px; }
+        .save-button { min-height:68px; font-size:20px; }
         .delete-button, .cancel-button { min-height:60px; font-size:18px; }
       }
       @media print { .job-card,.capture-summary,.capture-heading,.bento-grid,.signage-card,.more-tools,.status,.modal-backdrop,.fullscreen-viewer { display:none !important; } }
@@ -241,7 +245,7 @@
         <header class="brand">
           <p class="eyebrow">IT Rental Photo Report</p>
           <h1 class="title">เก็บรูปหน้างาน</h1>
-          <p class="subtitle">เลือก Job แล้วแตะช่อง ก่อนติดตั้ง หรือ หลังติดตั้ง — รูปจะบันทึกอัตโนมัติทันที</p>
+          <p class="subtitle">เลือก Job แล้วแตะช่อง ก่อนติดตั้ง หรือ หลังติดตั้ง — เลือกรูปแล้วกด “บันทึก” รูปจะลงชีตทันที</p>
         </header>
 
         <section class="job-card">
@@ -259,7 +263,7 @@
         <section class="capture-summary">
           <div class="summary-line"><span class="summary-label">รูปที่เก็บแล้ว</span><strong id="progressCount" class="progress-count">0/9</strong></div>
           <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
-          <div class="summary-bottom"><span id="missingLine" class="missing-line">เลือก Job แล้วเริ่มถ่ายรูป — บันทึกอัตโนมัติ</span><div class="summary-actions"><button id="printJobButton" class="compact-print" type="button" onclick="printJob()" disabled>พิมพ์เอกสาร</button></div></div>
+          <div class="summary-bottom"><span id="missingLine" class="missing-line">เลือก Job แล้วเริ่มถ่ายรูป — เลือกรูปแล้วกดบันทึก</span><div class="summary-actions"><button id="printJobButton" class="compact-print" type="button" onclick="printJob()" disabled>พิมพ์เอกสาร</button></div></div>
         </section>
 
         <div class="capture-heading"><h2>2. เก็บรูป</h2><p>แตะการ์ดเพื่อเพิ่มหลายรูป</p></div>
@@ -295,14 +299,14 @@
       <section class="modal">
         <div class="modal-handle"></div>
         <h2 id="modalTitle" class="modal-title">เพิ่มรูป</h2>
-        <p id="modalNote" class="modal-note">เลือกรูปจากคลังหรือถ่ายรูปใหม่ ระบบจะบันทึกให้อัตโนมัติ</p>
+        <p id="modalNote" class="modal-note">เลือกรูปจากคลังหรือถ่ายรูปใหม่ แล้วกด “บันทึก” เพื่อบันทึกลงชีต</p>
         <div id="slotPicker" class="slot-picker"></div>
         <div id="existingBox" class="existing-box">ช่องนี้มีรูปแล้ว เลือกรูปใหม่เพื่อแทนที่ หรือกดลบรูป</div>
         <div class="source-grid"><button id="galleryButton" class="modal-button gallery-button" type="button" onclick="chooseGallery()">เลือกรูปจากคลัง</button><button id="cameraButton" class="modal-button camera-button" type="button" onclick="chooseCamera()">ถ่ายรูปด้วยกล้อง</button></div>
         <input id="galleryFile" class="hidden" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
         <input id="cameraFile" class="hidden" type="file" accept="image/*" capture="environment">
         <div id="pending" class="pending"><div id="pendingGrid" class="pending-grid"></div><div id="pendingName" class="pending-name"></div><div id="uploadingNote" class="uploading-note"></div></div>
-        <div class="modal-actions"><button id="deletePhotoButton" class="delete-button" type="button" onclick="deletePhoto()" hidden>ลบรูปนี้</button><button class="cancel-button" type="button" onclick="closeModal()">ปิด</button></div>
+        <div class="modal-actions"><button id="savePhotoButton" class="save-button" type="button" onclick="saveSelectedPhotos()" disabled>บันทึก</button><button id="deletePhotoButton" class="delete-button" type="button" onclick="deletePhoto()" hidden>ลบรูปนี้</button><button class="cancel-button" type="button" onclick="closeModal()">ยกเลิก</button></div>
       </section>
     </div>
 
@@ -322,6 +326,7 @@
       let activeMode = 'group';
       let previews = {};
       let previewUrls = {};
+      let pendingFiles = [];
       let uploading = false;
 
       window.addEventListener('load', function() {
@@ -442,7 +447,7 @@
         document.getElementById('progressFill').style.width = Math.round(filled.length / total * 100) + '%';
         const missing = allPhotoTypes().filter(function(type) { return filled.indexOf(type) === -1; });
         const line = document.getElementById('missingLine');
-        line.textContent = !getJob() ? 'เลือก Job แล้วเริ่มถ่ายรูป — บันทึกอัตโนมัติ' : (complete ? 'รูปครบแล้ว พร้อมพิมพ์เอกสาร' : 'ยังขาด ' + missing.length + ' รูป — แตะช่องเพื่อเพิ่ม ระบบบันทึกอัตโนมัติ');
+        line.textContent = !getJob() ? 'เลือก Job แล้วเริ่มถ่ายรูป — เลือกรูปแล้วกดบันทึก' : (complete ? 'รูปครบแล้ว พร้อมพิมพ์เอกสาร' : 'ยังขาด ' + missing.length + ' รูป — แตะช่อง เลือกรูป แล้วกดบันทึก');
         line.className = 'missing-line' + (complete ? ' complete' : '');
         if (getJob()) { document.getElementById('jobStatus').textContent = complete ? 'งานนี้ครบ 9/9 รูปแล้ว' : 'กำลังเก็บรูป — มีแล้ว ' + filled.length + '/9 รูป'; document.getElementById('jobStatus').className = 'job-status' + (complete ? ' complete' : ''); }
       }
@@ -506,7 +511,7 @@
         activeMode = 'group'; activeGroupKey = groupKey; activeType = '';
         resetPending();
         document.getElementById('modalTitle').textContent = group.title;
-        document.getElementById('modalNote').textContent = group.note + ' เลือกหลายรูปพร้อมกันได้ ระบบจะเรียงลงช่องว่างให้อัตโนมัติ';
+        document.getElementById('modalNote').textContent = group.note + ' เลือกหลายรูปพร้อมกันได้ ระบบจะเรียงลงช่องว่างให้อัตโนมัติ แล้วกด “บันทึก”';
         document.getElementById('existingBox').classList.remove('visible');
         document.getElementById('deletePhotoButton').hidden = true;
         document.getElementById('slotPicker').classList.add('visible');
@@ -521,7 +526,7 @@
         resetPending();
         const done = isFilled(type);
         document.getElementById('modalTitle').textContent = done ? 'เปลี่ยนรูป: ' + PHOTO_LABELS[type] : 'เพิ่มรูป: ' + PHOTO_LABELS[type];
-        document.getElementById('modalNote').textContent = 'เลือกรูปจากคลังหรือถ่ายรูปใหม่ ระบบจะบันทึกให้อัตโนมัติ';
+        document.getElementById('modalNote').textContent = 'เลือกรูปจากคลังหรือถ่ายรูปใหม่ แล้วกด “บันทึก” เพื่อบันทึกลงชีต';
         document.getElementById('existingBox').classList.toggle('visible', done);
         document.getElementById('deletePhotoButton').hidden = !done;
         document.getElementById('slotPicker').classList.remove('visible');
@@ -536,7 +541,7 @@
       }
 
       function closeModal() { if (uploading) return; resetPending(); document.getElementById('photoModal').classList.remove('open'); activeType = ''; activeGroupKey = ''; activeMode = 'group'; }
-      function resetPending() { document.getElementById('galleryFile').value = ''; document.getElementById('cameraFile').value = ''; document.getElementById('pendingGrid').innerHTML = ''; document.getElementById('pendingName').textContent = ''; document.getElementById('uploadingNote').textContent = ''; document.getElementById('pending').classList.remove('visible'); }
+      function resetPending() { pendingFiles = []; document.getElementById('galleryFile').value = ''; document.getElementById('cameraFile').value = ''; document.getElementById('pendingGrid').innerHTML = ''; document.getElementById('pendingName').textContent = ''; document.getElementById('uploadingNote').textContent = ''; document.getElementById('pending').classList.remove('visible'); document.getElementById('savePhotoButton').disabled = true; }
       function chooseGallery() { if (!uploading) document.getElementById('galleryFile').click(); }
       function chooseCamera() { if (!uploading) document.getElementById('cameraFile').click(); }
 
@@ -554,22 +559,28 @@
           setStatus('ช่องนี้รับได้ครั้งละ 1 รูป', true); event.target.value = ''; return;
         }
         showPending(files);
-        savePendingPhotos(files);
       }
 
       function showPending(files) {
         const root = document.getElementById('pendingGrid');
+        pendingFiles = files;
         root.innerHTML = '';
         document.getElementById('pendingName').textContent = files.length === 1 ? files[0].name : 'เลือกแล้ว ' + files.length + ' รูป';
-        document.getElementById('uploadingNote').textContent = 'กำลังบันทึกรูปอัตโนมัติ...';
+        document.getElementById('uploadingNote').textContent = 'ตรวจรูปแล้ว หากถูกต้องให้กด “บันทึก”';
+        document.getElementById('savePhotoButton').disabled = false;
         document.getElementById('pending').classList.add('visible');
         files.forEach(function(file) { const image = document.createElement('img'); image.alt = file.name; root.appendChild(image); readFileAsDataUrl(file).then(function(dataUrl) { image.src = dataUrl; }).catch(function() {}); });
+      }
+
+      function saveSelectedPhotos() {
+        if (!pendingFiles.length || uploading) return;
+        savePendingPhotos(pendingFiles);
       }
 
       async function savePendingPhotos(files) {
         const job = getJob();
         if (!job) { setStatus('กรุณาเลือก Job ก่อน', true); return; }
-        uploading = true; updateButtons();
+        uploading = true; document.getElementById('savePhotoButton').disabled = true; updateButtons();
         try {
           if (activeMode === 'single') {
             const dataUrl = await prepareUploadDataUrl(files[0]);
@@ -589,7 +600,7 @@
             finishUpload('บันทึกรูป ' + files.length + ' รูปเรียบร้อยแล้ว');
           }
         } catch (error) {
-          uploading = false; updateButtons(); document.getElementById('uploadingNote').textContent = ''; setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error), true);
+          uploading = false; document.getElementById('savePhotoButton').disabled = false; updateButtons(); document.getElementById('uploadingNote').textContent = ''; setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error), true);
         }
       }
 
