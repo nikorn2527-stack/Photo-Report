@@ -1,770 +1,292 @@
 <!DOCTYPE html>
 <html lang="th">
-  <head>
-    <base target="_top">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <script>
-      (function() {
-        var ua = navigator.userAgent || '';
-        var mobileUa = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini|Mobile/i.test(ua);
-        var touchPhone = navigator.maxTouchPoints > 0 && Math.min(screen.width || 9999, screen.height || 9999) <= 1600;
-        var compactViewport = (window.innerWidth || 9999) <= 1400;
-        if (mobileUa || touchPhone || compactViewport) document.documentElement.classList.add('mobile-runtime');
-      }());
-    </script>
-    <style>
-      :root { --ink:#202124; --muted:#68707a; --line:#d9dee5; --surface:#f5f7fa; --blue:#1967d2; --green:#188038; --green-dark:#0d652d; --orange:#b45f16; --danger:#b3261e; }
-      * { box-sizing:border-box; }
-      html,body { width:100%; min-height:100%; margin:0; overflow-x:hidden; background:#eef1f5; color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; font-size:16px; line-height:1.4; -webkit-text-size-adjust:100%; }
-      body { padding:0; }
-      button,select,input { font:inherit; }
-      button:focus-visible,select:focus-visible,input:focus-visible { outline:3px solid rgba(25,103,210,.25); outline-offset:2px; }
-      .app { width:100%; max-width:none; min-height:0; margin:0; background:#fff; }
-      .page { min-height:0; padding:12px 10px calc(24px + env(safe-area-inset-bottom)); }
-      .brand { padding:2px 2px 16px; }
-      .eyebrow { margin:0 0 4px; color:var(--blue); font-size:12px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
-      .title { margin:0; font-size:25px; line-height:1.15; }
-      .subtitle { margin:5px 0 0; color:var(--muted); font-size:14px; }
-      .job-card { position:sticky; top:0; z-index:5; padding:13px; border:1px solid #b8c0ca; border-radius:14px; background:rgba(255,255,255,.97); box-shadow:0 4px 15px rgba(32,33,36,.1); backdrop-filter:blur(8px); }
-      .job-label { display:block; margin-bottom:7px; font-size:15px; font-weight:900; }
-      .job-search-row { display:grid; grid-template-columns:minmax(0,1fr) 50px 50px; gap:8px; margin-bottom:9px; }
-      .job-search { width:100%; min-height:54px; padding:11px 13px; border:1px solid #8a9098; border-radius:10px; background:#fff; color:var(--ink); font-size:17px; }
-      .job-results { display:none; max-height:230px; margin:0 0 8px; padding:6px; overflow:auto; border:1px solid var(--line); border-radius:11px; background:#f8fafc; }
-      .job-results.visible { display:grid; gap:6px; }
-      .job-result { width:100%; min-height:48px; padding:9px 11px; border:1px solid #d1d6dd; border-radius:9px; background:#fff; color:var(--ink); font:inherit; font-size:15px; font-weight:800; text-align:left; cursor:pointer; }
-      .job-result:active { transform:scale(.985); }
-      .job-result.selected { border-color:#8bb89a; background:#e8f5ec; color:var(--green-dark); }
-      .job-search-hint { margin:5px 2px 8px; color:var(--muted); font-size:12px; line-height:1.3; }
-      .job-search-results { display:none; max-height:260px; margin:0 0 9px; gap:7px; overflow:auto; }
-      .job-search-results.visible { display:grid; }
-      .job-result-button { display:flex; width:100%; min-height:56px; flex-direction:column; align-items:flex-start; justify-content:center; padding:9px 12px; border:1px solid #c7cbd1; border-radius:10px; background:#fff; color:var(--ink); font:inherit; text-align:left; cursor:pointer; }
-      .job-result-button:active { transform:scale(.985); border-color:var(--blue); background:#eef5ff; }
-      .job-result-job { font-size:16px; font-weight:900; }
-      .job-result-meta { margin-top:2px; color:var(--muted); font-size:12px; }
-      .page-navigation { margin-top:10px; }
-      .portal-link { display:flex; min-height:50px; align-items:center; justify-content:center; padding:10px 14px; border:1px solid #9bbce8; border-radius:12px; background:#eef5ff; color:var(--blue); font-size:15px; font-weight:900; text-decoration:none; }
-      .portal-link:active { transform:scale(.985); }
-      .clear-search { min-height:54px; border:1px solid #9aa0a6; border-radius:10px; background:#f8fafc; color:var(--muted); font-size:25px; font-weight:700; cursor:pointer; }
-      .job-row { display:grid; grid-template-columns:1fr 50px; gap:8px; }
-      select { width:100%; min-height:54px; padding:11px 12px; border:1px solid #8a9098; border-radius:10px; background:#fff; color:var(--ink); font-size:17px; }
-      .refresh { min-height:54px; border:1px solid #8a9098; border-radius:10px; background:#f8fafc; color:var(--ink); font-size:21px; cursor:pointer; }
-      .job-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:9px; color:var(--muted); font-size:13px; }
-      .job-location { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-      .job-date { color:var(--muted); font-size:12px; white-space:nowrap; }
-      .job-status { margin-top:9px; padding:8px 10px; border-radius:9px; background:#fff7ed; color:#8a4b0f; font-size:13px; font-weight:800; text-align:center; }
-      .job-status.complete { background:#e8f5ec; color:var(--green-dark); }
-      .capture-summary { margin-top:13px; padding:12px 13px; border:1px solid var(--line); border-radius:13px; background:var(--surface); }
-      .summary-line { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-      .summary-label { color:var(--muted); font-size:13px; font-weight:800; }
-      .progress-count { color:var(--blue); font-size:20px; font-weight:900; }
-      .progress-track { height:9px; margin-top:8px; overflow:hidden; border-radius:9px; background:#e1e5ea; }
-      .progress-fill { height:100%; width:0; border-radius:9px; background:var(--green); transition:width .2s ease; }
-      .summary-bottom { display:flex; align-items:center; justify-content:space-between; gap:9px; margin-top:8px; }
-      .summary-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex:none; flex-wrap:wrap; }
-      .missing-line { min-width:0; overflow:hidden; color:#8a4b0f; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
-      .missing-line.complete { color:var(--green-dark); }
-      .compact-print { display:inline-flex; min-height:38px; align-items:center; justify-content:center; padding:7px 11px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font-size:12px; font-weight:900; cursor:pointer; text-decoration:none; }
-      .compact-print:disabled { border-color:#c7cbd1; background:#eef0f3; color:#7b8188; cursor:not-allowed; }
-      .compact-print[hidden], .print-info[hidden] { display:none !important; }
-      .print-info { margin-top:8px; padding:8px 10px; border:1px solid #b7d2ef; border-radius:8px; background:#f5f9ff; color:#355a82; font-size:12px; line-height:1.35; overflow-wrap:anywhere; }
-      .print-preview { position:fixed; z-index:50; inset:0; display:none; overflow:auto; padding:12px; background:#eef1f5; }
-      .print-preview.open { display:block; }
-      .print-toolbar { position:sticky; z-index:2; top:0; display:flex; align-items:center; justify-content:space-between; gap:8px; max-width:210mm; margin:0 auto 10px; padding:10px; border:1px solid #c7cbd1; border-radius:12px; background:rgba(255,255,255,.96); box-shadow:0 3px 12px rgba(32,33,36,.14); }
-      .print-toolbar-title { min-width:0; color:var(--ink); font-size:14px; font-weight:900; }
-      .print-toolbar-actions { display:flex; gap:7px; flex:none; }
-      .print-action { min-height:42px; padding:8px 12px; border:1px solid var(--blue); border-radius:9px; background:var(--blue); color:#fff; font-size:13px; font-weight:900; cursor:pointer; }
-      .print-close { border-color:#9aa0a6; background:#fff; color:var(--ink); }
-      .print-page { width:min(100%,210mm); min-height:297mm; margin:0 auto; padding:10mm 9mm; background:#fff; color:#202124; box-shadow:0 4px 18px rgba(32,33,36,.18); font-family:Arial,"Noto Sans Thai",sans-serif; }
-      .print-company { margin:0; color:#1f3c64; font-size:10pt; font-weight:900; text-align:center; }
-      .print-document-title { margin:2mm 0 3mm; color:#1f3c64; font-size:13pt; font-weight:900; text-align:center; }
-      .print-meta { display:grid; grid-template-columns:1.1fr 2fr 1fr; gap:2mm; margin-bottom:3mm; font-size:8pt; }
-      .print-meta-box { min-height:8mm; padding:2mm; border:1px solid #b8c0ca; background:#fff; }
-      .print-meta-label { color:#555; font-weight:700; }
-      .print-meta-value { color:#1f3c64; font-weight:900; }
-      .print-section-title { padding:1.7mm 2mm; color:#fff; background:#285b91; font-size:8.5pt; font-weight:900; text-align:center; }
-      .print-signage { display:grid; grid-template-columns:1fr 2fr; min-height:38mm; border:1px solid #285b91; border-top:0; }
-      .print-signage .print-image-box { border-right:1px solid #285b91; }
-      .print-image-box { display:flex; min-width:0; min-height:34mm; align-items:center; justify-content:center; overflow:hidden; padding:2mm; background:#fff; }
-      .print-image-box img { display:block; max-width:100%; max-height:100%; object-fit:contain; }
-      .print-empty { color:#9aa0a6; font-size:8pt; text-align:center; }
-      .print-pair-head { display:grid; grid-template-columns:1fr 1fr; margin-top:4mm; }
-      .print-pair-head div { padding:1.5mm; font-size:8pt; font-weight:900; text-align:center; }
-      .print-before-head { color:#8a4b0f; background:#f4d7bb; }
-      .print-after-head { color:#166534; background:#ccebd5; }
-      .print-pair { display:grid; grid-template-columns:1fr 1fr; min-height:44mm; border:1px solid #b8c0ca; border-top:0; }
-      .print-pair .print-image-box { min-height:44mm; }
-      .print-pair .print-image-box:first-child { border-right:1px solid #b8c0ca; }
-      .print-slot-label { align-self:flex-start; margin-top:-1mm; color:#777; font-size:7pt; }
-      .print-preview-note { max-width:210mm; margin:8px auto 0; color:#68707a; font-size:12px; text-align:center; }
-      @media print {
-        @page { size:A4 portrait; margin:0; }
-        html,body { width:210mm; min-height:297mm; background:#fff; }
-        body > main, body > .modal-backdrop, body > .fullscreen-viewer { display:none !important; }
-        .print-preview { position:static; display:block !important; width:210mm; min-height:297mm; padding:0; overflow:visible; background:#fff; }
-        .print-toolbar, .print-preview-note { display:none !important; }
-        .print-page { width:210mm; min-height:297mm; margin:0; padding:10mm 9mm; box-shadow:none; }
-      }
-      .capture-heading { display:flex; align-items:end; justify-content:space-between; gap:8px; margin:20px 2px 9px; }
-      .capture-heading h2 { margin:0; font-size:19px; }
-      .capture-heading p { margin:0; color:var(--muted); font-size:12px; }
-      .bento-grid { display:grid; grid-template-columns:1fr; gap:10px; }
-      .bento-card { display:flex; min-height:320px; flex-direction:column; padding:12px; border:1px solid #c7cbd1; border-radius:17px; background:#fff; color:var(--ink); text-align:left; box-shadow:0 3px 10px rgba(60,64,67,.08); cursor:pointer; transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease; }
-      .bento-card:active { transform:scale(.985); }
-      .bento-card.ready { border-color:#8bb89a; background:#fbfffc; }
-      .bento-card:disabled { opacity:.55; cursor:not-allowed; }
-      .bento-top { display:flex; align-items:center; justify-content:space-between; gap:5px; }
-      .bento-number { color:var(--muted); font-size:11px; font-weight:900; letter-spacing:.08em; }
-      .bento-count { padding:4px 7px; border-radius:999px; background:#eef2f6; color:var(--muted); font-size:11px; font-weight:900; white-space:nowrap; }
-      .bento-card.ready .bento-count { background:#e8f5ec; color:var(--green-dark); }
-      .bento-title { margin:12px 0 2px; font-size:21px; line-height:1.1; }
-      .bento-note { min-height:36px; margin:0; color:var(--muted); font-size:12px; line-height:1.35; }
-      .mosaic { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; flex:1; min-height:190px; margin:11px 0; }
-      .mosaic-tile { position:relative; display:flex; min-height:84px; align-items:center; justify-content:center; overflow:hidden; border:1px dashed #c7cbd1; border-radius:8px; background:#f5f7fa; color:#9aa0a6; font-size:20px; font-weight:900; }
-      .mosaic-tile.filled { border-style:solid; border-color:#a8cbb1; background:#e8f5ec; color:var(--green-dark); }
-      .mosaic-tile.filled::after { content:'บันทึกแล้ว ✓'; position:absolute; right:5px; bottom:5px; padding:3px 6px; border-radius:6px; background:rgba(13,101,45,.88); color:#fff; font-size:10px; line-height:1.1; font-weight:900; }
-      .mosaic-tile img { width:100%; height:100%; min-height:51px; object-fit:cover; }
-      .bento-footer { display:flex; align-items:center; justify-content:space-between; gap:5px; margin-top:auto; color:var(--blue); font-size:11px; font-weight:900; }
-      .bento-footer span:last-child { color:var(--muted); font-weight:700; }
-      .signage-card { display:flex; align-items:center; gap:10px; margin-top:10px; padding:10px 11px; border:1px solid var(--line); border-radius:12px; background:#fafbfc; }
-      .signage-icon { display:flex; width:64px; height:64px; flex:none; align-items:center; justify-content:center; overflow:hidden; padding:0; border:1px solid #b8c0ca; border-radius:12px; background:#e9eef7; color:var(--blue); font-size:24px; cursor:pointer; }
-      .signage-icon img { width:100%; height:100%; object-fit:cover; }
-      .signage-icon.has-preview { border-color:#8bb89a; background:#e8f5ec; }
-      .signage-copy { min-width:0; flex:1; }
-      .signage-title { font-size:14px; font-weight:900; }
-      .signage-status { margin-top:2px; color:var(--muted); font-size:12px; }
-      .signage-button { min-height:38px; padding:6px 9px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font-size:12px; font-weight:900; cursor:pointer; }
-      .more-tools { margin-top:19px; border-top:1px solid var(--line); }
-      .more-tools summary { padding:13px 2px; color:var(--muted); font-size:13px; font-weight:800; cursor:pointer; }
-      .links { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding-bottom:4px; }
-      .link-button { display:flex; min-height:43px; align-items:center; justify-content:center; padding:8px; border:1px solid #9aa0a6; border-radius:8px; color:var(--blue); font-size:12px; font-weight:800; text-align:center; text-decoration:none; }
-      .status { min-height:22px; margin-top:10px; color:var(--muted); font-size:13px; text-align:center; }
-      .status.error { color:var(--danger); }
-      .status.success { color:var(--green-dark); }
-      .modal-backdrop { position:fixed; z-index:20; inset:0; display:none; align-items:center; justify-content:center; padding:13px; background:rgba(32,33,36,.62); }
-      .modal-backdrop.open { display:flex; }
-      .modal { width:100%; max-width:560px; max-height:90vh; overflow:auto; padding:18px; border:1px solid #c7cbd1; border-radius:18px; background:#fff; box-shadow:0 12px 35px rgba(0,0,0,.3); }
-      .modal-handle { width:42px; height:4px; margin:0 auto 12px; border-radius:4px; background:#c5c9cf; }
-      .modal-title { margin:0; font-size:22px; }
-      .modal-note { margin:5px 0 13px; color:var(--muted); font-size:13px; }
-      .slot-picker { display:none; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-bottom:14px; }
-      .slot-picker.visible { display:grid; }
-      .slot-button { min-height:58px; border:1px solid #c7cbd1; border-radius:12px; background:#f8fafc; color:var(--muted); font-size:16px; font-weight:900; cursor:pointer; }
-      .slot-button:active, .modal-button:active, .delete-button:active, .cancel-button:active, .signage-button:active, .clear-search:active { transform:scale(.97); }
-      .slot-button.filled { border-color:#9bc3a6; background:#e8f5ec; color:var(--green-dark); }
-      .source-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-      .modal-button { min-height:60px; padding:10px 12px; border:0; border-radius:12px; color:#fff; font-size:16px; font-weight:900; line-height:1.25; cursor:pointer; }
-      .gallery-button { background:var(--blue); }
-      .camera-button { background:#5f6368; }
-      .existing-box { display:none; margin-bottom:12px; padding:10px; border:1px solid #e0b28b; border-radius:9px; background:#fff7ed; color:#8a4b0f; font-size:12px; font-weight:800; }
-      .existing-box.visible { display:block; }
-      .pending { display:none; margin-top:13px; }
-      .pending.visible { display:block; }
-      .pending-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-      .pending-grid img { width:100%; aspect-ratio:1; object-fit:cover; border:1px solid var(--line); border-radius:8px; background:#f1f3f4; }
-      .pending-name { margin-top:6px; color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
-      .uploading-note { margin-top:8px; color:var(--blue); font-size:13px; font-weight:800; }
-      .modal-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
-      .save-button { grid-column:1 / -1; width:100%; min-height:60px; border:0; border-radius:11px; background:var(--green); color:#fff; font-size:18px; font-weight:900; cursor:pointer; }
-      .save-button:disabled { background:#b8c0ca; color:#f1f3f4; cursor:not-allowed; }
-      .delete-button { width:100%; min-height:56px; margin-top:0; border:0; border-radius:11px; background:var(--danger); color:#fff; font-size:16px; font-weight:900; cursor:pointer; }
-      .delete-button[hidden] + .cancel-button { grid-column:1 / -1; }
-      .cancel-button { width:100%; min-height:56px; margin-top:0; border:1px solid #9aa0a6; border-radius:11px; background:#fff; color:var(--ink); font-size:16px; font-weight:900; cursor:pointer; }
-      .hidden { display:none !important; }
-      .fullscreen-viewer { position:fixed; z-index:40; inset:0; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(0,0,0,.88); }
-      .fullscreen-viewer.open { display:flex; }
-      .fullscreen-image { display:block; max-width:96vw; max-height:84vh; object-fit:contain; border-radius:8px; }
-      .viewer-caption { position:absolute; right:62px; bottom:22px; left:22px; color:#fff; font-size:15px; text-align:center; }
-      .viewer-close { position:absolute; top:calc(12px + env(safe-area-inset-top)); right:14px; width:50px; height:50px; border:1px solid rgba(255,255,255,.65); border-radius:50%; background:rgba(0,0,0,.45); color:#fff; font-size:28px; cursor:pointer; }
-      /* Responsive เฉพาะมือถือ: คงดีไซน์เดิม แต่จัดใหม่ให้พอดีจอ 6.7–6.9 นิ้ว */
-      /* ครอบคลุมมือถือที่เบราว์เซอร์รายงานความกว้างแบบ Desktop site ได้ถึงราว 1400px */
-      html.mobile-runtime, html.mobile-runtime body { min-height:0; background:#fff; }
-      html.mobile-runtime .app { width:100%; max-width:none !important; min-height:0; margin:0; }
-      html.mobile-runtime .page { width:100%; min-height:0; padding:12px 10px calc(24px + env(safe-area-inset-bottom)); }
-      html.mobile-runtime .bento-grid { grid-template-columns:1fr; }
-      html.mobile-runtime .bento-card { min-height:320px; padding:14px; }
-      html.mobile-runtime .bento-title { font-size:23px; }
-      html.mobile-runtime .bento-note { font-size:13px; }
-      html.mobile-runtime .mosaic { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; min-height:190px; }
-      html.mobile-runtime .source-grid { grid-template-columns:1fr; }
-      html.mobile-runtime .modal { width:100%; max-width:none; }
-      @media (max-width:1400px), (pointer:coarse) {
-        html,body { min-height:0; background:#fff; }
-        .app { width:100%; max-width:none !important; min-height:0; margin:0; }
-        .page { width:100%; min-height:0; padding:12px 10px calc(24px + env(safe-area-inset-bottom)); }
-        .bento-grid { grid-template-columns:1fr; }
-        .bento-card { min-height:320px; padding:14px; }
-        .bento-title { font-size:23px; }
-        .bento-note { font-size:13px; }
-        .mosaic { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; min-height:190px; }
-        .source-grid { grid-template-columns:1fr; }
-        .modal { width:100%; max-width:none; }
-      }
-      @media (max-width:430px), (pointer:coarse) {
-        .page { padding-left:10px; padding-right:10px; }
-        .bento-card { min-height:300px; padding:12px; }
-        .bento-title { font-size:21px; }
-        .bento-footer { font-size:10px; }
-        .job-meta { font-size:12px; }
-      }
-      /* Final mobile pass: ใช้พื้นที่และขนาดการกดแบบมือถือจริง 6.7–6.9 นิ้ว */
-      @media (max-width: 1400px), (pointer: coarse) {
-        html, body { font-size:19px; }
-        .page { padding:18px 16px calc(30px + env(safe-area-inset-bottom)); }
-        .brand { padding:4px 2px 20px; }
-        .eyebrow { font-size:15px; }
-        .title { font-size:34px; }
-        .subtitle { margin-top:7px; font-size:18px; }
-        .job-card { padding:17px; border-radius:17px; }
-        .job-label { margin-bottom:9px; font-size:19px; }
-        .job-search-row { grid-template-columns:minmax(0,1fr) 58px 58px; gap:10px; margin-bottom:10px; }
-        .job-search { min-height:66px; padding:14px 15px; border-radius:12px; font-size:20px; }
-        .job-results { max-height:260px; padding:8px; border-radius:13px; }
-        .job-result { min-height:58px; padding:11px 13px; border-radius:11px; font-size:18px; }
-        .job-search-hint { margin:6px 2px 9px; font-size:14px; }
-        .job-search-results { gap:9px; }
-        .job-result-button { min-height:66px; padding:11px 14px; border-radius:12px; }
-        .job-result-job { font-size:19px; }
-        .job-result-meta { font-size:14px; }
-        .page-navigation { margin-top:12px; }
-        .portal-link { min-height:62px; border-radius:14px; font-size:19px; }
-        .clear-search { min-height:66px; border-radius:12px; font-size:29px; }
-        .job-row { grid-template-columns:minmax(0,1fr) 62px; gap:10px; }
-        select { min-height:66px; padding:14px 15px; border-radius:12px; font-size:22px; }
-        .refresh { min-height:66px; border-radius:12px; font-size:27px; }
-        .job-meta { margin-top:11px; font-size:16px; }
-        .job-date { font-size:15px; }
-        .job-status { margin-top:11px; padding:11px 12px; border-radius:11px; font-size:17px; }
-        .capture-summary { margin-top:16px; padding:16px 17px; border-radius:16px; }
-        .summary-label { font-size:17px; }
-        .progress-count { font-size:27px; }
-        .progress-track { height:11px; margin-top:10px; }
-        .summary-bottom { margin-top:11px; gap:10px; }
-        .summary-actions { gap:8px; }
-        .missing-line { font-size:16px; }
-        .compact-print { min-height:48px; padding:9px 13px; border-radius:10px; font-size:16px; }
-        .capture-heading { margin:26px 2px 12px; }
-        .capture-heading h2 { font-size:25px; }
-        .capture-heading p { font-size:16px; }
-        .bento-grid { gap:14px; }
-        .bento-card { min-height:430px; padding:18px; border-radius:20px; }
-        .bento-number { font-size:15px; }
-        .bento-count { padding:6px 9px; font-size:15px; }
-        .bento-title { margin-top:15px; font-size:31px; }
-        .bento-note { min-height:44px; font-size:18px; }
-        .mosaic { gap:12px; min-height:270px; margin:14px 0; }
-        .mosaic-tile { min-height:118px; border-radius:11px; font-size:28px; }
-        .bento-footer { gap:8px; font-size:15px; }
-        .signage-card { gap:13px; margin-top:14px; padding:14px; border-radius:15px; }
-        .signage-icon { width:72px; height:72px; border-radius:13px; font-size:27px; }
-        .signage-title { font-size:19px; }
-        .signage-status { font-size:16px; }
-        .signage-button { min-height:48px; padding:8px 12px; border-radius:10px; font-size:16px; }
-        .more-tools { margin-top:22px; }
-        .more-tools summary { padding:16px 2px; font-size:18px; }
-        .link-button { min-height:50px; padding:10px; font-size:16px; }
-        .status { min-height:26px; margin-top:13px; font-size:16px; }
-        .modal-backdrop { padding:10px; }
-        .modal { max-height:92vh; padding:22px 18px calc(24px + env(safe-area-inset-bottom)); border-radius:20px; }
-        .modal-title { font-size:28px; }
-        .modal-note { font-size:18px; }
-        .slot-picker { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-        .slot-button { min-height:64px; border-radius:13px; font-size:18px; }
-        .source-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-        .modal-button { min-height:68px; padding:12px 10px; border-radius:13px; font-size:19px; }
-        .modal-actions { grid-template-columns:1fr 1fr; gap:10px; margin-top:13px; }
-        .save-button { min-height:68px; font-size:20px; }
-        .delete-button, .cancel-button { min-height:60px; font-size:18px; }
-      }
-      @media print { .job-card,.capture-summary,.capture-heading,.bento-grid,.signage-card,.more-tools,.status,.modal-backdrop,.fullscreen-viewer { display:none !important; } }
-    </style>
-  </head>
-  <body>
-    <main class="app">
-      <section class="page">
-        <header class="brand">
-          <p class="eyebrow">IT Rental Photo Report</p>
-          <h1 class="title">เก็บรูปหน้างาน</h1>
-          <p class="subtitle">เลือก Job แล้วแตะช่อง ก่อนติดตั้ง หรือ หลังติดตั้ง — เลือกรูปแล้วกด “บันทึก” รูปจะลงชีตทันที</p>
-        </header>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Photo Report</title>
+  <style>
+    :root { --ink:#172033; --muted:#687386; --line:#dfe5ec; --blue:#1769e0; --blue-soft:#edf4ff; --green:#16834b; --green-soft:#eaf8f0; --orange:#b96a18; --orange-soft:#fff3e3; --danger:#c62828; --surface:#f5f7fa; }
+    * { box-sizing:border-box; }
+    html,body { width:100%; min-height:100%; margin:0; background:#f5f7fa; color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; font-size:16px; line-height:1.4; -webkit-text-size-adjust:100%; }
+    body { overflow-x:hidden; }
+    button,input { font:inherit; }
+    button:focus-visible,input:focus-visible { outline:3px solid rgba(23,105,224,.25); outline-offset:2px; }
+    .app { width:100%; min-height:100vh; }
+    .page { width:100%; max-width:760px; margin:0 auto; padding:16px 14px calc(30px + env(safe-area-inset-bottom)); }
+    .brand { padding:4px 2px 8px; }
+    .brand .subtitle { display:none; }
+    .eyebrow { margin:0 0 3px; color:var(--blue); font-size:12px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { margin:0; font-size:30px; line-height:1.1; letter-spacing:-.02em; }
+    .subtitle { margin:6px 0 0; color:var(--muted); font-size:14px; }
+    .card { border:1px solid var(--line); border-radius:18px; background:#fff; box-shadow:0 4px 16px rgba(24,39,75,.06); }
+    .job-card { position:sticky; top:0; z-index:8; padding:14px; background:rgba(255,255,255,.97); backdrop-filter:blur(10px); }
+    .step-label { display:block; margin-bottom:8px; font-size:14px; font-weight:900; }
+    .search-row { display:grid; grid-template-columns:minmax(0,1fr) 52px; gap:8px; }
+    .job-search { width:100%; min-height:56px; padding:13px 15px; border:1px solid #9aa7b7; border-radius:13px; background:#fff; color:var(--ink); font-size:18px; }
+    .clear-button { min-height:56px; border:1px solid #aeb8c5; border-radius:13px; background:#f8fafc; color:var(--muted); font-size:27px; font-weight:700; cursor:pointer; }
+    .search-hint { min-height:20px; margin:7px 2px 0; color:var(--muted); font-size:13px; }
+    .search-results { display:none; gap:7px; max-height:260px; margin-top:9px; overflow:auto; }
+    .search-results.open { display:grid; }
+    .job-result { display:flex; min-height:59px; flex-direction:column; align-items:flex-start; justify-content:center; padding:9px 12px; border:1px solid #cbd5e1; border-radius:12px; background:#fff; color:var(--ink); text-align:left; cursor:pointer; }
+    .job-result:active { transform:scale(.985); background:var(--blue-soft); }
+    .job-result strong { font-size:17px; }
+    .job-result span { margin-top:2px; color:var(--muted); font-size:12px; }
+    .selected-job { display:none !important; margin-top:12px; padding:12px; border-radius:13px; background:var(--blue-soft); }
+    .selected-job.open { display:block; }
+    .selected-job-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .selected-job-number { color:var(--blue); font-size:22px; font-weight:950; }
+    .selected-job-location { margin-top:2px; color:var(--muted); font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .job-status { margin-top:8px; color:var(--muted); font-size:13px; font-weight:800; }
+    .workspace { display:none; }
+    .workspace.open { display:block; }
+    .progress-card { margin-top:14px; padding:15px; }
+    .progress-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .progress-title { color:var(--muted); font-size:14px; font-weight:900; }
+    .progress-count { color:var(--blue); font-size:25px; font-weight:950; }
+    .progress-track { height:10px; margin-top:9px; overflow:hidden; border-radius:99px; background:#e7ebf0; }
+    .progress-fill { width:0; height:100%; border-radius:99px; background:var(--green); transition:width .2s ease; }
+    .progress-note { margin:9px 0 0; color:var(--muted); font-size:13px; }
+    .capture-heading { display:flex; align-items:end; justify-content:space-between; gap:8px; margin:20px 2px 10px; }
+    .capture-heading h2 { margin:0; font-size:21px; }
+    .capture-heading p { margin:0; color:var(--muted); font-size:12px; }
+    .capture-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+    .capture-button { display:flex; min-height:150px; flex-direction:column; align-items:flex-start; justify-content:space-between; padding:15px; border:1px solid #cbd5e1; border-radius:18px; background:#fff; color:var(--ink); text-align:left; box-shadow:0 4px 12px rgba(24,39,75,.06); cursor:pointer; }
+    .capture-button:active { transform:scale(.98); }
+    .capture-button:disabled { opacity:.48; cursor:not-allowed; }
+    .capture-button.before { border-color:#e7bd91; background:linear-gradient(160deg,#fff,#fff8f0); }
+    .capture-button.after { border-color:#a7d7ba; background:linear-gradient(160deg,#fff,#f2fbf5); }
+    .capture-icon { display:flex; width:50px; height:50px; align-items:center; justify-content:center; border-radius:15px; background:var(--surface); font-size:25px; }
+    .before .capture-icon { background:var(--orange-soft); }
+    .after .capture-icon { background:var(--green-soft); }
+    .capture-name { margin-top:10px; font-size:19px; font-weight:950; }
+    .capture-help { margin-top:3px; color:var(--muted); font-size:12px; }
+    .capture-count { align-self:flex-end; color:var(--muted); font-size:13px; font-weight:900; }
+    .signage-button { display:flex; width:100%; min-height:82px; align-items:center; gap:12px; margin-top:11px; padding:12px; border:1px solid #aec6df; border-radius:17px; background:#f7fbff; color:var(--ink); text-align:left; cursor:pointer; }
+    .signage-button:active { transform:scale(.985); }
+    .signage-button:disabled { opacity:.48; cursor:not-allowed; }
+    .signage-icon { display:flex; width:51px; height:51px; flex:none; align-items:center; justify-content:center; border-radius:14px; background:#e9f2ff; color:var(--blue); font-size:24px; }
+    .signage-copy { min-width:0; flex:1; }
+    .signage-title { font-size:16px; font-weight:950; }
+    .signage-status { margin-top:2px; color:var(--muted); font-size:12px; }
+    .signage-arrow { color:var(--blue); font-size:21px; font-weight:900; }
+    .actions { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:15px; }
+    .main-action { min-height:52px; border:0; border-radius:13px; background:var(--blue); color:#fff; font-size:15px; font-weight:950; cursor:pointer; }
+    .main-action.secondary { border:1px solid #abc0df; background:#fff; color:var(--blue); }
+    .main-action:disabled { background:#c6ced8; color:#fff; cursor:not-allowed; }
+    .tools { margin-top:20px; }
+    .tools summary { padding:12px 2px; color:var(--muted); font-size:14px; font-weight:900; cursor:pointer; }
+    .tool-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .tool-link { display:flex; min-height:44px; align-items:center; justify-content:center; padding:8px; border:1px solid #b9c4d2; border-radius:10px; color:var(--blue); font-size:12px; font-weight:800; text-align:center; text-decoration:none; }
+    .mobile-job-bar { display:flex; align-items:center; gap:8px; margin-top:14px; padding:9px 11px; border-radius:12px; background:var(--blue-soft); }
+    .mobile-job-bar strong { color:var(--blue); font-size:20px; font-weight:950; }
+    .mobile-job-bar span { min-width:0; flex:1; overflow:hidden; color:var(--muted); font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
+    .mobile-job-bar b { color:var(--blue); font-size:13px; }
+    .mobile-photo-card { margin-top:11px; padding:11px; border:1px solid var(--line); border-radius:17px; background:#fff; box-shadow:0 4px 14px rgba(24,39,75,.06); }
+    .mobile-photo-head { display:flex; align-items:end; justify-content:space-between; margin:0 2px 6px; }
+    .mobile-photo-head h2 { margin:0; font-size:20px; }
+    .mobile-photo-head span { color:var(--muted); font-size:11px; }
+    .mobile-photo-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .mobile-section-label { grid-column:1/-1; padding:5px 3px 1px; font-size:13px; font-weight:950; }
+    .mobile-section-label.signage { color:var(--blue); }
+    .mobile-section-label.before { color:#b66a17; }
+    .mobile-section-label.after { color:#16834b; }
+    .mobile-slot { position:relative; display:flex; min-width:0; min-height:138px; align-items:center; justify-content:center; padding:0; overflow:hidden; border:1px solid #cbd5e1; border-radius:14px; background:#fafbfd; box-shadow:0 2px 8px rgba(24,39,75,.05); user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+    .mobile-slot.signage { grid-column:1/-1; min-height:91px; }
+    .mobile-slot.before { border-color:#e6bd93; background:#fff9f2; }
+    .mobile-slot.after { border-color:#a8d8b9; background:#f2fbf5; }
+    .mobile-slot.has-image { background:#e9edf2; }
+    .mobile-slot:active { transform:scale(.985); }
+    .mobile-slot img { width:100%; height:100%; min-height:138px; object-fit:cover; pointer-events:none; }
+    .mobile-slot.signage img { min-height:91px; }
+    .mobile-slot-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px; text-align:center; }
+    .mobile-slot-icon { display:flex; width:40px; height:40px; align-items:center; justify-content:center; border-radius:12px; background:#eef2f6; color:#7a8795; font-size:24px; font-weight:800; }
+    .mobile-slot.before .mobile-slot-icon { background:var(--before-soft); color:var(--before); }
+    .mobile-slot.after .mobile-slot-icon { background:var(--after-soft); color:var(--after); }
+    .mobile-slot.signage .mobile-slot-icon { background:var(--blue-soft); color:var(--blue); }
+    .mobile-slot-label { font-size:14px; font-weight:950; }
+    .mobile-slot-note { color:var(--muted); font-size:10px; }
+    .mobile-slot.has-image .mobile-slot-label { position:absolute; right:5px; bottom:5px; left:5px; padding:3px 5px; border-radius:5px; background:rgba(0,0,0,.58); color:#fff; font-size:11px; text-align:left; }
+    .mobile-slot.has-image .mobile-slot-empty { display:none; }
+    .mobile-slot-x { position:absolute; z-index:3; top:6px; right:6px; display:none; width:34px; height:34px; padding:0; border:2px solid #fff; border-radius:50%; background:var(--danger); color:#fff; font-size:23px; font-weight:950; line-height:26px; box-shadow:0 2px 8px rgba(0,0,0,.28); }
+    .mobile-slot.hold-on .mobile-slot-x { display:block; }
+    .mobile-help { margin:9px 2px 0; color:var(--muted); font-size:11px; text-align:center; }
+    .mobile-more { margin-top:11px; }
+    .mobile-more summary { padding:7px 2px; color:#9aa5b2; font-size:11px; text-align:center; cursor:pointer; }
+    .mobile-more-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+    .mobile-more-grid a { padding:8px; border:1px solid #d2d9e2; border-radius:8px; background:#fff; color:var(--blue); font-size:11px; text-align:center; text-decoration:none; }
+    .status { min-height:23px; margin-top:12px; color:var(--muted); font-size:13px; text-align:center; }
+    .status.error { color:var(--danger); }
+    .status.success { color:var(--green); }
+    .modal-backdrop { position:fixed; z-index:30; inset:0; display:none; align-items:flex-end; justify-content:center; padding:10px; background:rgba(15,23,42,.62); }
+    .modal-backdrop.open { display:flex; }
+    .modal { width:100%; max-width:560px; max-height:88vh; overflow:auto; padding:19px 16px calc(20px + env(safe-area-inset-bottom)); border-radius:22px 22px 14px 14px; background:#fff; box-shadow:0 -8px 30px rgba(0,0,0,.24); }
+    .modal-handle { width:42px; height:4px; margin:0 auto 12px; border-radius:4px; background:#cbd5e1; }
+    .modal-title { margin:0; font-size:23px; }
+    .modal-note { margin:5px 0 14px; color:var(--muted); font-size:13px; }
+    .slot-picker { display:none; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+    .slot-picker.open { display:grid; }
+    .slot-button { min-height:62px; padding:9px; border:1px solid #cbd5e1; border-radius:13px; background:#fff; color:var(--ink); font-size:15px; font-weight:900; cursor:pointer; }
+    .slot-button.filled { border-color:#9bd0ad; background:var(--green-soft); color:var(--green); }
+    .existing-box { display:none; margin-bottom:12px; padding:11px; border-radius:11px; background:var(--orange-soft); color:#8a4b0f; font-size:13px; font-weight:800; }
+    .existing-box.open { display:block; }
+    .source-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+    .source-button { min-height:65px; border:0; border-radius:13px; color:#fff; font-size:16px; font-weight:950; cursor:pointer; }
+    .source-button.gallery { background:var(--blue); }
+    .source-button.camera { background:#4b5563; }
+    .pending { display:none; margin-top:13px; }
+    .pending.open { display:block; }
+    .pending-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+    .pending-grid img { width:100%; aspect-ratio:1; object-fit:cover; border:1px solid var(--line); border-radius:8px; }
+    .pending-name { margin-top:6px; color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
+    .upload-note { margin-top:7px; color:var(--blue); font-size:12px; font-weight:800; }
+    .modal-actions { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:13px; }
+    .save-button { grid-column:1 / -1; min-height:61px; border:0; border-radius:12px; background:var(--green); color:#fff; font-size:18px; font-weight:950; cursor:pointer; }
+    .save-button:disabled { background:#c6ced8; cursor:not-allowed; }
+    .delete-button,.cancel-button { min-height:55px; border:0; border-radius:12px; font-size:16px; font-weight:900; cursor:pointer; }
+    .delete-button { background:#fff0f0; color:var(--danger); }
+    .cancel-button { border:1px solid #b9c4d2; background:#fff; color:var(--ink); }
+    .hidden { display:none !important; }
+    .print-preview { position:fixed; z-index:50; inset:0; display:none; overflow:auto; padding:12px; background:#eef1f5; }
+    .print-preview.open { display:block; }
+    .print-toolbar { position:sticky; z-index:2; top:0; display:flex; align-items:center; justify-content:space-between; gap:8px; max-width:210mm; margin:0 auto 10px; padding:10px; border:1px solid #c7cbd1; border-radius:12px; background:rgba(255,255,255,.96); box-shadow:0 3px 12px rgba(32,33,36,.14); }
+    .print-toolbar-title { min-width:0; font-size:14px; font-weight:950; }
+    .print-toolbar-actions { display:flex; gap:7px; }
+    .print-action { min-height:42px; padding:8px 12px; border:1px solid var(--blue); border-radius:9px; background:var(--blue); color:#fff; font-size:13px; font-weight:900; cursor:pointer; }
+    .print-close { border-color:#9aa0a6; background:#fff; color:var(--ink); }
+    .print-page { width:min(100%,210mm); min-height:297mm; margin:0 auto; padding:10mm 9mm; background:#fff; color:#202124; box-shadow:0 4px 18px rgba(32,33,36,.18); font-family:Arial,"Noto Sans Thai",sans-serif; }
+    .print-company { margin:0; color:#1f3c64; font-size:10pt; font-weight:900; text-align:center; }
+    .print-document-title { margin:2mm 0 3mm; color:#1f3c64; font-size:13pt; font-weight:900; text-align:center; }
+    .print-meta { display:grid; grid-template-columns:1.1fr 2fr 1fr; gap:2mm; margin-bottom:3mm; font-size:8pt; }
+    .print-meta-box { min-height:8mm; padding:2mm; border:1px solid #b8c0ca; }
+    .print-meta-label { color:#555; font-weight:700; }
+    .print-meta-value { color:#1f3c64; font-weight:900; }
+    .print-section-title { padding:1.7mm 2mm; color:#fff; background:#285b91; font-size:8.5pt; font-weight:900; text-align:center; }
+    .print-signage { display:grid; grid-template-columns:1fr 2fr; min-height:38mm; border:1px solid #285b91; border-top:0; }
+    .print-signage .print-image-box { border-right:1px solid #285b91; }
+    .print-image-box { display:flex; min-width:0; min-height:34mm; align-items:center; justify-content:center; overflow:hidden; padding:2mm; background:#fff; }
+    .print-image-box img { display:block; max-width:100%; max-height:100%; object-fit:contain; }
+    .print-empty { color:#9aa0a6; font-size:8pt; text-align:center; }
+    .print-pair-head { display:grid; grid-template-columns:1fr 1fr; margin-top:4mm; }
+    .print-pair-head div { padding:1.5mm; font-size:8pt; font-weight:900; text-align:center; }
+    .print-before-head { color:#8a4b0f; background:#f4d7bb; }
+    .print-after-head { color:#166534; background:#ccebd5; }
+    .print-pair { display:grid; grid-template-columns:1fr 1fr; min-height:44mm; border:1px solid #b8c0ca; border-top:0; }
+    .print-pair .print-image-box { min-height:44mm; }
+    .print-pair .print-image-box:first-child { border-right:1px solid #b8c0ca; }
+    .print-preview-note { max-width:210mm; margin:8px auto 0; color:#68707a; font-size:12px; text-align:center; }
+    @media print {
+      @page { size:A4 portrait; margin:0; }
+      html,body { width:210mm; min-height:297mm; background:#fff; }
+      body > main, body > .modal-backdrop { display:none !important; }
+      .print-preview { position:static; display:block !important; width:210mm; min-height:297mm; padding:0; overflow:visible; background:#fff; }
+      .print-toolbar, .print-preview-note { display:none !important; }
+      .print-page { width:210mm; min-height:297mm; margin:0; padding:10mm 9mm; box-shadow:none; }
+    }
+    @media (max-width:520px), (pointer:coarse) {
+      .page { padding:12px 10px calc(24px + env(safe-area-inset-bottom)); }
+      .mobile-photo-card { padding:9px; }
+      .mobile-slot { min-height:133px; }
+      .mobile-slot img { min-height:133px; }
+      .mobile-slot.signage, .mobile-slot.signage img { min-height:88px; }
+      h1 { font-size:28px; }
+      .capture-grid { gap:9px; }
+      .capture-button { min-height:143px; padding:13px; }
+      .capture-name { font-size:17px; }
+      .capture-help { font-size:11px; }
+      .actions { grid-template-columns:1fr; }
+      .tool-grid { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="page">
+      <header class="brand">
+        <p class="eyebrow">IT Rental Photo Report</p>
+        <h1>เก็บรูปหน้างาน</h1>
+        <p class="subtitle">หน้ากรอกสำหรับมือถือโดยเฉพาะ เลือก Job แล้วแตะเฉพาะประเภทภาพที่ต้องการบันทึก</p>
+      </header>
 
-        <section class="job-card">
-          <label class="job-label" for="jobSearch">1. ค้นหา Job</label>
-          <div class="job-search-row"><input id="jobSearch" class="job-search" type="search" inputmode="search" placeholder="พิมพ์เลขบางส่วน เช่น 1234 หรือ JOB 12" autocomplete="off"><button id="clearJobSearch" class="clear-search" type="button" onclick="clearJobSearch()" aria-label="ล้างคำค้นหา">×</button><button id="refreshButton" class="refresh" type="button" onclick="loadJobs()" aria-label="รีเฟรชรายการ Job">↻</button></div>
-          <div id="jobSearchHint" class="job-search-hint">พิมพ์เลขบางส่วน ระบบจะเข้า Job ให้อัตโนมัติเมื่อพบรายการเดียว</div>
-          <div id="jobSearchResults" class="job-search-results" aria-live="polite"></div>
-          <select id="jobSelect" class="hidden" aria-hidden="true" tabindex="-1"><option value="">กำลังโหลดรายการ Job...</option></select>
-          <div class="job-meta"><span id="locationValue" class="job-location">ยังไม่ได้เลือกสถานที่</span><span id="installDateText" class="job-date">วันนี้</span></div>
-          <input id="installDate" class="hidden" type="date">
-          <div id="jobStatus" class="job-status">เลือก Job เพื่อเริ่มเก็บรูป</div>
-        </section>
-        <div class="page-navigation"><a id="portalLink" class="portal-link" href="#" target="_top">ไป IT Rental Portal →</a></div>
-
-        <section class="capture-summary">
-          <div class="summary-line"><span class="summary-label">รูปที่เก็บแล้ว</span><strong id="progressCount" class="progress-count">0/9</strong></div>
-          <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
-          <div class="summary-bottom"><span id="missingLine" class="missing-line">เลือก Job แล้วเริ่มถ่ายรูป — เลือกรูปแล้วกดบันทึก</span><div class="summary-actions"><button id="printJobButton" class="compact-print" type="button" onclick="printJob()" disabled>ดู Template / สั่งพิมพ์</button></div></div>
-          <div id="printInfo" class="print-info">เมื่อเลือก Job ปุ่มนี้จะเปิด Template A4 ในแอป พร้อมรูปของ Job เพื่อดูและสั่งพิมพ์โดยตรง</div>
-        </section>
-
-        <div class="capture-heading"><h2>2. เก็บรูป</h2><p>แตะการ์ดเพื่อเพิ่มหลายรูป</p></div>
-        <section class="bento-grid" aria-label="ช่องเก็บรูปก่อนและหลังติดตั้ง">
-          <button id="beforeCard" class="bento-card" type="button" onclick="openGroupModal('before')" disabled>
-            <span class="bento-top"><span class="bento-number">01 / BEFORE</span><span id="beforeCount" class="bento-count">0/4 รูป</span></span>
-            <strong class="bento-title">ก่อนติดตั้ง</strong>
-            <span class="bento-note">เก็บสภาพหน้างานก่อนเริ่มงาน</span>
-            <span id="beforeMosaic" class="mosaic" aria-hidden="true"></span>
-            <span class="bento-footer"><span>แตะเพื่อเพิ่มรูป</span><span>เปิดกล้อง / คลังรูป →</span></span>
-          </button>
-          <button id="afterCard" class="bento-card" type="button" onclick="openGroupModal('after')" disabled>
-            <span class="bento-top"><span class="bento-number">02 / AFTER</span><span id="afterCount" class="bento-count">0/4 รูป</span></span>
-            <strong class="bento-title">หลังติดตั้ง</strong>
-            <span class="bento-note">เก็บผลงานหลังทำงานเสร็จ</span>
-            <span id="afterMosaic" class="mosaic" aria-hidden="true"></span>
-            <span class="bento-footer"><span>แตะเพื่อเพิ่มรูป</span><span>เปิดกล้อง / คลังรูป →</span></span>
-          </button>
-        </section>
-
-        <section class="signage-card">
-          <button id="signagePreview" class="signage-icon" type="button" onclick="openSignagePreview()" aria-label="ดูรูปหัวตาราง">⌖</button>
-          <div class="signage-copy"><div class="signage-title">รูปหัวตาราง / จุดติดตั้ง</div><div id="signageStatus" class="signage-status">ถ้ามีรูปป้ายหรือจุดติดตั้ง ให้เพิ่ม 1 รูป</div></div>
-          <button id="signageButton" class="signage-button" type="button" onclick="openSingleSlot('signage')" disabled>เพิ่มรูป</button>
-        </section>
-
-        <details class="more-tools"><summary>เครื่องมือเพิ่มเติม</summary><div class="links"><a id="assetLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Asset_Master</a><a id="reportLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a><a id="photoIndexLink" class="link-button" href="#" target="_blank" rel="noopener">ประวัติ URL รูปใน Drive</a></div></details>
-        <div id="status" class="status" role="status" aria-live="polite"></div>
+      <section class="card job-card">
+        <label class="step-label" for="jobSearch">1. ค้นหา Job</label>
+        <div class="search-row"><input id="jobSearch" class="job-search" type="search" inputmode="search" autocomplete="off" placeholder="พิมพ์เลขบางส่วน เช่น 031 หรือ JOB-031"><button id="clearSearch" class="clear-button" type="button" onclick="clearSearch()" aria-label="ล้างการค้นหา">×</button></div>
+        <div id="searchHint" class="search-hint">พิมพ์เลขบางส่วน ระบบจะเข้า Job ให้อัตโนมัติเมื่อพบรายการเดียว</div>
+        <div id="searchResults" class="search-results"></div>
+        <select id="jobSelect" class="hidden" aria-hidden="true" tabindex="-1"></select>
+        <div id="selectedJob" class="selected-job"><div class="selected-job-top"><strong id="selectedJobNumber" class="selected-job-number"></strong><span id="selectedJobCount"></span></div><div id="selectedJobLocation" class="selected-job-location"></div><div id="jobStatus" class="job-status"></div></div>
       </section>
-    </main>
 
-    <div id="photoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <section class="modal">
-        <div class="modal-handle"></div>
-        <h2 id="modalTitle" class="modal-title">เพิ่มรูป</h2>
-        <p id="modalNote" class="modal-note">เลือกรูปจากคลังหรือถ่ายรูปใหม่ แล้วกด “บันทึก” เพื่อบันทึกลงชีต</p>
-        <div id="slotPicker" class="slot-picker"></div>
-        <div id="existingBox" class="existing-box">ช่องนี้มีรูปแล้ว เลือกรูปใหม่เพื่อแทนที่ หรือกดลบรูป</div>
-        <div class="source-grid"><button id="galleryButton" class="modal-button gallery-button" type="button" onclick="chooseGallery()">เลือกรูปจากคลัง</button><button id="cameraButton" class="modal-button camera-button" type="button" onclick="chooseCamera()">ถ่ายรูปด้วยกล้อง</button></div>
-        <input id="galleryFile" class="hidden" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
-        <input id="cameraFile" class="hidden" type="file" accept="image/*" capture="environment">
-        <div id="pending" class="pending"><div id="pendingGrid" class="pending-grid"></div><div id="pendingName" class="pending-name"></div><div id="uploadingNote" class="uploading-note"></div></div>
-        <div class="modal-actions"><button id="savePhotoButton" class="save-button" type="button" onclick="saveSelectedPhotos()" disabled>บันทึก</button><button id="deletePhotoButton" class="delete-button" type="button" onclick="deletePhoto()" hidden>ลบรูปนี้</button><button class="cancel-button" type="button" onclick="closeModal()">ยกเลิก</button></div>
-      </section>
-    </div>
-
-    <div id="fullscreenViewer" class="fullscreen-viewer" role="dialog" aria-modal="true" aria-label="ดูรูปเต็มจอ"><button class="viewer-close" type="button" onclick="closeViewer()" aria-label="ปิดการดูรูป">×</button><img id="fullscreenImage" class="fullscreen-image" alt="รูปภาพเต็มจอ"><div id="viewerCaption" class="viewer-caption"></div></div>
-
-    <section id="printPreview" class="print-preview" aria-label="Template A4 สำหรับพิมพ์">
-      <div class="print-toolbar"><strong id="printToolbarTitle" class="print-toolbar-title">Template A4</strong><div class="print-toolbar-actions"><button class="print-action print-close" type="button" onclick="closePrintPreview()">กลับ</button><button class="print-action" type="button" onclick="printNow()">สั่งพิมพ์</button></div></div>
-      <article id="printPage" class="print-page"></article>
-      <p class="print-preview-note">รูปที่แสดงคือรูปที่บันทึกไว้ของ Job นี้ ระบบจะพิมพ์หน้า Template นี้โดยตรง ไม่สร้าง PDF ลง Drive อัตโนมัติ</p>
+      <div id="workspace" class="workspace">
+        <section class="mobile-job-bar"><strong id="mobileJobNo"></strong><span id="mobileJobLocation"></span><b id="mobileJobCount">0/9</b></section>
+        <section class="mobile-photo-card"><div class="mobile-photo-head"><h2>รูปงาน</h2><span>แตะช่องเพื่อเพิ่ม</span></div><div id="mobilePhotoGrid" class="mobile-photo-grid"></div><p class="mobile-help">กดค้างที่รูปเดิม แล้วกด X เพื่อลบ</p></section>
+        <details class="mobile-more"><summary>เพิ่มเติม</summary><div class="mobile-more-grid"><a id="portalLink" href="#" target="_top">IT Rental Portal</a><a id="photoIndexLink" href="#" target="_blank">ประวัติ URL รูป</a><a id="assetLink" href="#" target="_blank">Asset_Master</a><a id="reportLink" href="#" target="_blank">Template ในชีต</a><a id="printLink" href="#" onclick="openPrintTemplate();return false">ดู Template A4 / พิมพ์</a></div></details>
+      </div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
     </section>
+  </main>
 
-    <script>
-      const MAX_FILE_SIZE = 10 * 1024 * 1024;
-      // ตั้งเพดานเผื่อความปลอดภัยมากกว่าข้อจำกัด Google Sheets: 1.2 MB และ 600,000 พิกเซล
-      const MAX_UPLOAD_BYTES = 1.2 * 1024 * 1024;
-      const MAX_IMAGE_PIXELS = 600000;
-      const MAX_IMAGE_DIMENSION = 1000;
-      const PHOTO_LABELS = { signage:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง', before1:'ก่อนติดตั้ง 1', after1:'หลังติดตั้ง 1', before2:'ก่อนติดตั้ง 2', after2:'หลังติดตั้ง 2', before3:'ก่อนติดตั้ง 3', after3:'หลังติดตั้ง 3', before4:'ก่อนติดตั้ง 4', after4:'หลังติดตั้ง 4' };
-      const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'เก็บสภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'เก็บผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
-      let jobs = [];
-      let currentProgress = { filledTypes:[], complete:false };
-      let activeType = '';
-      let activeGroupKey = '';
-      let activeMode = 'group';
-      let previews = {};
-      let previewUrls = {};
-      let pendingFiles = [];
-      let uploading = false;
+  <div id="photoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><section class="modal"><div class="modal-handle"></div><h2 id="modalTitle" class="modal-title">เพิ่มรูป</h2><p id="modalNote" class="modal-note">เลือกช่อง แล้วเลือกรูปจากคลังหรือกล้อง</p><div id="slotPicker" class="slot-picker"></div><div id="existingBox" class="existing-box">ช่องนี้มีรูปเดิมอยู่แล้ว เลือกรูปใหม่เพื่อแทนที่ หรือกดลบรูปนี้</div><div class="source-grid"><button class="source-button gallery" type="button" onclick="chooseGallery()">เลือกรูปจากคลัง</button><button class="source-button camera" type="button" onclick="chooseCamera()">ถ่ายรูปด้วยกล้อง</button></div><input id="galleryFile" class="hidden" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple><input id="cameraFile" class="hidden" type="file" accept="image/*" capture="environment"><div id="pending" class="pending"><div id="pendingGrid" class="pending-grid"></div><div id="pendingName" class="pending-name"></div><div id="uploadNote" class="upload-note"></div></div><div class="modal-actions"><button id="saveButton" class="save-button" type="button" onclick="saveSelectedPhotos()" disabled>บันทึก</button><button id="deleteButton" class="delete-button" type="button" onclick="deletePhoto()" hidden>ลบรูปนี้</button><button class="cancel-button" type="button" onclick="closeModal()">ยกเลิก</button></div></section></div>
 
-      window.addEventListener('load', function() {
-        document.getElementById('galleryFile').addEventListener('change', handleFile);
-        document.getElementById('cameraFile').addEventListener('change', handleFile);
-        document.getElementById('jobSelect').addEventListener('change', handleJobChange);
-        document.getElementById('jobSearch').addEventListener('input', filterJobs);
-        document.getElementById('jobSearch').addEventListener('focus', renderJobOptions);
-        document.getElementById('installDate').value = todayString();
-        renderAll();
-        loadSheetLinks();
-        loadJobs();
-      });
+  <section id="printPreview" class="print-preview" aria-label="Template A4 สำหรับพิมพ์"><div class="print-toolbar"><strong id="printToolbarTitle" class="print-toolbar-title">Template A4</strong><div class="print-toolbar-actions"><button class="print-action print-close" type="button" onclick="closePrintPreview()">กลับ</button><button class="print-action" type="button" onclick="printNow()">สั่งพิมพ์</button></div></div><article id="printPage" class="print-page"></article><p class="print-preview-note">รูปที่แสดงคือรูปที่บันทึกไว้ของ Job นี้ ระบบพิมพ์หน้า Template นี้โดยตรง ไม่สร้าง PDF ลง Drive อัตโนมัติ</p></section>
 
-      function todayString() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
-      function getJob() { const value = document.getElementById('jobSelect').value; return value === '' ? null : jobs[Number(value)]; }
-      function isFilled(type) { return (currentProgress.filledTypes || []).indexOf(type) !== -1; }
-      function allPhotoTypes() { return Object.keys(PHOTO_LABELS); }
+  <script>
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    const MAX_UPLOAD_BYTES = 1.2 * 1024 * 1024;
+    const MAX_IMAGE_PIXELS = 600000;
+    const MAX_IMAGE_DIMENSION = 1000;
+    const PHOTO_LABELS = { signage:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง', before1:'ก่อนติดตั้ง 1', after1:'หลังติดตั้ง 1', before2:'ก่อนติดตั้ง 2', after2:'หลังติดตั้ง 2', before3:'ก่อนติดตั้ง 3', after3:'หลังติดตั้ง 3', before4:'ก่อนติดตั้ง 4', after4:'หลังติดตั้ง 4' };
+    const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'สภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'ผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
+    let jobs = [], currentJob = null, currentProgress = { filledTypes:[], missingTypes:[] }, previewUrls = {}, previews = {}, pendingFiles = [], activeType = '', activeGroupKey = '', activeMode = 'group', uploading = false;
 
-      function loadJobs() {
-        setStatus('กำลังโหลดรายการ Job...');
-        google.script.run.withSuccessHandler(function(data) { jobs = data || []; populateJobs(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรายการ Job ไม่สำเร็จ: ' + errorMessage(error), true); }).getJobData();
-      }
-
-      function populateJobs() {
-        const select = document.getElementById('jobSelect');
-        select.value = '';
-        document.getElementById('jobSearch').value = '';
-        renderJobOptions();
-        handleJobChange();
-      }
-
-      function normalizeJobSearch(value) { return String(value || '').toLowerCase().replace(/[\s\-_\/]+/g, ''); }
-
-      function jobSearchScore(job, query) {
-        const raw = String(job && job.jobNo || '').toLowerCase();
-        const normalizedJob = normalizeJobSearch(raw);
-        const normalizedQuery = normalizeJobSearch(query);
-        if (!normalizedQuery) return 99;
-        if (normalizedJob === normalizedQuery) return 0;
-        if (normalizedJob.indexOf(normalizedQuery) === 0) return 1;
-        if (normalizedJob.indexOf(normalizedQuery) !== -1) return 2;
-        const queryDigits = String(query || '').replace(/\D/g, '');
-        const jobDigits = raw.replace(/\D/g, '');
-        if (queryDigits && jobDigits.indexOf(queryDigits) !== -1) return 3;
-        return -1;
-      }
-
-      function renderJobOptions() {
-        const select = document.getElementById('jobSelect');
-        const query = String(document.getElementById('jobSearch').value || '').trim();
-        const ranked = jobs.map(function(job, index) { return { job:job, index:index, score:jobSearchScore(job, query) }; }).filter(function(item) { return item.score >= 0; }).sort(function(a,b) { return a.score - b.score || a.index - b.index; });
-        const hint = document.getElementById('jobSearchHint');
-        const oldValue = select.value;
-        let nextValue = '';
-        if (query && ranked.length === 1) nextValue = String(ranked[0].index);
-        const resultRoot = document.getElementById('jobSearchResults');
-        resultRoot.innerHTML = '';
-        resultRoot.classList.remove('visible');
-        if (query && ranked.length > 1) {
-          hint.textContent = 'พบ ' + ranked.length + ' Job — แตะรายการที่ต้องการ 1 ครั้งเพื่อเข้าไปบันทึกรูป';
-          resultRoot.classList.add('visible');
-          resultRoot.innerHTML = ranked.slice(0, 20).map(function(item) {
-            const location = item.job.location ? 'สถานที่: ' + escapeHtml(item.job.location) : 'ยังไม่ระบุสถานที่';
-            return '<button class="job-result-button" type="button" onclick="selectJobFromSearch(' + item.index + ')"><span class="job-result-job">' + escapeHtml(item.job.jobNo) + '</span><span class="job-result-meta">' + location + ' · รูปแล้ว ' + (item.job.filledCount || 0) + '/' + (item.job.requiredCount || 9) + '</span></button>';
-          }).join('');
-        } else if (query && ranked.length === 0) {
-          hint.textContent = 'ไม่พบ Job ที่ตรงกับคำค้นหา';
-        } else if (query && ranked.length === 1) {
-          hint.textContent = 'เข้า Job อัตโนมัติ: ' + ranked[0].job.jobNo + ' — กำลังโหลดรูป';
-        } else {
-          hint.textContent = 'พิมพ์เลขบางส่วน ระบบจะเข้า Job ให้อัตโนมัติเมื่อพบรายการเดียว';
-        }
-        select.innerHTML = '<option value="">-- เลือก Job อัตโนมัติ --</option>';
-        jobs.forEach(function(job, index) { const option = document.createElement('option'); option.value = index; option.textContent = job.jobNo; select.appendChild(option); });
-        select.value = nextValue;
-        if (oldValue !== nextValue) handleJobChange();
-        if (nextValue && document.getElementById('jobSearch').value !== ranked[0].job.jobNo) document.getElementById('jobSearch').value = ranked[0].job.jobNo;
-      }
-
-      function filterJobs() { renderJobOptions(); }
-      function selectJobFromSearch(index) {
-        if (!jobs[index]) return;
-        document.getElementById('jobSelect').value = String(index);
-        document.getElementById('jobSearch').value = jobs[index].jobNo;
-        renderJobOptions();
-        handleJobChange();
-      }
-      function clearJobSearch() { document.getElementById('jobSearch').value = ''; document.getElementById('jobSelect').value = ''; renderJobOptions(); document.getElementById('jobSearch').focus(); }
-
-      function handleJobChange() {
-        const job = getJob();
-        previews = {};
-        previewUrls = {};
-        currentProgress = { filledTypes:[], complete:false };
-        document.getElementById('locationValue').textContent = job ? (job.location || 'ไม่ระบุสถานที่') : 'ยังไม่ได้เลือกสถานที่';
-        document.getElementById('installDate').value = todayString();
-        document.getElementById('installDateText').textContent = 'วันที่ ' + formatDate(document.getElementById('installDate').value);
-        document.getElementById('jobStatus').textContent = job ? 'กำลังโหลดรูป...' : 'เลือก Job เพื่อเริ่มเก็บรูป';
-        document.getElementById('jobStatus').className = 'job-status';
-        renderAll();
-        if (!job) return;
-        setStatus('กำลังโหลดรูปของ ' + job.jobNo + '...');
-        google.script.run.withSuccessHandler(function(progress) { currentProgress = progress || { filledTypes:[] }; previewUrls = (progress && progress.previewUrls) || {}; if (progress && progress.date) { document.getElementById('installDate').value = normalizeDate(progress.date); document.getElementById('installDateText').textContent = 'วันที่ ' + formatDate(document.getElementById('installDate').value); } renderAll(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรูปไม่สำเร็จ: ' + errorMessage(error), true); }).getJobProgress(job.jobNo);
-      }
-
-      function renderAll() { renderProgress(); renderBento(); updateButtons(); }
-
-      function renderProgress() {
-        const filled = currentProgress.filledTypes || [];
-        const total = allPhotoTypes().length;
-        const complete = filled.length === total;
-        document.getElementById('progressCount').textContent = filled.length + '/' + total;
-        document.getElementById('progressFill').style.width = Math.round(filled.length / total * 100) + '%';
-        const missing = allPhotoTypes().filter(function(type) { return filled.indexOf(type) === -1; });
-        const line = document.getElementById('missingLine');
-        line.textContent = !getJob() ? 'เลือก Job แล้วเริ่มถ่ายรูป — เลือกรูปแล้วกดบันทึก' : (complete ? 'รูปครบแล้ว พร้อมเปิดใบงานพิมพ์' : 'ยังขาด ' + missing.length + ' รูป — แตะช่อง เลือกรูป แล้วกดบันทึก');
-        line.className = 'missing-line' + (complete ? ' complete' : '');
-        if (getJob()) { document.getElementById('jobStatus').textContent = complete ? 'งานนี้ครบ 9/9 รูปแล้ว' : 'กำลังเก็บรูป — มีแล้ว ' + filled.length + '/9 รูป'; document.getElementById('jobStatus').className = 'job-status' + (complete ? ' complete' : ''); }
-      }
-
-      function renderBento() {
-        Object.keys(GROUPS).forEach(function(key) {
-          const group = GROUPS[key];
-          const filledCount = group.types.filter(isFilled).length;
-          document.getElementById(key + 'Count').textContent = filledCount + '/4 รูป';
-          document.getElementById(key + 'Card').className = 'bento-card' + (filledCount ? ' ready' : '');
-          renderMosaic(document.getElementById(key + 'Mosaic'), group.types);
-        });
-        renderSignagePreview();
-        const signageDone = isFilled('signage');
-        document.getElementById('signageStatus').textContent = signageDone ? 'มีรูปแล้ว — แตะเพิ่มเพื่อเปลี่ยนรูป' : 'ถ้ามีรูปป้ายหรือจุดติดตั้ง ให้เพิ่ม 1 รูป';
-        document.getElementById('signageButton').textContent = signageDone ? 'เปลี่ยนรูป' : 'เพิ่มรูป';
-      }
-
-      function renderMosaic(root, types) {
-        root.innerHTML = '';
-        types.forEach(function(type, index) {
-          const tile = document.createElement('span');
-          tile.className = 'mosaic-tile' + (isFilled(type) ? ' filled' : '');
-          const imageUrl = previews[type] || previewUrls[type];
-          if (imageUrl) { const image = document.createElement('img'); image.src = imageUrl; image.alt = PHOTO_LABELS[type]; tile.appendChild(image); tile.addEventListener('click', function(event) { event.preventDefault(); event.stopPropagation(); openViewer(imageUrl, PHOTO_LABELS[type]); }); } else { tile.textContent = isFilled(type) ? '✓' : String(index + 1); }
-          root.appendChild(tile);
-        });
-      }
-
-      function renderSignagePreview() {
-        const root = document.getElementById('signagePreview');
-        const imageUrl = previews.signage || previewUrls.signage;
-        root.innerHTML = '';
-        root.classList.toggle('has-preview', !!imageUrl);
-        if (!imageUrl) { root.textContent = '⌖'; return; }
-        const image = document.createElement('img');
-        image.src = imageUrl;
-        image.alt = PHOTO_LABELS.signage;
-        root.appendChild(image);
-      }
-
-      function openSignagePreview() {
-        const imageUrl = previews.signage || previewUrls.signage;
-        if (imageUrl) openViewer(imageUrl, PHOTO_LABELS.signage);
-        else openSingleSlot('signage');
-      }
-
-      function updateButtons() {
-        const job = getJob();
-        const filled = (currentProgress.filledTypes || []).length;
-        document.getElementById('beforeCard').disabled = !job || uploading;
-        document.getElementById('afterCard').disabled = !job || uploading;
-        document.getElementById('signageButton').disabled = !job || uploading;
-        document.getElementById('printJobButton').disabled = !job || filled === 0 || uploading;
-      }
-
-      function openGroupModal(groupKey) {
-        if (!getJob() || uploading) { if (!getJob()) setStatus('กรุณาเลือก Job ก่อน', true); return; }
-        const group = GROUPS[groupKey];
-        if (!group) return;
-        activeMode = 'group'; activeGroupKey = groupKey; activeType = '';
-        resetPending();
-        document.getElementById('modalTitle').textContent = group.title;
-        document.getElementById('modalNote').textContent = group.note + ' เลือกหลายรูปพร้อมกันได้ ระบบจะเรียงลงช่องว่างให้อัตโนมัติ แล้วกด “บันทึก”';
-        document.getElementById('existingBox').classList.remove('visible');
-        document.getElementById('deletePhotoButton').hidden = true;
-        document.getElementById('slotPicker').classList.add('visible');
-        renderSlotPicker(group.types);
-        document.getElementById('galleryFile').setAttribute('multiple', 'multiple');
-        document.getElementById('photoModal').classList.add('open');
-      }
-
-      function openSingleSlot(type) {
-        if (!getJob() || uploading) { if (!getJob()) setStatus('กรุณาเลือก Job ก่อน', true); return; }
-        activeMode = 'single'; activeGroupKey = ''; activeType = type;
-        resetPending();
-        const done = isFilled(type);
-        document.getElementById('modalTitle').textContent = done ? 'เปลี่ยนรูป: ' + PHOTO_LABELS[type] : 'เพิ่มรูป: ' + PHOTO_LABELS[type];
-        document.getElementById('modalNote').textContent = 'เลือกรูปจากคลังหรือถ่ายรูปใหม่ แล้วกด “บันทึก” เพื่อบันทึกลงชีต';
-        document.getElementById('existingBox').classList.toggle('visible', done);
-        document.getElementById('deletePhotoButton').hidden = !done;
-        document.getElementById('slotPicker').classList.remove('visible');
-        document.getElementById('galleryFile').removeAttribute('multiple');
-        document.getElementById('photoModal').classList.add('open');
-      }
-
-      function renderSlotPicker(types) {
-        const root = document.getElementById('slotPicker');
-        root.innerHTML = '';
-        types.forEach(function(type, index) { const button = document.createElement('button'); button.type = 'button'; button.className = 'slot-button' + (isFilled(type) ? ' filled' : ''); button.textContent = 'ช่อง ' + (index + 1) + (isFilled(type) ? ' ✓' : ''); button.addEventListener('click', function() { openSingleSlot(type); }); root.appendChild(button); });
-      }
-
-      function closeModal() { if (uploading) return; resetPending(); document.getElementById('photoModal').classList.remove('open'); activeType = ''; activeGroupKey = ''; activeMode = 'group'; }
-      function resetPending() { pendingFiles = []; document.getElementById('galleryFile').value = ''; document.getElementById('cameraFile').value = ''; document.getElementById('pendingGrid').innerHTML = ''; document.getElementById('pendingName').textContent = ''; document.getElementById('uploadingNote').textContent = ''; document.getElementById('pending').classList.remove('visible'); document.getElementById('savePhotoButton').disabled = true; }
-      function chooseGallery() { if (!uploading) document.getElementById('galleryFile').click(); }
-      function chooseCamera() { if (!uploading) document.getElementById('cameraFile').click(); }
-
-      function handleFile(event) {
-        const files = Array.from(event.target.files || []);
-        if (!files.length || uploading) return;
-        const invalid = files.find(function(file) { return !['image/jpeg','image/png','image/gif','image/webp'].includes(file.type) || file.size > MAX_FILE_SIZE; });
-        if (invalid) { setStatus('ทุกไฟล์ต้องเป็น JPG, PNG, GIF หรือ WEBP และไม่เกิน 10 MB ต่อไฟล์', true); event.target.value = ''; return; }
-        if (activeMode === 'group') {
-          const group = GROUPS[activeGroupKey];
-          const emptyTypes = group.types.filter(function(type) { return !isFilled(type); });
-          if (!emptyTypes.length) { setStatus('ช่อง ' + group.title + ' เต็มแล้ว แตะหมายเลขช่องเพื่อเปลี่ยนรูป', true); event.target.value = ''; return; }
-          if (files.length > emptyTypes.length) { setStatus('เลือกได้อีกไม่เกิน ' + emptyTypes.length + ' รูป', true); event.target.value = ''; return; }
-        } else if (files.length > 1) {
-          setStatus('ช่องนี้รับได้ครั้งละ 1 รูป', true); event.target.value = ''; return;
-        }
-        showPending(files);
-      }
-
-      function showPending(files) {
-        const root = document.getElementById('pendingGrid');
-        pendingFiles = files;
-        root.innerHTML = '';
-        document.getElementById('pendingName').textContent = files.length === 1 ? files[0].name : 'เลือกแล้ว ' + files.length + ' รูป';
-        document.getElementById('uploadingNote').textContent = 'ตรวจรูปแล้ว ระบบจะย่อให้ผ่านข้อจำกัดชีตก่อน หากถูกต้องให้กด “บันทึก”';
-        document.getElementById('savePhotoButton').disabled = false;
-        document.getElementById('pending').classList.add('visible');
-        files.forEach(function(file) { const image = document.createElement('img'); image.alt = file.name; root.appendChild(image); readFileAsDataUrl(file).then(function(dataUrl) { image.src = dataUrl; }).catch(function() {}); });
-      }
-
-      function saveSelectedPhotos() {
-        if (!pendingFiles.length || uploading) return;
-        savePendingPhotos(pendingFiles);
-      }
-
-      async function savePendingPhotos(files) {
-        const job = getJob();
-        if (!job) { setStatus('กรุณาเลือก Job ก่อน', true); return; }
-        uploading = true; document.getElementById('savePhotoButton').disabled = true; updateButtons();
-        try {
-          if (activeMode === 'single') {
-            const dataUrl = await prepareUploadDataUrl(files[0]);
-            await uploadOne(job, activeType, dataUrl, files[0].name);
-            previews[activeType] = dataUrl;
-            markFilled(activeType);
-            finishUpload('บันทึกรูปเรียบร้อยแล้ว');
-          } else {
-            const group = GROUPS[activeGroupKey];
-            const emptyTypes = group.types.filter(function(type) { return !isFilled(type); });
-            for (let index = 0; index < files.length; index += 1) {
-              const dataUrl = await prepareUploadDataUrl(files[index]);
-              await uploadOne(job, emptyTypes[index], dataUrl, files[index].name);
-              previews[emptyTypes[index]] = dataUrl;
-              markFilled(emptyTypes[index]);
-            }
-            finishUpload('บันทึกรูป ' + files.length + ' รูปเรียบร้อยแล้ว');
-          }
-        } catch (error) {
-          uploading = false; document.getElementById('savePhotoButton').disabled = false; updateButtons(); document.getElementById('uploadingNote').textContent = ''; setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error), true);
-        }
-      }
-
-      function finishUpload(message) { uploading = false; renderAll(); closeModal(); setStatus(message, false, true); }
-      function markFilled(type) { if (!isFilled(type)) currentProgress.filledTypes = (currentProgress.filledTypes || []).concat(type); }
-      function readFileAsDataUrl(file) { return new Promise(function(resolve, reject) { const reader = new FileReader(); reader.onload = function(event) { resolve(event.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); }); }
-
-      function estimateDataUrlBytes(dataUrl) {
-        const comma = String(dataUrl || '').indexOf(',');
-        return comma < 0 ? Infinity : Math.ceil((dataUrl.length - comma - 1) * 0.75);
-      }
-
-      function prepareUploadDataUrl(file) {
-        // ต้องย่อทุกไฟล์ แม้ไฟล์เดิมจะเล็กกว่า 2 MB เพราะจำนวนพิกเซลอาจเกิน 1 ล้านพิกเซล
-        return readFileAsDataUrl(file).then(function(originalDataUrl) {
-          return compressImageDataUrl(originalDataUrl).then(function(safeDataUrl) {
-            if (!/^data:image\/jpeg;base64,/.test(safeDataUrl) || estimateDataUrlBytes(safeDataUrl) > MAX_UPLOAD_BYTES) {
-              throw new Error('ระบบย่อรูปให้เล็กพอสำหรับชีตไม่ได้ กรุณาเลือกภาพอื่น');
-            }
-            return safeDataUrl;
-          });
-        });
-      }
-
-      function compressImageDataUrl(dataUrl) {
-        return new Promise(function(resolve, reject) {
-          const image = new Image();
-          image.onload = function() {
-            const sourceWidth = image.naturalWidth || image.width;
-            const sourceHeight = image.naturalHeight || image.height;
-            const longestSide = Math.max(sourceWidth, sourceHeight);
-            const sourcePixels = Math.max(1, sourceWidth * sourceHeight);
-            const pixelScale = Math.sqrt(MAX_IMAGE_PIXELS / sourcePixels);
-            let scale = Math.min(1, MAX_IMAGE_DIMENSION / longestSide, pixelScale);
-            let quality = 0.68;
-            let result = '';
-            const canvas = document.createElement('canvas');
-            for (let attempt = 0; attempt < 14; attempt += 1) {
-              canvas.width = Math.max(1, Math.floor(sourceWidth * scale));
-              canvas.height = Math.max(1, Math.floor(sourceHeight * scale));
-              const context = canvas.getContext('2d', { alpha:false });
-              context.fillStyle = '#fff';
-              context.fillRect(0, 0, canvas.width, canvas.height);
-              context.drawImage(image, 0, 0, canvas.width, canvas.height);
-              result = canvas.toDataURL('image/jpeg', quality);
-              const estimatedBytes = estimateDataUrlBytes(result);
-              const pixelCount = canvas.width * canvas.height;
-              if (estimatedBytes <= MAX_UPLOAD_BYTES && pixelCount <= MAX_IMAGE_PIXELS) break;
-              if (quality > 0.42) quality -= 0.08;
-              else scale *= 0.72;
-            }
-            if (estimateDataUrlBytes(result) > MAX_UPLOAD_BYTES || canvas.width * canvas.height > MAX_IMAGE_PIXELS) {
-              reject(new Error('ภาพมีขนาดหรือความละเอียดเกินข้อจำกัดของชีต'));
-              return;
-            }
-            resolve(result);
-          };
-          image.onerror = reject;
-          image.src = dataUrl;
-        });
-      }
-
-      function uploadOne(job, type, dataUrl, filename) { return new Promise(function(resolve, reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadImageToSheet(job.jobNo, job.location, type, dataUrl, filename, document.getElementById('installDate').value); }); }
-
-      function deletePhoto() {
-        const job = getJob();
-        if (!job || !activeType || uploading) return;
-        if (!window.confirm('ยืนยันลบรูปช่องนี้หรือไม่? รูปจะหายจากชีต ล้าง URL และย้ายไฟล์ต้นฉบับใน Drive ลงถังขยะ')) return;
-        const button = document.getElementById('deletePhotoButton'); button.disabled = true; button.textContent = 'กำลังลบ...'; uploading = true; updateButtons();
-        google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || (currentProgress.filledTypes || []).filter(function(type) { return type !== activeType; }); delete previews[activeType]; delete previewUrls[activeType]; uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; renderAll(); closeModal(); setStatus(result.message, false, true); }).withFailureHandler(function(error) { uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; updateButtons(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error), true); }).deleteImageFromSheet(job.jobNo, job.location, activeType, document.getElementById('installDate').value);
-      }
-
-      function printJob() {
-        const job = getJob();
-        if (!job) { setStatus('กรุณาเลือก Job ก่อน', true); return; }
-        renderPrintTemplate(job);
-        document.getElementById('printPreview').classList.add('open');
-      }
-
-      function closePrintPreview() {
-        document.getElementById('printPreview').classList.remove('open');
-      }
-
-      function printNow() {
-        window.print();
-      }
-
-      function printImageBox(type, label) {
-        const imageUrl = previews[type] || previewUrls[type];
-        const image = imageUrl ? '<img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml(label) + '">' : '<span class="print-empty">ยังไม่มีรูป<br>' + escapeHtml(label) + '</span>';
-        return '<div class="print-image-box">' + image + '</div>';
-      }
-
-      function renderPrintTemplate(job) {
-        const date = document.getElementById('installDate').value || todayString();
-        const location = job.location || document.getElementById('locationValue').textContent || 'ไม่ระบุสถานที่';
-        const html = '<p class="print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p>' +
-          '<h1 class="print-document-title">ใบรับรองภาพถ่ายการติดตั้งอุปกรณ์ (Installation Photo Report)</h1>' +
-          '<div class="print-meta"><div class="print-meta-box"><span class="print-meta-label">เลข Job: </span><span class="print-meta-value">' + escapeHtml(job.jobNo) + '</span></div><div class="print-meta-box"><span class="print-meta-label">สถานที่ติดตั้ง: </span><span class="print-meta-value">' + escapeHtml(location) + '</span></div><div class="print-meta-box"><span class="print-meta-label">วันที่ติดตั้ง: </span><span class="print-meta-value">' + escapeHtml(formatDate(date)) + '</span></div></div>' +
-          '<div class="print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="print-signage">' + printImageBox('signage', PHOTO_LABELS.signage) + '<div></div></div>' +
-          '<div class="print-pair-head"><div class="print-before-head">ภาพถ่ายก่อนติดตั้ง (BEFORE)</div><div class="print-after-head">ภาพถ่ายหลังติดตั้ง (AFTER)</div></div>' +
-          '<div class="print-pair">' + printImageBox('before1', 'ก่อนติดตั้ง 1') + printImageBox('after1', 'หลังติดตั้ง 1') + '</div>' +
-          '<div class="print-pair-head"><div class="print-before-head">รูปที่ 2 (ก่อนติดตั้ง)</div><div class="print-after-head">รูปที่ 2 (หลังติดตั้ง)</div></div>' +
-          '<div class="print-pair">' + printImageBox('before2', 'ก่อนติดตั้ง 2') + printImageBox('after2', 'หลังติดตั้ง 2') + '</div>' +
-          '<div class="print-pair-head"><div class="print-before-head">รูปที่ 3 (ก่อนติดตั้ง)</div><div class="print-after-head">รูปที่ 3 (หลังติดตั้ง)</div></div>' +
-          '<div class="print-pair">' + printImageBox('before3', 'ก่อนติดตั้ง 3') + printImageBox('after3', 'หลังติดตั้ง 3') + '</div>' +
-          '<div class="print-pair-head"><div class="print-before-head">รูปที่ 4 (ก่อนติดตั้ง)</div><div class="print-after-head">รูปที่ 4 (หลังติดตั้ง)</div></div>' +
-          '<div class="print-pair">' + printImageBox('before4', 'ก่อนติดตั้ง 4') + printImageBox('after4', 'หลังติดตั้ง 4') + '</div>';
-        document.getElementById('printPage').innerHTML = html;
-        document.getElementById('printToolbarTitle').textContent = 'Template A4 · ' + job.jobNo;
-      }
-      function loadSheetLinks() { google.script.run.withSuccessHandler(function(links) { document.getElementById('assetLink').href = links.assetMasterUrl; document.getElementById('reportLink').href = links.templateUrl; document.getElementById('photoIndexLink').href = links.photoFileIndexUrl || links.spreadsheetUrl || '#'; document.getElementById('portalLink').href = links.portalWebUrl || '#'; }).withFailureHandler(function(error) { setStatus('โหลดลิงก์ชีตไม่สำเร็จ: ' + errorMessage(error), true); }).getSheetEditLinks(); }
-      function normalizeDate(value) { if (!value) return todayString(); const parsed = new Date(value); if (isNaN(parsed.getTime())) return todayString(); return parsed.getFullYear() + '-' + String(parsed.getMonth()+1).padStart(2,'0') + '-' + String(parsed.getDate()).padStart(2,'0'); }
-      function formatDate(value) { if (!value) return 'วันนี้'; const parts = value.split('-'); return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : value; }
-      function openViewer(url, caption) { if (!url) return; document.getElementById('fullscreenImage').src = url; document.getElementById('viewerCaption').textContent = caption || ''; document.getElementById('fullscreenViewer').classList.add('open'); }
-      function closeViewer() { document.getElementById('fullscreenViewer').classList.remove('open'); document.getElementById('fullscreenImage').removeAttribute('src'); }
-      function errorMessage(error) { return error && error.message ? error.message : String(error || 'ไม่ทราบสาเหตุ'); }
-      function setStatus(message, isError, isSuccess) { const status = document.getElementById('status'); status.textContent = message || ''; status.className = 'status' + (isError ? ' error' : '') + (isSuccess ? ' success' : ''); }
-      document.getElementById('photoModal').addEventListener('click', function(event) { if (event.target === this && !uploading) closeModal(); });
-      document.getElementById('fullscreenViewer').addEventListener('click', function(event) { if (event.target === this) closeViewer(); });
-      document.addEventListener('keydown', function(event) { if (event.key === 'Escape') { closeViewer(); closePrintPreview(); if (!uploading) closeModal(); } });
-    </script>
-  </body>
+    window.addEventListener('load', function() { document.getElementById('galleryFile').addEventListener('change', handleFile); document.getElementById('cameraFile').addEventListener('change', handleFile); document.getElementById('jobSearch').addEventListener('input', renderSearch); loadSheetLinks(); loadJobs(); });
+    function allTypes() { return Object.keys(PHOTO_LABELS); }
+    function isFilled(type) { return (currentProgress.filledTypes || []).indexOf(type) !== -1; }
+    function setStatus(text, error, success) { const el = document.getElementById('status'); el.textContent = text || ''; el.className = 'status' + (error ? ' error' : '') + (success ? ' success' : ''); }
+    function errorMessage(error) { return error && error.message ? error.message : String(error || 'ไม่ทราบสาเหตุ'); }
+    function todayString() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+    function formatDate(value) { if (!value) return 'วันนี้'; const p = String(value).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : value; }
+    function normalizeDate(value) { if (!value) return todayString(); const d = new Date(value); return isNaN(d.getTime()) ? todayString() : d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+    function normalizeSearch(value) { return String(value || '').toLowerCase().replace(/[\s\-_\/]+/g,''); }
+    function jobScore(job, query) { const raw = String(job.jobNo || '').toLowerCase(); const n = normalizeSearch(raw); const q = normalizeSearch(query); if (!q) return 99; if (n === q) return 0; if (n.indexOf(q) === 0) return 1; if (n.indexOf(q) !== -1) return 2; const digits = String(query || '').replace(/\D/g,''); return digits && raw.replace(/\D/g,'').indexOf(digits) !== -1 ? 3 : -1; }
+    function loadJobs() { setStatus('กำลังโหลดรายการ Job...'); google.script.run.withSuccessHandler(function(data) { jobs = data || []; resetJob(false); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรายการ Job ไม่สำเร็จ: ' + errorMessage(error), true); }).getJobData(); }
+    function renderSearch() { const query = document.getElementById('jobSearch').value.trim(); const hint = document.getElementById('searchHint'); const root = document.getElementById('searchResults'); const ranked = jobs.map(function(job,index) { return { job:job, index:index, score:jobScore(job,query) }; }).filter(function(item) { return item.score >= 0; }).sort(function(a,b) { return a.score - b.score || a.index - b.index; }); root.innerHTML = ''; root.classList.remove('open'); if (!query) { hint.textContent = 'พิมพ์เลขบางส่วน ระบบจะเข้า Job ให้อัตโนมัติเมื่อพบรายการเดียว'; return; } if (ranked.length === 1) { hint.textContent = 'พบ ' + ranked[0].job.jobNo + ' — กำลังเปิดงาน'; selectJob(ranked[0].index); return; } if (!ranked.length) { hint.textContent = 'ไม่พบ Job ที่ตรงกับคำค้นหา'; return; } hint.textContent = 'พบ ' + ranked.length + ' Job — แตะรายการที่ต้องการ 1 ครั้ง'; root.classList.add('open'); root.innerHTML = ranked.slice(0,20).map(function(item) { return '<button class="job-result" type="button" onclick="selectJob(' + item.index + ')"><strong>' + escapeHtml(item.job.jobNo) + '</strong><span>' + escapeHtml(item.job.location || 'ไม่ระบุสถานที่') + ' · รูปแล้ว ' + (item.job.filledCount || 0) + '/9</span></button>'; }).join(''); }
+    function selectJob(index) { if (!jobs[index]) return; currentJob = jobs[index]; document.getElementById('jobSearch').value = currentJob.jobNo; document.getElementById('searchResults').classList.remove('open'); document.getElementById('jobSelect').value = String(index); document.getElementById('workspace').classList.add('open'); previews = {}; previewUrls = {}; currentProgress = { filledTypes:[], missingTypes:[] }; renderStage(); google.script.run.withSuccessHandler(function(progress) { currentProgress = progress || { filledTypes:[], missingTypes:[] }; previewUrls = progress.previewUrls || {}; renderStage(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรูปไม่สำเร็จ: ' + errorMessage(error), true); }).getJobProgress(currentJob.jobNo); }
+    function resetJob(focus) { currentJob = null; currentProgress = { filledTypes:[], missingTypes:[] }; previewUrls = {}; previews = {}; document.getElementById('jobSearch').value = ''; document.getElementById('searchResults').innerHTML = ''; document.getElementById('searchResults').classList.remove('open'); document.getElementById('workspace').classList.remove('open'); document.getElementById('mobilePhotoGrid').innerHTML = ''; if (focus) document.getElementById('jobSearch').focus(); }
+    function clearSearch() { resetJob(true); setStatus(''); }
+    function renderStage() { renderMobileGrid(); }
+    function renderMobileGrid() { if (!currentJob) return; const filled = currentProgress.filledTypes || []; const root = document.getElementById('mobilePhotoGrid'); document.getElementById('mobileJobNo').textContent = currentJob.jobNo; document.getElementById('mobileJobLocation').textContent = currentJob.location || 'ไม่ระบุสถานที่'; document.getElementById('mobileJobCount').textContent = filled.length + '/9'; let html = '<div class="mobile-section-label signage">รูปชื่อหน่วยงาน / จุดติดตั้ง</div>' + mobileSlot('signage', 'signage', 'รูปชื่อหน่วยงาน'); html += '<div class="mobile-section-label before">ก่อนติดตั้ง</div><div class="mobile-section-label after">หลังติดตั้ง</div>'; for (let i = 1; i <= 4; i += 1) html += mobileSlot('before' + i, 'before', 'ก่อน ' + i) + mobileSlot('after' + i, 'after', 'หลัง ' + i); root.innerHTML = html; }
+    function mobileSlot(type, kind, label) { const has = (currentProgress.filledTypes || []).indexOf(type) !== -1; const url = previews[type] || previewUrls[type] || ''; const image = url ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(label) + '">' : '<div class="mobile-slot-empty"><span class="mobile-slot-icon">' + (has ? '✓' : '+') + '</span><span class="mobile-slot-label">' + escapeHtml(label) + '</span><span class="mobile-slot-note">' + (has ? 'แตะเพื่อเปลี่ยน' : 'แตะเพื่อเพิ่ม') + '</span></div>'; const remove = has ? '<button class="mobile-slot-x" type="button" aria-label="ลบ ' + escapeHtml(label) + '" onclick="event.stopPropagation(); mobileDelete(\'' + type + '\')">×</button>' : ''; return '<div class="mobile-slot ' + kind + (has ? ' has-image' : '') + (type === 'signage' ? ' signage' : '') + '" role="button" tabindex="0" onclick="mobileSlotClick(\'' + type + '\', this)" onpointerdown="mobileStartHold(\'' + type + '\', this)" onpointerup="mobileEndHold(this)" onpointercancel="mobileEndHold(this)" onpointerleave="mobileEndHold(this)" oncontextmenu="return false">' + image + (has ? '<span class="mobile-slot-label">' + escapeHtml(label) + '</span>' : '') + remove + '</div>'; }
+    function mobileSlotClick(type, element) { if (element.classList.contains('hold-on')) return; if (holdTriggered) { holdTriggered = false; return; } openSingleSlot(type); }
+    function mobileStartHold(type, element) { holdTriggered = false; clearTimeout(holdTimer); if (!isFilled(type)) return; holdTimer = setTimeout(function() { element.classList.add('hold-on'); holdTriggered = true; }, 520); }
+    function mobileEndHold(element) { clearTimeout(holdTimer); if (!holdTriggered) element.classList.remove('hold-on'); }
+    function mobileDelete(type) { clearTimeout(holdTimer); holdTriggered = false; activeType = type; deletePhoto(); }
+    function openGroupModal(groupKey) { if (!currentJob || uploading) return; activeMode = 'group'; activeGroupKey = groupKey; activeType = ''; resetPending(); const group = GROUPS[groupKey]; document.getElementById('modalTitle').textContent = group.title; document.getElementById('modalNote').textContent = 'เลือกช่องที่ต้องการ แล้วเลือกรูปจากคลังหรือกล้อง'; document.getElementById('existingBox').classList.remove('open'); document.getElementById('deleteButton').hidden = true; document.getElementById('slotPicker').classList.add('open'); renderSlotPicker(group.types); document.getElementById('galleryFile').setAttribute('multiple','multiple'); document.getElementById('photoModal').classList.add('open'); }
+    function renderSlotPicker(types) { const root = document.getElementById('slotPicker'); root.innerHTML = types.map(function(type,index) { return '<button type="button" class="slot-button' + (isFilled(type) ? ' filled' : '') + '" onclick="openSingleSlot(\'' + type + '\')">ช่อง ' + (index + 1) + (isFilled(type) ? ' · มีรูปเดิม' : ' · ว่าง') + '</button>'; }).join(''); }
+    function openSingleSlot(type) { if (!currentJob || uploading) return; activeMode = 'single'; activeGroupKey = ''; activeType = type; resetPending(); const filled = isFilled(type); document.getElementById('modalTitle').textContent = filled ? 'เปลี่ยนรูป: ' + PHOTO_LABELS[type] : 'เพิ่มรูป: ' + PHOTO_LABELS[type]; document.getElementById('modalNote').textContent = 'เลือกรูปแล้วกด “บันทึก” รูปจึงจะลงชีต'; document.getElementById('existingBox').classList.toggle('open', filled); document.getElementById('deleteButton').hidden = !filled; document.getElementById('slotPicker').classList.remove('open'); document.getElementById('galleryFile').removeAttribute('multiple'); document.getElementById('photoModal').classList.add('open'); }
+    function closeModal() { if (uploading) return; resetPending(); document.getElementById('photoModal').classList.remove('open'); activeType = ''; activeGroupKey = ''; activeMode = 'group'; }
+    function resetPending() { pendingFiles = []; document.getElementById('galleryFile').value = ''; document.getElementById('cameraFile').value = ''; document.getElementById('pendingGrid').innerHTML = ''; document.getElementById('pendingName').textContent = ''; document.getElementById('uploadNote').textContent = ''; document.getElementById('pending').classList.remove('open'); document.getElementById('saveButton').disabled = true; }
+    function chooseGallery() { if (!uploading) document.getElementById('galleryFile').click(); }
+    function chooseCamera() { if (!uploading) document.getElementById('cameraFile').click(); }
+    function handleFile(event) { const files = Array.from(event.target.files || []); if (!files.length || uploading) return; const invalid = files.find(function(file) { return !['image/jpeg','image/png','image/gif','image/webp'].includes(file.type) || file.size > MAX_FILE_SIZE; }); if (invalid) { setStatus('ทุกไฟล์ต้องเป็น JPG, PNG, GIF หรือ WEBP และไม่เกิน 10 MB', true); event.target.value = ''; return; } if (activeMode === 'group') { const empty = GROUPS[activeGroupKey].types.filter(function(type) { return !isFilled(type); }); if (!empty.length || files.length > empty.length) { setStatus('จำนวนรูปเกินช่องที่ว่างอยู่', true); event.target.value = ''; return; } } else if (files.length !== 1) { setStatus('ช่องนี้รับครั้งละ 1 รูป', true); event.target.value = ''; return; } showPending(files); }
+    function showPending(files) { pendingFiles = files; const root = document.getElementById('pendingGrid'); root.innerHTML = ''; document.getElementById('pendingName').textContent = files.length === 1 ? files[0].name : 'เลือกแล้ว ' + files.length + ' รูป'; document.getElementById('uploadNote').textContent = 'รูปจะถูกย่อให้ผ่านข้อจำกัดชีตก่อนส่ง กด “บันทึก” เมื่อพร้อม'; document.getElementById('pending').classList.add('open'); document.getElementById('saveButton').disabled = false; files.forEach(function(file) { const img = document.createElement('img'); root.appendChild(img); readFileAsDataUrl(file).then(function(url) { img.src = url; }); }); }
+    function saveSelectedPhotos() { if (!pendingFiles.length || uploading) return; savePendingPhotos(pendingFiles); }
+    async function savePendingPhotos(files) { if (!currentJob) return; uploading = true; document.getElementById('saveButton').disabled = true; renderStage(); try { if (activeMode === 'single') { const data = await prepareUpload(files[0]); await uploadOne(activeType,data,files[0].name); previews[activeType] = data; if (!isFilled(activeType)) currentProgress.filledTypes.push(activeType); } else { const empty = GROUPS[activeGroupKey].types.filter(function(type) { return !isFilled(type); }); for (let i=0;i<files.length;i++) { const data = await prepareUpload(files[i]); await uploadOne(empty[i],data,files[i].name); previews[empty[i]] = data; if (!isFilled(empty[i])) currentProgress.filledTypes.push(empty[i]); } } uploading = false; renderStage(); closeModal(); setStatus('บันทึกรูปเรียบร้อยแล้ว',false,true); } catch (error) { uploading = false; document.getElementById('saveButton').disabled = false; renderStage(); setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
+    function uploadOne(type,data,filename) { return new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadImageToSheet(currentJob.jobNo,currentJob.location,type,data,filename,todayString()); }); }
+    function deletePhoto() { if (!currentJob || !activeType || uploading) return; uploading = true; document.getElementById('deleteButton').disabled = true; renderStage(); google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || currentProgress.filledTypes.filter(function(type) { return type !== activeType; }); delete previews[activeType]; delete previewUrls[activeType]; uploading = false; closeModal(); renderStage(); setStatus(result.message,false,true); }).withFailureHandler(function(error) { uploading = false; document.getElementById('deleteButton').disabled = false; renderStage(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error),true); }).deleteImageFromSheet(currentJob.jobNo,currentJob.location,activeType,todayString()); }
+    function readFileAsDataUrl(file) { return new Promise(function(resolve,reject) { const reader = new FileReader(); reader.onload = function(e) { resolve(e.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); }); }
+    function estimateBytes(data) { const comma = String(data || '').indexOf(','); return comma < 0 ? Infinity : Math.ceil((data.length - comma - 1) * .75); }
+    function prepareUpload(file) { return readFileAsDataUrl(file).then(compressImage); }
+    function compressImage(dataUrl) { return new Promise(function(resolve,reject) { const img = new Image(); img.onload = function() { const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height, longest = Math.max(w,h), pixels = Math.max(1,w*h), scale = Math.min(1,MAX_IMAGE_DIMENSION/longest,Math.sqrt(MAX_IMAGE_PIXELS/pixels)), canvas = document.createElement('canvas'); let s=scale, q=.68, out=''; for (let i=0;i<14;i++) { canvas.width=Math.max(1,Math.floor(w*s)); canvas.height=Math.max(1,Math.floor(h*s)); const ctx=canvas.getContext('2d',{alpha:false}); ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0,canvas.width,canvas.height); out=canvas.toDataURL('image/jpeg',q); if (estimateBytes(out)<=MAX_UPLOAD_BYTES && canvas.width*canvas.height<=MAX_IMAGE_PIXELS) break; if(q>.42) q-=.08; else s*=.72; } if(estimateBytes(out)>MAX_UPLOAD_BYTES || canvas.width*canvas.height>MAX_IMAGE_PIXELS) { reject(new Error('ภาพยังใหญ่เกินข้อจำกัดของชีต')); return; } resolve(out); }; img.onerror=reject; img.src=dataUrl; }); }
+    function openPrintTemplate() { if (!currentJob) return; renderPrintTemplate(); document.getElementById('printPreview').classList.add('open'); }
+    function closePrintPreview() { document.getElementById('printPreview').classList.remove('open'); }
+    function printNow() { window.print(); }
+    function printImage(type,label) { const url=previews[type] || previewUrls[type]; return '<div class="print-image-box">' + (url ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(label) + '">' : '<span class="print-empty">ยังไม่มีรูป<br>' + escapeHtml(label) + '</span>') + '</div>'; }
+    function renderPrintTemplate() { const job=currentJob, date=todayString(), location=job.location || 'ไม่ระบุสถานที่'; document.getElementById('printToolbarTitle').textContent='Template A4 · ' + job.jobNo; document.getElementById('printPage').innerHTML='<p class="print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p><h1 class="print-document-title">ใบรับรองภาพถ่ายการติดตั้งอุปกรณ์</h1><div class="print-meta"><div class="print-meta-box"><span class="print-meta-label">เลข Job: </span><span class="print-meta-value">' + escapeHtml(job.jobNo) + '</span></div><div class="print-meta-box"><span class="print-meta-label">สถานที่ติดตั้ง: </span><span class="print-meta-value">' + escapeHtml(location) + '</span></div><div class="print-meta-box"><span class="print-meta-label">วันที่: </span><span class="print-meta-value">' + formatDate(date) + '</span></div></div><div class="print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="print-signage">' + printImage('signage','ป้ายจุดติดตั้ง') + '<div></div></div>' + pair('before1','after1',1) + pair('before2','after2',2) + pair('before3','after3',3) + pair('before4','after4',4); }
+    function pair(before,after,index) { return '<div class="print-pair-head"><div class="print-before-head">ก่อนติดตั้ง ' + index + '</div><div class="print-after-head">หลังติดตั้ง ' + index + '</div></div><div class="print-pair">' + printImage(before,'ก่อนติดตั้ง ' + index) + printImage(after,'หลังติดตั้ง ' + index) + '</div>'; }
+    function loadSheetLinks() { google.script.run.withSuccessHandler(function(links) { document.getElementById('portalLink').href=links.portalWebUrl || '#'; document.getElementById('photoIndexLink').href=links.photoFileIndexUrl || '#'; document.getElementById('assetLink').href=links.assetMasterUrl || '#'; document.getElementById('reportLink').href=links.templateUrl || '#'; }).withFailureHandler(function(error) { setStatus('โหลดลิงก์เพิ่มเติมไม่สำเร็จ: ' + errorMessage(error),true); }).getSheetEditLinks(); }
+    function escapeHtml(value) { return String(value || '').replace(/[&<>'"]/g,function(ch) { return {'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[ch]; }); }
+    document.getElementById('photoModal').addEventListener('click',function(e) { if(e.target===this && !uploading) closeModal(); });
+    document.addEventListener('keydown',function(e) { if(e.key==='Escape') { closePrintPreview(); if(!uploading) closeModal(); } });
+  </script>
+</body>
 </html>

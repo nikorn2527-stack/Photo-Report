@@ -733,6 +733,8 @@ function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFile
     const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
     const savedFile = folder.createFile(imageBlob);
     savedFile.setName(buildPhotoFilename_(jobNo, imageType, originalFilename));
+    const replacedDriveResult = trashPhotoFilesForSlot_(jobNo, imageType, savedFile.getId());
+    if (replacedDriveResult.error) throw new Error('ย้ายไฟล์รูปเดิมใน Drive ลงถังขยะไม่สำเร็จ: ' + replacedDriveResult.error);
     appendPhotoFileIndex_(jobNo, imageType, originalFilename, savedFile, sheet.getName());
     SpreadsheetApp.flush();
     return 'บันทึกรูปภาพเรียบร้อยแล้ว: ' + imageType;
@@ -952,7 +954,7 @@ function extractDriveFileId_(url) {
   return '';
 }
 
-function trashPhotoFilesForSlot_(jobNo, imageType) {
+function trashPhotoFilesForSlot_(jobNo, imageType, keepFileId) {
   const result = { trashedCount: 0, error: '' };
   try {
     const safeJobNo = String(jobNo || '').replace(/[^a-zA-Z0-9ก-๙_-]/g, '_');
@@ -962,6 +964,7 @@ function trashPhotoFilesForSlot_(jobNo, imageType) {
     while (files.hasNext()) {
       const file = files.next();
       if (file.getName().indexOf(prefix) !== 0) continue;
+      if (keepFileId && file.getId() === keepFileId) continue;
       file.setTrashed(true);
       result.trashedCount += 1;
     }
