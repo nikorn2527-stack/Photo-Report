@@ -82,7 +82,58 @@
       .save-photo { width:100%; min-height:52px; margin-top:12px; border:0; border-radius:10px; background:var(--green); color:#fff; font:inherit; font-size:15px; font-weight:800; cursor:pointer; }
       .cancel-button { width:100%; min-height:48px; margin-top:8px; border:1px solid #9aa0a6; border-radius:10px; background:#fff; color:var(--text); font:inherit; font-weight:800; cursor:pointer; }
       .hidden { display:none; }
-      @media (max-width:420px) { body{padding:5px 5px calc(92px + env(safe-area-inset-bottom))}.page{padding:11px}.title{font-size:21px}.photo-card{grid-template-columns:52px 1fr auto;gap:7px}.photo-thumb{width:52px;height:52px}.photo-action{min-width:74px;padding:7px 8px}.source-grid{grid-template-columns:1fr}.modal{width:96vw;padding:16px 14px}.job-info{grid-template-columns:1fr}.links{grid-template-columns:1fr}.next-button{font-size:11px;padding:6px 8px} }
+      @media (max-width:680px) {
+        html, body { font-size:18px; }
+        body { padding:0 0 calc(100px + env(safe-area-inset-bottom)); }
+        .app { max-width:none; }
+        .page { min-height:100vh; padding:18px 12px 24px; border:0; border-radius:0; box-shadow:none; }
+        .brand { padding-bottom:16px; }
+        .company { font-size:13px; }
+        .title { font-size:25px; }
+        .subtitle { font-size:14px; }
+        .steps { gap:6px; margin-bottom:14px; padding:5px; }
+        .step { min-height:38px; display:flex; align-items:center; justify-content:center; font-size:13px; }
+        .job-panel { padding:15px; border-radius:12px; }
+        .panel-label { font-size:17px; }
+        select, input[type="date"] { min-height:58px; font-size:18px; }
+        .refresh { min-width:58px; min-height:58px; }
+        .job-info { grid-template-columns:1fr; gap:9px; }
+        .info-box { padding:11px; }
+        .info-label { font-size:13px; }
+        .info-value { font-size:17px; }
+        .job-status { padding:10px; font-size:15px; }
+        .section-title { font-size:21px; }
+        .section-note { font-size:14px; }
+        .next-button { min-height:46px; font-size:13px; }
+        .progress { padding:14px; }
+        .progress-line { font-size:16px; }
+        .progress-count { font-size:18px; }
+        .missing-line { font-size:14px; }
+        .group-title { margin-top:18px; font-size:17px; }
+        .photo-card { grid-template-columns:76px 1fr auto; gap:11px; min-height:106px; padding:11px; border-radius:12px; }
+        .photo-thumb { width:76px; height:76px; border-radius:10px; font-size:28px; }
+        .photo-name { font-size:17px; }
+        .photo-status { font-size:14px; }
+        .photo-action { min-width:96px; min-height:56px; padding:9px 10px; font-size:14px; }
+        .bottom-actions { gap:10px; padding:10px 10px calc(10px + env(safe-area-inset-bottom)); }
+        .bottom-button { min-height:62px; font-size:17px; }
+        .links { grid-template-columns:1fr; gap:9px; }
+        .link-button { min-height:50px; font-size:14px; }
+        .modal-backdrop { padding:10px; }
+        .modal { width:96vw; max-height:90vh; padding:20px 16px; }
+        .modal-title { font-size:24px; }
+        .modal-note { font-size:16px; }
+        .source-grid { grid-template-columns:1fr; gap:11px; }
+        .modal-button, .save-photo, .delete-button, .cancel-button { min-height:60px; font-size:17px; }
+      }
+
+      @media (max-width:420px) {
+        .page { padding-left:10px; padding-right:10px; }
+        .photo-card { grid-template-columns:68px 1fr; }
+        .photo-thumb { width:68px; height:68px; }
+        .photo-action { grid-column:1 / -1; width:100%; min-height:58px; }
+        .bottom-actions { grid-template-columns:1fr; }
+      }
       @media print { .bottom-actions,.links,.status,.steps,.job-panel,.section-note,.next-button{display:none!important} }
     </style>
   </head>
