@@ -290,7 +290,7 @@
           <button id="signageButton" class="signage-button" type="button" onclick="openSingleSlot('signage')" disabled>เพิ่มรูป</button>
         </section>
 
-        <details class="more-tools"><summary>เครื่องมือเพิ่มเติม</summary><div class="links"><a id="assetLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Asset_Master</a><a id="reportLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a></div></details>
+        <details class="more-tools"><summary>เครื่องมือเพิ่มเติม</summary><div class="links"><a id="assetLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Asset_Master</a><a id="reportLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a><a id="photoIndexLink" class="link-button" href="#" target="_blank" rel="noopener">ประวัติ URL รูปใน Drive</a></div></details>
         <div id="status" class="status" role="status" aria-live="polite"></div>
       </section>
     </main>
@@ -667,7 +667,7 @@
         google.script.run.withSuccessHandler(function(result) { button.disabled = false; button.textContent = 'พิมพ์เอกสาร'; if (popup) popup.location = result.fileUrl; setStatus(result.message, false, true); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'พิมพ์เอกสาร'; if (popup) popup.close(); setStatus('พิมพ์ไม่สำเร็จ: ' + errorMessage(error), true); }).createJobPdf(job.jobNo);
       }
 
-      function loadSheetLinks() { google.script.run.withSuccessHandler(function(links) { document.getElementById('assetLink').href = links.assetMasterUrl; document.getElementById('reportLink').href = links.templateUrl; document.getElementById('portalLink').href = links.portalWebUrl || '#'; }).withFailureHandler(function(error) { setStatus('โหลดลิงก์ชีตไม่สำเร็จ: ' + errorMessage(error), true); }).getSheetEditLinks(); }
+      function loadSheetLinks() { google.script.run.withSuccessHandler(function(links) { document.getElementById('assetLink').href = links.assetMasterUrl; document.getElementById('reportLink').href = links.templateUrl; document.getElementById('photoIndexLink').href = links.photoFileIndexUrl || links.spreadsheetUrl || '#'; document.getElementById('portalLink').href = links.portalWebUrl || '#'; }).withFailureHandler(function(error) { setStatus('โหลดลิงก์ชีตไม่สำเร็จ: ' + errorMessage(error), true); }).getSheetEditLinks(); }
       function normalizeDate(value) { if (!value) return todayString(); const parsed = new Date(value); if (isNaN(parsed.getTime())) return todayString(); return parsed.getFullYear() + '-' + String(parsed.getMonth()+1).padStart(2,'0') + '-' + String(parsed.getDate()).padStart(2,'0'); }
       function formatDate(value) { if (!value) return 'วันนี้'; const parts = value.split('-'); return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : value; }
       function openViewer(url, caption) { if (!url) return; document.getElementById('fullscreenImage').src = url; document.getElementById('viewerCaption').textContent = caption || ''; document.getElementById('fullscreenViewer').classList.add('open'); }
