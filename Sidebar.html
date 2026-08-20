@@ -170,7 +170,7 @@
     .ios-search-panel { padding:13px 0 10px; border-bottom:0; }
     .ios-label { display:block; margin:0 0 8px 2px; color:#3c3c43; font-size:18px; font-weight:900; }
     .ios-search-row { position:relative; display:block; }
-    .ios-search { width:100%; min-height:78px; padding:31px 66px 10px 78px; border:2px solid var(--blue); border-radius:16px; background:#fff; color:#071d49; font-size:34px; line-height:1; box-shadow:0 3px 10px rgba(7,29,73,.10); }
+    .ios-search { width:100%; min-height:78px; padding:10px 66px 10px 78px; border:2px solid var(--blue); border-radius:16px; background:#fff; color:#071d49; font-size:34px; line-height:1; box-shadow:0 3px 10px rgba(7,29,73,.10); }
     .ios-search::placeholder { color:#1769e0; opacity:1; }
     .ios-search-row::before { content:"⌕"; position:absolute; left:24px; top:50%; z-index:1; transform:translateY(-50%); color:#071d49; font-size:48px; line-height:1; pointer-events:none; }
     .ios-clear { position:absolute; right:14px; top:50%; width:42px; height:42px; min-height:0; padding:0; transform:translateY(-50%); border:0; border-radius:50%; background:#eef1f6; color:#071d49; font-size:34px; line-height:38px; cursor:pointer; }
@@ -275,8 +275,7 @@
       </header>
 
       <section class="ios-search-panel">
-        <label class="ios-label" for="jobSearch">ค้นหา Job</label>
-        <div class="ios-search-row"><input id="jobSearch" class="ios-search" type="search" inputmode="search" autocomplete="off" placeholder="ค้นหา Job"><button id="clearSearch" class="ios-clear" type="button" onclick="clearSearch()" aria-label="ล้างการค้นหา">×</button></div>
+        <div class="ios-search-row"><input id="jobSearch" class="ios-search" type="search" inputmode="search" autocomplete="off" placeholder="ค้นหา Job" aria-label="ค้นหา Job"><button id="clearSearch" class="ios-clear" type="button" onclick="clearSearch()" aria-label="ล้างการค้นหา">×</button></div>
         <div id="searchHint" class="ios-hint">พิมพ์เลขบางส่วนเพื่อค้นหา</div>
         <div id="searchResults" class="search-results"></div>
         <select id="jobSelect" class="hidden" aria-hidden="true" tabindex="-1"></select>
@@ -307,7 +306,7 @@
     const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'สภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'ผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
     let jobs = [], currentJob = null, currentProgress = { filledTypes:[], missingTypes:[] }, previewUrls = {}, previews = {}, uploadStates = {}, pendingFiles = [], activeType = '', activeGroupKey = '', activeMode = 'group', uploading = false, canceledUploads = {};
 
-    window.addEventListener('load', function() { document.getElementById('jobSearch').placeholder = 'ค้นหา Job'; document.getElementById('jobSearch').setAttribute('aria-label','ค้นหา Job'); document.getElementById('jobSearch').value = ''; document.getElementById('galleryFile').addEventListener('change', handleFile); document.getElementById('cameraFile').addEventListener('change', handleFile); document.getElementById('jobSearch').addEventListener('input', renderSearch); loadSheetLinks(); loadJobs(); });
+    window.addEventListener('load', function() { document.getElementById('jobSearch').value = ''; document.getElementById('galleryFile').addEventListener('change', handleFile); document.getElementById('cameraFile').addEventListener('change', handleFile); document.getElementById('jobSearch').addEventListener('input', renderSearch); loadSheetLinks(); loadJobs(); });
     function allTypes() { return Object.keys(PHOTO_LABELS); }
     function isFilled(type) { return (currentProgress.filledTypes || []).indexOf(type) !== -1; }
     function setStatus(text, error, success) { const el = document.getElementById('status'); el.textContent = text || ''; el.className = 'status' + (error ? ' error' : '') + (success ? ' success' : ''); }
