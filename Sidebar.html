@@ -4,964 +4,246 @@
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <style>
-      :root {
-        --green: #188038;
-        --green-dark: #0d652d;
-        --blue: #1967d2;
-        --text: #202124;
-        --muted: #5f6368;
-        --border: #c7cbd1;
-        --surface: #f6f8fb;
-        --danger: #b3261e;
-      }
-
-      * { box-sizing: border-box; }
-
-      html, body {
-        margin: 0;
-        min-height: 100%;
-        background: #eef1f5;
-        color: var(--text);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-        font-size: 16px;
-        line-height: 1.45;
-      }
-
-      body { padding: 8px 8px 88px; }
-      .app { width: 100%; max-width: 620px; margin: 0 auto; }
-      .template-page {
-        width: 100%;
-        min-height: 794px;
-        padding: 18px;
-        border: 1px solid #b9bec6;
-        border-radius: 5px;
-        background: #fff;
-        box-shadow: 0 2px 8px rgba(60, 64, 67, .15);
-      }
-
-      .report-header {
-        padding: 4px 0 12px;
-        border-bottom: 2px solid #202124;
-        text-align: center;
-      }
-
-      .company-title { margin: 0 0 5px; color: var(--muted); font-size: 11px; font-weight: 600; line-height: 1.35; }
-      .report-title { margin: 0; font-size: 21px; line-height: 1.25; }
-      .report-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
-      .sheet-access { margin-top: 12px; padding: 12px; border: 1px solid #d9dde3; border-radius: 10px; background: #f8fafc; }
-      .sheet-access-title { margin: 0 0 8px; color: var(--text); font-size: 13px; font-weight: 700; }
-      .sheet-access-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      .sheet-access-link { display: flex; min-height: 42px; align-items: center; justify-content: center; padding: 8px 10px; border: 1px solid #9aa0a6; border-radius: 8px; background: #fff; color: var(--blue); font-size: 13px; font-weight: 700; text-align: center; text-decoration: none; }
-      .sheet-access-link.primary { border-color: var(--green); background: var(--green); color: #fff; }
-      .sheet-access-link.is-disabled { pointer-events: none; opacity: .55; }
-      .sheet-access-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
-
-      .job-section { display: grid; grid-template-columns: 1.1fr 1.6fr .9fr; gap: 0; margin-top: 14px; border: 1px solid #7b7f86; background: #fff; }
-      .field { min-width: 0; margin: 0; padding: 9px 10px; border-right: 1px solid #7b7f86; }
-      .field:last-child { border-right: 0; }
-      .field-date { display: block; }
-      .field-date input { font-size: 14px; }
-      .field:last-child { margin-bottom: 0; }
-      label, .field-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
-
-      select, input[type="text"], input[type="date"] {
-        width: 100%;
-        min-height: 46px;
-        padding: 10px 11px;
-        border: 1px solid #9aa0a6;
-        border-radius: 7px;
-        background: #fff;
-        color: var(--text);
-        font: inherit;
-      }
-
-      input[readonly] { background: var(--surface); color: var(--muted); }
-      select:focus, input:focus, button:focus-visible, .photo-slot:focus-visible {
-        outline: 3px solid rgba(25, 103, 210, .24);
-        outline-offset: 2px;
-      }
-
-      .photo-section { margin-top: 18px; }
-      .section-heading { margin: 0 0 8px; font-size: 16px; }
-      .section-note { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
-      .progress-board { margin: 0 0 12px; padding: 10px; border: 1px solid #c7cbd1; background: #f8fafc; }
-      .progress-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
-      .progress-count { color: var(--blue); font-weight: 800; }
-      .progress-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 8px; }
-      .progress-chip { padding: 5px 6px; border: 1px solid #c5cad2; border-radius: 6px; background: #fff; color: var(--muted); font-size: 11px; text-align: center; }
-      .progress-chip.done { border-color: #7bb58d; background: #eaf6ed; color: #17663e; font-weight: 700; }
-      .progress-chip.missing { border-color: #e0b28b; background: #fff7ed; color: #8a4b0f; }
-      .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #7b7f86; }
-      .photo-column-heading { padding: 8px 6px; border: 1px solid #7b7f86; background: #f1f3f4; color: var(--text); font-size: 13px; font-weight: 800; text-align: center; }
-      .photo-column-heading.before { color: #8a4b0f; }
-      .photo-column-heading.after { color: #17663e; }
-      .photo-slot-wide { grid-column: 1 / -1; }
-      .photo-slot {
-        position: relative;
-        display: flex;
-        min-height: 190px;
-        flex-direction: column;
-        align-items: stretch;
-        justify-content: flex-start;
-        overflow: hidden;
-        padding: 0;
-        border: 1px solid #7b7f86;
-        border-radius: 0;
-        background: #fff;
-        color: var(--muted);
-        cursor: pointer;
-        text-align: center;
-        -webkit-tap-highlight-color: transparent;
-      }
-      .photo-slot-wide { min-height: 205px; }
-      .photo-slot[data-photo-type^="before"] { border-color: #b45f16; }
-      .photo-slot[data-photo-type^="after"] { border-color: #1b6e43; }
-      .photo-slot:hover { background: #f4f8ff; }
-      .photo-slot.is-filled { border-color: var(--green); background: #fff; }
-      .slot-doc-label { display: block; min-height: 28px; padding: 5px 6px; border-bottom: 1px solid #c7cbd1; background: #fafbfc; color: var(--text); font-size: 12px; font-weight: 700; }
-      .slot-content { display: flex; width: 100%; flex: 1; min-height: 150px; align-items: center; justify-content: center; padding: 10px; }
-      .slot-label { display: none; }
-      .slot-hint { display: block; font-size: 12px; }
-      .slot-image { display: block; width: 100%; height: 100%; min-height: 150px; object-fit: cover; object-position: center; background: #f1f3f4; }
-      .photo-slot-wide .slot-image { min-height: 170px; }
-      .photo-slot-wide .slot-content { min-height: 170px; }
-      .slot-status { position: absolute; right: 7px; bottom: 6px; padding: 2px 6px; border-radius: 9px; background: rgba(24, 128, 56, .9); color: #fff; font-size: 11px; }
-
-      .job-actions {
-        position: sticky;
-        z-index: 5;
-        bottom: 8px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin: 16px -8px -8px;
-        padding: 8px;
-        border: 1px solid rgba(199, 203, 209, .9);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, .94);
-        box-shadow: 0 2px 12px rgba(32, 33, 36, .16);
-        backdrop-filter: blur(8px);
-      }
-      .job-action { min-height: 48px; border: 1px solid var(--border); background: #fff; color: var(--text); }
-      .job-action-save { background: var(--green); color: #fff; border-color: var(--green); }
-      .job-action-print { background: #1967d2; color: #fff; border-color: #1967d2; }
-      .job-action:disabled { background: #e5e7eb !important; color: #80868b; border-color: #d2d5da; }
-      .progress-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
-      .print-link { display: none; margin-top: 10px; color: var(--blue); font-size: 13px; text-align: center; text-decoration: underline; }
-      .print-link.is-visible { display: block; }
-      .manage-link { display: inline-block; margin-top: 9px; color: var(--blue); font-size: 13px; text-decoration: underline; }
-      .manage-link.is-disabled { pointer-events: none; opacity: .55; }
-      .report-footer { margin-top: 18px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; text-align: center; }
-      .status { min-height: 22px; margin-top: 10px; color: var(--muted); font-size: 14px; text-align: center; }
-      .status.error { color: var(--danger); }
-      .status.success { color: var(--green-dark); }
-
-      .modal-backdrop {
-        position: fixed;
-        z-index: 10;
-        inset: 0;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 18px;
-        background: rgba(32, 33, 36, .58);
-      }
-
-      .modal-backdrop.is-open { display: flex; }
-      .modal {
-        width: min(94vw, 620px);
-        max-height: min(86vh, 720px);
-        overflow-y: auto;
-        padding: 16px 18px calc(20px + env(safe-area-inset-bottom));
-        border: 1px solid #c7cbd1;
-        border-radius: 18px;
-        background: #fff;
-        box-shadow: 0 10px 32px rgba(0, 0, 0, .28);
-      }
-
-      .sheet-handle {
-        width: 42px;
-        height: 4px;
-        margin: 0 auto 12px;
-        border-radius: 4px;
-        background: #c6c9ce;
-      }
-
-      .modal-title { margin: 0; font-size: 22px; }
-      .modal-note { margin: 6px 0 16px; color: var(--muted); font-size: 14px; }
-      .source-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-      .existing-photo-actions { display: none; margin: 14px 0 0; padding: 12px; border: 1px solid #e0b28b; border-radius: 10px; background: #fff7ed; }
-      .existing-photo-actions.is-visible { display: block; }
-      .existing-photo-note { margin: 0 0 9px; color: #8a4b0f; font-size: 13px; font-weight: 700; }
-      .button-delete { width: 100%; background: #b3261e; }
-      .button-delete:hover { background: #8c1d18; }
-      button { min-height: 48px; padding: 11px 14px; border: 0; border-radius: 9px; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
-      button:disabled { background: #9aa0a6 !important; cursor: wait; }
-      .button-gallery { background: var(--blue); }
-      .button-camera { background: #5f6368; }
-      .button-save { width: 100%; margin-top: 12px; background: var(--green); font-size: 16px; }
-      .button-save:not(:disabled):hover { background: var(--green-dark); }
-      .button-cancel { width: 100%; margin-top: 8px; background: #fff; color: var(--text); border: 1px solid #9aa0a6; }
-      .pending-preview { display: none; margin-top: 14px; }
-      .pending-preview.is-visible { display: block; }
-      .pending-preview img { display: block; width: 100%; max-height: 260px; object-fit: contain; border: 1px solid var(--border); border-radius: 8px; background: #f1f3f4; }
-      .pending-file { margin-top: 6px; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
-
-      .required-note { color: var(--muted); font-size: 12px; font-weight: 400; }
-      .hidden-input { display: none; }
-
-      @media (max-width: 640px) {
-        .modal-backdrop { padding: 12px; }
-        .modal { width: min(94vw, 560px); max-height: 88vh; padding: 17px 16px calc(18px + env(safe-area-inset-bottom)); }
-        .photo-slot { min-height: 218px; }
-        .photo-slot-wide { min-height: 238px; }
-        .slot-content { min-height: 178px; }
-        .slot-image { min-height: 178px; }
-        .photo-slot-wide .slot-content, .photo-slot-wide .slot-image { min-height: 198px; }
-        .slot-doc-label { font-size: 13px; }
-        .slot-hint { font-size: 13px; }
-      }
-
-      @media (max-width: 380px) {
-        body { padding: 6px 6px 86px; }
-        .template-page { padding: 11px; }
-        .photo-grid { grid-template-columns: 1fr 1fr; gap: 0; }
-        .source-buttons { grid-template-columns: 1fr; }
-        .modal-backdrop { padding: 8px; }
-        .modal { width: 96vw; max-height: 90vh; padding-left: 13px; padding-right: 13px; }
-        .photo-slot { min-height: 195px; }
-        .photo-slot-wide { min-height: 215px; }
-        .slot-content, .slot-image { min-height: 155px; }
-        .photo-slot-wide .slot-content, .photo-slot-wide .slot-image { min-height: 175px; }
-        .job-action { min-height: 50px; font-size: 14px; }
-      }
-
-      @page { size: A4 portrait; margin: 10mm; }
-
-      @media print {
-        html, body { background: #fff; }
-        body { padding: 0; }
-        .sheet-access, .modal-backdrop, .status, .job-actions, .progress-board, .progress-note, .report-footer, .manage-link, .print-link { display: none !important; }
-        .template-page { width: 190mm; max-width: none; min-height: 277mm; padding: 0; border: 0; box-shadow: none; }
-        .job-section { margin-top: 10px; }
-      }
+      :root { --green:#188038; --green-dark:#0d652d; --blue:#1967d2; --text:#202124; --muted:#5f6368; --border:#d1d5db; --surface:#f4f6f8; --danger:#b3261e; --orange:#b45f16; }
+      * { box-sizing:border-box; }
+      html,body { margin:0; min-height:100%; background:#eef1f5; color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; font-size:16px; line-height:1.4; }
+      body { padding:8px 8px calc(92px + env(safe-area-inset-bottom)); }
+      .app { width:100%; max-width:680px; margin:0 auto; }
+      .page { padding:14px; border:1px solid #b8bec7; border-radius:12px; background:#fff; box-shadow:0 2px 8px rgba(60,64,67,.15); }
+      .brand { padding:2px 2px 12px; text-align:center; }
+      .company { margin:0; color:var(--muted); font-size:11px; font-weight:700; }
+      .title { margin:4px 0 0; font-size:23px; line-height:1.2; }
+      .subtitle { margin:4px 0 0; color:var(--muted); font-size:12px; }
+      .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin:0 0 12px; padding:4px; border-radius:9px; background:#e8ebef; }
+      .step { padding:7px 4px; border-radius:7px; color:var(--muted); font-size:11px; font-weight:700; text-align:center; }
+      .step.active { background:#fff; color:var(--blue); box-shadow:0 1px 4px rgba(60,64,67,.15); }
+      .job-panel { padding:13px; border:1px solid #9aa0a6; border-radius:10px; background:#fff; }
+      .panel-label { display:block; margin-bottom:6px; font-size:14px; font-weight:800; }
+      .job-row { display:grid; grid-template-columns:1fr auto; gap:8px; }
+      select,input[type="date"] { width:100%; min-height:50px; padding:11px 12px; border:1px solid #8a9098; border-radius:9px; background:#fff; color:var(--text); font:inherit; }
+      select:focus,input:focus,button:focus-visible { outline:3px solid rgba(25,103,210,.25); outline-offset:2px; }
+      .refresh { min-width:50px; min-height:50px; border:1px solid #8a9098; border-radius:9px; background:#f8fafc; color:var(--text); font-size:20px; cursor:pointer; }
+      .job-info { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:9px; }
+      .info-box { min-width:0; padding:9px; border-radius:8px; background:var(--surface); }
+      .info-label { display:block; color:var(--muted); font-size:11px; }
+      .info-value { display:block; margin-top:2px; overflow:hidden; font-size:14px; font-weight:700; text-overflow:ellipsis; white-space:nowrap; }
+      .job-status { display:block; margin-top:9px; padding:8px 10px; border-radius:8px; background:#fff7ed; color:#8a4b0f; font-size:13px; font-weight:700; text-align:center; }
+      .job-status.complete { background:#e8f5ec; color:#17663e; }
+      .section { margin-top:14px; }
+      .section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:8px; }
+      .section-title { margin:0; font-size:18px; }
+      .section-note { margin:3px 0 0; color:var(--muted); font-size:12px; }
+      .next-button { min-height:40px; padding:7px 10px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font:inherit; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap; }
+      .progress { padding:11px; border:1px solid #c7cbd1; border-radius:9px; background:#f8fafc; }
+      .progress-line { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; font-weight:800; }
+      .progress-count { color:var(--blue); font-size:15px; }
+      .progress-track { height:10px; margin-top:8px; overflow:hidden; border-radius:8px; background:#e1e5ea; }
+      .progress-fill { height:100%; width:0; border-radius:8px; background:var(--green); transition:width .2s ease; }
+      .missing-line { margin:8px 0 0; color:#8a4b0f; font-size:12px; }
+      .missing-line.complete { color:#17663e; }
+      .group-title { margin:14px 0 7px; font-size:14px; }
+      .photo-list { display:grid; gap:8px; }
+      .photo-card { display:grid; grid-template-columns:58px 1fr auto; gap:9px; align-items:center; min-height:86px; padding:8px; border:1px solid #c7cbd1; border-radius:10px; background:#fff; }
+      .photo-card.done { border-color:#7bb58d; background:#f7fcf8; }
+      .photo-thumb { display:flex; width:58px; height:58px; align-items:center; justify-content:center; overflow:hidden; border:1px solid #c7cbd1; border-radius:8px; background:#f1f3f4; color:var(--muted); font-size:22px; }
+      .photo-thumb img { width:100%; height:100%; object-fit:cover; }
+      .photo-name { font-size:14px; font-weight:800; }
+      .photo-status { margin-top:3px; color:#8a4b0f; font-size:12px; }
+      .photo-card.done .photo-status { color:#17663e; }
+      .photo-action { min-width:82px; min-height:44px; padding:8px 10px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font:inherit; font-size:12px; font-weight:800; cursor:pointer; }
+      .photo-card.done .photo-action { border-color:var(--green); color:var(--green-dark); }
+      .bottom-actions { position:fixed; z-index:5; right:0; bottom:0; left:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:8px max(8px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right)); border-top:1px solid #c7cbd1; background:rgba(255,255,255,.96); box-shadow:0 -3px 12px rgba(32,33,36,.16); backdrop-filter:blur(8px); }
+      .bottom-button { min-height:52px; border:0; border-radius:10px; font:inherit; font-size:15px; font-weight:800; cursor:pointer; }
+      .save-button { background:var(--green); color:#fff; }
+      .print-button { background:var(--blue); color:#fff; }
+      .bottom-button:disabled { background:#d8dce1; color:#7b8188; cursor:not-allowed; }
+      .links { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+      .link-button { display:flex; min-height:42px; align-items:center; justify-content:center; padding:8px; border:1px solid #9aa0a6; border-radius:8px; color:var(--blue); font-size:12px; font-weight:700; text-align:center; text-decoration:none; }
+      .status { min-height:22px; margin-top:10px; color:var(--muted); font-size:13px; text-align:center; }
+      .status.error { color:var(--danger); }
+      .status.success { color:var(--green-dark); }
+      .modal-backdrop { position:fixed; z-index:20; inset:0; display:none; align-items:center; justify-content:center; padding:14px; background:rgba(32,33,36,.62); }
+      .modal-backdrop.open { display:flex; }
+      .modal { width:min(94vw,560px); max-height:88vh; overflow:auto; padding:18px; border:1px solid #c7cbd1; border-radius:18px; background:#fff; box-shadow:0 12px 35px rgba(0,0,0,.3); }
+      .modal-handle { width:42px; height:4px; margin:0 auto 12px; border-radius:4px; background:#c5c9cf; }
+      .modal-title { margin:0; font-size:22px; }
+      .modal-note { margin:5px 0 15px; color:var(--muted); font-size:14px; }
+      .source-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+      .modal-button { min-height:54px; border:0; border-radius:10px; color:#fff; font:inherit; font-size:15px; font-weight:800; cursor:pointer; }
+      .gallery-button { background:var(--blue); }
+      .camera-button { background:#5f6368; }
+      .existing-box { display:none; margin-bottom:12px; padding:11px; border:1px solid #e0b28b; border-radius:9px; background:#fff7ed; color:#8a4b0f; font-size:13px; font-weight:700; }
+      .existing-box.visible { display:block; }
+      .delete-button { width:100%; min-height:48px; margin-top:8px; border:0; border-radius:9px; background:var(--danger); color:#fff; font:inherit; font-weight:800; cursor:pointer; }
+      .pending { display:none; margin-top:14px; }
+      .pending.visible { display:block; }
+      .pending img { display:block; width:100%; max-height:270px; object-fit:contain; border:1px solid var(--border); border-radius:9px; background:#f1f3f4; }
+      .pending-name { margin-top:6px; color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
+      .save-photo { width:100%; min-height:52px; margin-top:12px; border:0; border-radius:10px; background:var(--green); color:#fff; font:inherit; font-size:15px; font-weight:800; cursor:pointer; }
+      .cancel-button { width:100%; min-height:48px; margin-top:8px; border:1px solid #9aa0a6; border-radius:10px; background:#fff; color:var(--text); font:inherit; font-weight:800; cursor:pointer; }
+      .hidden { display:none; }
+      @media (max-width:420px) { body{padding:5px 5px calc(92px + env(safe-area-inset-bottom))}.page{padding:11px}.title{font-size:21px}.photo-card{grid-template-columns:52px 1fr auto;gap:7px}.photo-thumb{width:52px;height:52px}.photo-action{min-width:74px;padding:7px 8px}.source-grid{grid-template-columns:1fr}.modal{width:96vw;padding:16px 14px}.job-info{grid-template-columns:1fr}.links{grid-template-columns:1fr}.next-button{font-size:11px;padding:6px 8px} }
+      @media print { .bottom-actions,.links,.status,.steps,.job-panel,.section-note,.next-button{display:none!important} }
     </style>
   </head>
   <body>
-    <noscript><div style="margin:12px;padding:12px;border:1px solid #b3261e;border-radius:8px;background:#fff3f2;color:#b3261e">กรุณาเปิดใช้งาน JavaScript เพื่อใช้งาน Photo Report</div></noscript>
+    <noscript><div class="status error">กรุณาเปิดใช้งาน JavaScript เพื่อใช้งานหน้า Photo Report</div></noscript>
     <main class="app">
-      <section class="sheet-access" aria-label="ลิงก์แก้ไข Google Sheet">
-        <p class="sheet-access-title">จัดการข้อมูลและพิมพ์จาก Google Sheet</p>
-        <div class="sheet-access-actions">
-          <a id="openAssetSheetLink" class="sheet-access-link primary is-disabled" href="#" target="_blank" rel="noopener">แก้ไข Asset_Master</a>
-          <a id="openTemplateSheetLink" class="sheet-access-link is-disabled" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a>
-        </div>
-        <p class="sheet-access-note">หากต้องแก้ข้อมูลโดยตรง ให้กดปุ่มด้านบน ระบบจะเปิด Google Sheet ในหน้าใหม่</p>
-      </section>
-
-      <section id="reportView" class="template-page" aria-label="แบบฟอร์ม Photo Report">
-        <header class="report-header">
-          <p class="company-title">ห้างหุ้นส่วนจำกัด เปซิกฟิก พลัส ไอที<br>(PACIFIC PLUS IT LIMITED PARTNERSHIP)</p>
-          <h1 class="report-title">ใบบันทึกภาพถ่ายการติดตั้งอุปกรณ์</h1>
-          <p class="report-subtitle">Installation Photo Report</p>
+      <section class="page">
+        <header class="brand">
+          <p class="company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p>
+          <h1 class="title">บันทึกภาพหน้างาน</h1>
+          <p class="subtitle">Photo Report — เลือกงาน แล้วเติมเฉพาะรูปที่ยังขาด</p>
         </header>
 
-        <section class="job-section">
-          <div class="field">
-            <label for="jobSelect">เลข Job <span class="required-note">(จำเป็น)</span></label>
-            <select id="jobSelect">
-              <option value="">กำลังโหลดรายการ Job...</option>
-            </select>
+        <div class="steps"><div class="step active">1 เลือก Job</div><div class="step active">2 เติมรูป</div><div class="step">3 บันทึก/พิมพ์</div></div>
+
+        <section class="job-panel">
+          <label class="panel-label" for="jobSelect">เลือก Job ที่จะทำ</label>
+          <div class="job-row"><select id="jobSelect"><option value="">กำลังโหลดรายการ Job...</option></select><button id="refreshButton" class="refresh" type="button" onclick="loadJobs()" aria-label="รีเฟรชรายการ Job">↻</button></div>
+          <div class="job-info">
+            <div class="info-box"><span class="info-label">สถานที่ติดตั้ง</span><span id="locationValue" class="info-value">-</span></div>
+            <div class="info-box"><span class="info-label">วันที่ติดตั้ง</span><input id="installDate" type="date"></div>
           </div>
-          <div class="field">
-            <label for="locationDisplay">สถานที่ติดตั้ง</label>
-            <input type="text" id="locationDisplay" readonly placeholder="จะแสดงหลังเลือก Job">
-          </div>
-          <div class="field field-date">
-            <label for="installDate">วันที่ติดตั้ง</label>
-            <input type="date" id="installDate">
-          </div>
+          <div id="jobStatus" class="job-status">เลือก Job เพื่อเริ่มงาน</div>
         </section>
 
-        <section class="photo-section">
-          <h2 class="section-heading">รูปภาพประกอบรายงาน</h2>
-          <p class="section-note">ทุกคนเลือก Job เดิมแล้วเติมเฉพาะช่องที่ยังขาดได้ ระบบจะรวมรูปไว้ในรายงานเดียวกัน</p>
-          <div id="progressBoard" class="progress-board">
-            <div class="progress-head"><strong id="progressTitle">ยังไม่เลือก Job</strong><span id="progressCount" class="progress-count">0/9</span></div>
-            <div id="progressChips" class="progress-chips"></div>
-          </div>
-          <div class="photo-grid">
-            <div class="photo-column-heading photo-slot-wide">🏢 ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div>
-            <button type="button" class="photo-slot photo-slot-wide" data-photo-type="signage" onclick="openPhotoModal('signage')" aria-label="ใส่รูปป้ายชื่อหน่วยงาน">
-              <span class="slot-doc-label">รูปถ่ายจุดติดตั้ง</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
-            </button>
-            <div class="photo-column-heading before">📷 ภาพถ่ายก่อนติดตั้ง (BEFORE)</div>
-            <div class="photo-column-heading after">📷 ภาพถ่ายหลังติดตั้ง (AFTER)</div>
-            <button type="button" class="photo-slot" data-photo-type="before1" onclick="openPhotoModal('before1')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 1">
-              <span class="slot-doc-label">รูปที่ 1 (ก่อนติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
-            </button>
-            <button type="button" class="photo-slot" data-photo-type="after1" onclick="openPhotoModal('after1')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 1">
-              <span class="slot-doc-label">รูปที่ 1 (หลังติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
-            </button>
-            <button type="button" class="photo-slot" data-photo-type="before2" onclick="openPhotoModal('before2')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 2">
-              <span class="slot-doc-label">รูปที่ 2 (ก่อนติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
-            </button>
-            <button type="button" class="photo-slot" data-photo-type="after2" onclick="openPhotoModal('after2')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 2">
-              <span class="slot-doc-label">รูปที่ 2 (หลังติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
-            </button>
-            <button type="button" class="photo-slot" data-photo-type="before3" onclick="openPhotoModal('before3')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 3">
-              <span class="slot-doc-label">รูปที่ 3 (ก่อนติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
-            </button>
-            <button type="button" class="photo-slot" data-photo-type="after3" onclick="openPhotoModal('after3')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 3">
-              <span class="slot-doc-label">รูปที่ 3 (หลังติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
-            </button>
-            <button type="button" class="photo-slot" data-photo-type="before4" onclick="openPhotoModal('before4')" aria-label="ใส่รูปก่อนติดตั้งรูปที่ 4">
-              <span class="slot-doc-label">รูปที่ 4 (ก่อนติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
-            </button>
-            <button type="button" class="photo-slot" data-photo-type="after4" onclick="openPhotoModal('after4')" aria-label="ใส่รูปหลังติดตั้งรูปที่ 4">
-              <span class="slot-doc-label">รูปที่ 4 (หลังติดตั้ง)</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>
-            </button>
-          </div>
+        <section class="section">
+          <div class="section-head"><div><h2 class="section-title">รายการรูปที่ต้องส่ง</h2><p class="section-note">ทุกคนเลือก Job เดิมแล้วช่วยเติมช่องที่ยังขาดได้</p></div><button id="nextButton" class="next-button" type="button" onclick="openNextMissing()" disabled>ไปช่องถัดไป</button></div>
+          <div class="progress"><div class="progress-line"><span>ความคืบหน้า</span><span id="progressCount" class="progress-count">0/9</span></div><div class="progress-track"><div id="progressFill" class="progress-fill"></div></div><p id="missingLine" class="missing-line">ยังไม่เลือก Job</p></div>
         </section>
 
-        <div class="job-actions">
-          <button id="saveJobBtn" type="button" class="job-action job-action-save" onclick="saveJob()" disabled>บันทึกงาน</button>
-          <button id="printJobBtn" type="button" class="job-action job-action-print" onclick="printJob()" disabled>สั่งพิมพ์งาน</button>
-        </div>
-        <p id="progressNote" class="progress-note">เลือก Job เพื่อเริ่มงาน</p>
-        <a id="printLink" class="print-link" href="#" target="_blank" rel="noopener">เปิด PDF สำหรับพิมพ์</a>
+        <section id="photoGroups" class="section"></section>
+        <div class="links"><a id="assetLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Asset_Master</a><a id="reportLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a></div>
         <div id="status" class="status" role="status" aria-live="polite"></div>
-        <footer class="report-footer">รองรับ JPG, PNG, GIF, WEBP ขนาดไม่เกิน 2 MB ต่อรูป<br><a id="managePageLink" class="manage-link is-disabled" href="#" target="_top">เปิดหน้าจัดการ Asset_Master</a></footer>
       </section>
-
     </main>
 
+    <div class="bottom-actions"><button id="saveJobButton" class="bottom-button save-button" type="button" onclick="saveJob()" disabled>บันทึกงาน</button><button id="printJobButton" class="bottom-button print-button" type="button" onclick="printJob()" disabled>พิมพ์งาน</button></div>
+
     <div id="photoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-        <section class="modal">
-          <div class="sheet-handle" aria-hidden="true"></div>
-          <h2 id="modalTitle" class="modal-title">ใส่รูปภาพ</h2>
-        <p class="modal-note">เลือกจากคลังรูปหรือเปิดกล้องของมือถือ</p>
-        <div id="existingPhotoActions" class="existing-photo-actions">
-          <p id="existingPhotoNote" class="existing-photo-note">ช่องนี้มีรูปแล้ว</p>
-          <button type="button" class="button-delete" onclick="deletePhoto()">ลบรูปช่องนี้</button>
-        </div>
-        <div class="source-buttons">
-          <button type="button" class="button-gallery" onclick="openGallery()">เลือกรูปใหม่จากคลัง</button>
-          <button type="button" class="button-camera" onclick="openCamera()">ถ่ายรูปใหม่ด้วยกล้อง</button>
-        </div>
-        <input id="galleryFile" class="hidden-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
-        <input id="cameraFile" class="hidden-input" type="file" accept="image/*" capture="environment">
-        <div id="pendingPreview" class="pending-preview">
-          <img id="pendingImage" alt="ตัวอย่างรูปที่เลือก">
-          <div id="pendingFile" class="pending-file"></div>
-        </div>
-        <button id="savePhotoBtn" type="button" class="button-save" onclick="savePhoto()" disabled>บันทึกรูปช่องนี้</button>
-        <button type="button" class="button-cancel" onclick="closePhotoModal()">ยกเลิก</button>
+      <section class="modal">
+        <div class="modal-handle"></div>
+        <h2 id="modalTitle" class="modal-title">ใส่รูป</h2>
+        <p id="modalNote" class="modal-note">เลือกรูปจากคลังหรือถ่ายรูปใหม่</p>
+        <div id="existingBox" class="existing-box">ช่องนี้มีรูปแล้ว หากต้องการแก้ไขให้เลือกรูปใหม่ หรือกดลบรูป</div>
+        <div class="source-grid"><button class="modal-button gallery-button" type="button" onclick="chooseGallery()">เลือกรูปจากคลัง</button><button class="modal-button camera-button" type="button" onclick="chooseCamera()">ถ่ายรูปด้วยกล้อง</button></div>
+        <input id="galleryFile" class="hidden" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+        <input id="cameraFile" class="hidden" type="file" accept="image/*" capture="environment">
+        <div id="pending" class="pending"><img id="pendingImage" alt="ตัวอย่างรูปที่เลือก"><div id="pendingName" class="pending-name"></div></div>
+        <button id="savePhotoButton" class="save-photo" type="button" onclick="savePhoto()" disabled>บันทึกรูปช่องนี้</button>
+        <button id="deletePhotoButton" class="delete-button" type="button" onclick="deletePhoto()" hidden>ลบรูปช่องนี้</button>
+        <button class="cancel-button" type="button" onclick="closeModal()">ยกเลิก</button>
       </section>
     </div>
 
     <script>
       const MAX_FILE_SIZE = 2 * 1024 * 1024;
       const LAST_JOB_KEY = 'photoReport.lastJob';
-      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      const PHOTO_LABELS = {
-        signage: 'ป้ายชื่อหน่วยงาน / จุดติดตั้ง',
-        before1: 'ก่อนติดตั้ง 1',
-        after1: 'หลังติดตั้ง 1',
-        before2: 'ก่อนติดตั้ง 2',
-        after2: 'หลังติดตั้ง 2',
-        before3: 'ก่อนติดตั้ง 3',
-        after3: 'หลังติดตั้ง 3',
-        before4: 'ก่อนติดตั้ง 4',
-        after4: 'หลังติดตั้ง 4'
-      };
-
-      let jobDataList = [];
-      let activePhotoType = '';
+      const PHOTO_LABELS = { signage:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง', before1:'ก่อนติดตั้ง 1', after1:'หลังติดตั้ง 1', before2:'ก่อนติดตั้ง 2', after2:'หลังติดตั้ง 2', before3:'ก่อนติดตั้ง 3', after3:'หลังติดตั้ง 3', before4:'ก่อนติดตั้ง 4', after4:'หลังติดตั้ง 4' };
+      const GROUPS = [{ title:'รูปจุดติดตั้ง', types:['signage'] }, { title:'รูปก่อนติดตั้ง', types:['before1','before2','before3','before4'] }, { title:'รูปหลังติดตั้ง', types:['after1','after2','after3','after4'] }];
+      let jobs = [];
+      let currentProgress = { filledTypes:[], complete:false };
+      let activeType = '';
       let pendingFile = null;
       let pendingDataUrl = '';
+      let previews = {};
 
       window.addEventListener('load', function() {
-        document.getElementById('galleryFile').addEventListener('change', handleFileChange);
-        document.getElementById('cameraFile').addEventListener('change', handleFileChange);
-        setDefaultInstallDate();
+        document.getElementById('galleryFile').addEventListener('change', handleFile);
+        document.getElementById('cameraFile').addEventListener('change', handleFile);
+        document.getElementById('jobSelect').addEventListener('change', handleJobChange);
+        document.getElementById('installDate').value = todayString();
+        renderGroups();
+        loadSheetLinks();
         loadJobs();
-        loadSheetEditLinks();
       });
 
-      function loadSheetEditLinks() {
-        google.script.run
-          .withSuccessHandler(function(links) {
-            setLink('openAssetSheetLink', links.assetMasterUrl);
-            setLink('openTemplateSheetLink', links.templateUrl);
-            setLink('managePageLink', links.assetWebUrl);
-          })
-          .withFailureHandler(function(error) {
-            setStatus('ยังเปิดลิงก์แก้ไขชีตไม่ได้: ' + getErrorMessage(error), true);
-          })
-          .getSheetEditLinks();
-      }
-
-      function setLink(id, url) {
-        const link = document.getElementById(id);
-        if (!link || !url) return;
-        link.href = url;
-        link.classList.remove('is-disabled');
-      }
+      function todayString() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+      function getJob() { const value = document.getElementById('jobSelect').value; return value === '' ? null : jobs[Number(value)]; }
+      function isFilled(type) { return (currentProgress.filledTypes || []).indexOf(type) !== -1; }
 
       function loadJobs() {
         setStatus('กำลังโหลดรายการ Job...');
-        google.script.run
-          .withSuccessHandler(populateJobs)
-          .withFailureHandler(function(error) {
-            setStatus('โหลดรายการ Job ไม่สำเร็จ: ' + getErrorMessage(error), true);
-          })
-          .getJobData();
+        google.script.run.withSuccessHandler(function(data) { jobs = data || []; populateJobs(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรายการ Job ไม่สำเร็จ: ' + errorMessage(error), true); }).getJobData();
       }
 
-      function showView(view) {
-        currentView = view;
-        const reportView = document.getElementById('reportView');
-        const assetView = document.getElementById('assetView');
-        const reportTab = document.getElementById('reportTab');
-        const assetTab = document.getElementById('assetTab');
-
-        reportView.hidden = view !== 'report';
-        assetView.hidden = view !== 'asset';
-        reportTab.classList.toggle('is-active', view === 'report');
-        assetTab.classList.toggle('is-active', view === 'asset');
-
-        if (view === 'asset') {
-          closePhotoModal();
-          loadAssetMaster();
-        } else {
-          setAssetStatus('');
-        }
-      }
-
-      function loadAssetMaster() {
-        setAssetStatus('กำลังโหลดข้อมูล Asset_Master...');
-        google.script.run
-          .withSuccessHandler(renderAssetRows)
-          .withFailureHandler(function(error) {
-            setAssetStatus('โหลดข้อมูลไม่สำเร็จ: ' + getErrorMessage(error), true);
-          })
-          .getAssetMasterRows();
-      }
-
-      function renderAssetRows(rows) {
-        assetRows = rows || [];
-        filterAssetRows();
-        setAssetStatus('');
-      }
-
-      function filterAssetRows() {
-        const query = document.getElementById('assetSearch').value.trim().toLowerCase();
-        const filtered = assetRows.filter(function(item) {
-          const text = [item.jobNo, item.building, item.floor, item.department, item.room]
-            .join(' ')
-            .toLowerCase();
-          return !query || text.indexOf(query) !== -1;
-        });
-
-        document.getElementById('assetCount').textContent = 'แสดง ' + filtered.length + ' จาก ' + assetRows.length + ' รายการ';
-        const list = document.getElementById('assetList');
-        list.innerHTML = '';
-
-        if (!filtered.length) {
-          const empty = document.createElement('div');
-          empty.className = 'asset-empty';
-          empty.textContent = query ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูล Job';
-          list.appendChild(empty);
-          return;
-        }
-
-        filtered.forEach(function(item) {
-          const row = document.createElement('article');
-          row.className = 'asset-row';
-
-          const main = document.createElement('div');
-          main.className = 'asset-row-main';
-
-          const info = document.createElement('div');
-          const job = document.createElement('div');
-          job.className = 'asset-job';
-          job.textContent = item.jobNo || '(ไม่มีเลข Job)';
-          const location = document.createElement('div');
-          location.className = 'asset-location';
-          location.textContent = [item.building, item.floor, item.department, item.room]
-            .filter(function(value) { return value; })
-            .join('  |  ') || 'ยังไม่มีรายละเอียดสถานที่';
-          info.appendChild(job);
-          info.appendChild(location);
-
-          const editButton = document.createElement('button');
-          editButton.type = 'button';
-          editButton.className = 'asset-edit';
-          editButton.textContent = 'แก้ไข';
-          editButton.addEventListener('click', function() {
-            openAssetForm(item);
-          });
-
-          main.appendChild(info);
-          main.appendChild(editButton);
-          row.appendChild(main);
-          list.appendChild(row);
-        });
-      }
-
-      function openAssetForm(item) {
-        item = item || {};
-        document.getElementById('assetForm').hidden = false;
-        document.getElementById('assetFormTitle').textContent = item.rowNumber ? 'แก้ไขข้อมูล Job' : 'เพิ่มข้อมูล Job';
-        document.getElementById('assetRowNumber').value = item.rowNumber || '';
-        document.getElementById('assetJobNo').value = item.jobNo || '';
-        document.getElementById('assetBuilding').value = item.building || '';
-        document.getElementById('assetFloor').value = item.floor || '';
-        document.getElementById('assetDepartment').value = item.department || '';
-        document.getElementById('assetRoom').value = item.room || '';
-        document.getElementById('assetForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        document.getElementById('assetJobNo').focus();
-      }
-
-      function closeAssetForm() {
-        document.getElementById('assetForm').hidden = true;
-        document.getElementById('assetRowNumber').value = '';
-        document.getElementById('assetJobNo').value = '';
-        document.getElementById('assetBuilding').value = '';
-        document.getElementById('assetFloor').value = '';
-        document.getElementById('assetDepartment').value = '';
-        document.getElementById('assetRoom').value = '';
-      }
-
-      function saveAssetRow() {
-        const jobNo = document.getElementById('assetJobNo').value.trim().toUpperCase();
-        if (!jobNo) {
-          setAssetStatus('กรุณากรอกเลข Job', true);
-          return;
-        }
-
-        const button = document.getElementById('assetSaveBtn');
-        button.disabled = true;
-        button.textContent = 'กำลังบันทึก...';
-        setAssetStatus('กำลังบันทึกข้อมูล...');
-
-        const asset = {
-          jobNo: jobNo,
-          building: document.getElementById('assetBuilding').value.trim(),
-          floor: document.getElementById('assetFloor').value.trim(),
-          department: document.getElementById('assetDepartment').value.trim(),
-          room: document.getElementById('assetRoom').value.trim()
-        };
-
-        google.script.run
-          .withSuccessHandler(function(result) {
-            button.disabled = false;
-            button.textContent = 'บันทึกข้อมูล';
-            closeAssetForm();
-            setAssetStatus(result.message, false, true);
-            loadAssetMaster();
-            loadJobs();
-          })
-          .withFailureHandler(function(error) {
-            button.disabled = false;
-            button.textContent = 'บันทึกข้อมูล';
-            setAssetStatus('บันทึกไม่สำเร็จ: ' + getErrorMessage(error), true);
-          })
-          .saveAssetMasterRow(
-            document.getElementById('assetRowNumber').value,
-            asset
-          );
-      }
-
-      function setAssetStatus(message, isError, isSuccess) {
-        const status = document.getElementById('assetStatus');
-        status.textContent = message || '';
-        status.className = 'status' + (isError ? ' error' : '') + (isSuccess ? ' success' : '');
-      }
-
-      function populateJobs(jobs) {
-        jobDataList = jobs || [];
+      function populateJobs() {
         const select = document.getElementById('jobSelect');
+        const old = localStorage.getItem(LAST_JOB_KEY);
         select.innerHTML = '<option value="">-- เลือก Job --</option>';
-        jobDataList.forEach(function(job, index) {
-          const option = document.createElement('option');
-          option.value = index;
-          const progressLabel = job.complete ? ' ✓ ครบ 9/9' : (job.hasReport ? ' • มีแล้ว ' + job.filledCount + '/9' : ' • ยังไม่เริ่ม');
-          option.textContent = job.jobNo + progressLabel;
-          select.appendChild(option);
-        });
-        select.onchange = handleJobChange;
-        const lastJobNo = localStorage.getItem(LAST_JOB_KEY);
-        const lastJobIndex = jobDataList.findIndex(function(job) {
-          return job.jobNo === lastJobNo;
-        });
-        if (lastJobIndex >= 0) select.value = lastJobIndex;
-        setStatus(jobDataList.length ? '' : 'ไม่พบ Job ใน Asset_Master', !jobDataList.length);
+        jobs.forEach(function(job, index) { const option = document.createElement('option'); option.value = index; option.textContent = job.jobNo + (job.complete ? '  ✓ ครบ 9/9' : (job.hasReport ? '  • มีแล้ว ' + job.filledCount + '/9' : '  • ยังไม่เริ่ม')); select.appendChild(option); });
+        const lastIndex = jobs.findIndex(function(job) { return job.jobNo === old; });
+        if (lastIndex >= 0) select.value = lastIndex;
         handleJobChange();
       }
 
-      function getSelectedJob() {
-        const selectedIndex = document.getElementById('jobSelect').value;
-        return selectedIndex === '' ? null : jobDataList[selectedIndex];
-      }
-
-      function updateLocation() {
-        const job = getSelectedJob();
-        document.getElementById('locationDisplay').value = job ? job.location : '';
-      }
-
       function handleJobChange() {
-        updateLocation();
-        const job = getSelectedJob();
-        if (job) localStorage.setItem(LAST_JOB_KEY, job.jobNo);
-        else localStorage.removeItem(LAST_JOB_KEY);
-        clearRenderedSlots();
-        hidePrintLink();
-        renderProgressBoard(null);
-        setJobActions(!!job, false, false);
-
-        if (!job) {
-          document.getElementById('progressNote').textContent = 'เลือก Job เพื่อเริ่มงาน';
-          return;
-        }
-
-        setStatus('กำลังโหลดความคืบหน้าของ ' + job.jobNo + '...');
-        google.script.run
-          .withSuccessHandler(renderJobProgress)
-          .withFailureHandler(function(error) {
-            setStatus('โหลดความคืบหน้าไม่สำเร็จ: ' + getErrorMessage(error), true);
-          })
-          .getJobProgress(job.jobNo);
+        const job = getJob();
+        previews = {};
+        currentProgress = { filledTypes:[], complete:false };
+        document.getElementById('locationValue').textContent = job ? (job.location || '-') : '-';
+        document.getElementById('jobStatus').textContent = job ? 'กำลังโหลดความคืบหน้า...' : 'เลือก Job เพื่อเริ่มงาน';
+        document.getElementById('jobStatus').className = 'job-status';
+        document.getElementById('installDate').value = todayString();
+        renderProgress(); renderGroups(); updateButtons();
+        if (!job) { localStorage.removeItem(LAST_JOB_KEY); return; }
+        localStorage.setItem(LAST_JOB_KEY, job.jobNo);
+        setStatus('กำลังโหลดรูปของ ' + job.jobNo + '...');
+        google.script.run.withSuccessHandler(function(progress) { currentProgress = progress || { filledTypes:[] }; if (progress && progress.date) document.getElementById('installDate').value = progress.date; renderProgress(); renderGroups(); updateButtons(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรูปไม่สำเร็จ: ' + errorMessage(error), true); }).getJobProgress(job.jobNo);
       }
 
-      function renderJobProgress(progress) {
-        const filledTypes = (progress && progress.filledTypes) || [];
-        filledTypes.forEach(function(photoType) {
-          renderSavedSlot(photoType);
-        });
-
-        const hasJob = !!getSelectedJob();
-        renderProgressBoard(progress);
-        setJobActions(hasJob, !!(progress && progress.filledTypes && progress.filledTypes.length), !!(progress && progress.complete));
-        document.getElementById('progressNote').textContent = filledTypes.length + '/9 ช่องมีรูปแล้ว' +
-          (progress && progress.complete ? ' งานครบทุกช่องแล้ว' : ' ยังสามารถให้คนอื่นเข้ามาเติมต่อได้');
-        if (progress && progress.date) document.getElementById('installDate').value = progress.date;
-        setStatus('');
+      function renderProgress() {
+        const filled = currentProgress.filledTypes || [];
+        const total = Object.keys(PHOTO_LABELS).length;
+        const complete = filled.length === total;
+        document.getElementById('progressCount').textContent = filled.length + '/' + total;
+        document.getElementById('progressFill').style.width = Math.round(filled.length / total * 100) + '%';
+        const missing = Object.keys(PHOTO_LABELS).filter(function(type) { return filled.indexOf(type) === -1; });
+        const line = document.getElementById('missingLine');
+        line.textContent = !getJob() ? 'ยังไม่เลือก Job' : (complete ? 'ครบทุกช่องแล้ว พร้อมพิมพ์' : 'ยังขาด ' + missing.length + ' ช่อง: ' + missing.map(function(type) { return PHOTO_LABELS[type]; }).join(', '));
+        line.className = 'missing-line' + (complete ? ' complete' : '');
+        if (getJob()) { document.getElementById('jobStatus').textContent = complete ? 'งานนี้ครบ 9/9 ช่องแล้ว' : 'งานนี้มีรูปแล้ว ' + filled.length + '/9 ช่อง'; document.getElementById('jobStatus').className = 'job-status' + (complete ? ' complete' : ''); }
       }
 
-      function setDefaultInstallDate() {
-        const input = document.getElementById('installDate');
-        if (!input.value) {
-          const now = new Date();
-          input.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-        }
+      function renderGroups() {
+        const root = document.getElementById('photoGroups');
+        root.innerHTML = '';
+        GROUPS.forEach(function(group) { const section = document.createElement('section'); section.className = 'section'; const heading = document.createElement('h3'); heading.className = 'group-title'; heading.textContent = group.title; section.appendChild(heading); const list = document.createElement('div'); list.className = 'photo-list'; group.types.forEach(function(type) { list.appendChild(createPhotoCard(type)); }); section.appendChild(list); root.appendChild(section); });
       }
 
-      function setJobActions(hasJob, canPrint, complete) {
-        document.getElementById('saveJobBtn').disabled = !hasJob;
-        document.getElementById('printJobBtn').disabled = !canPrint;
-        document.getElementById('printJobBtn').textContent = complete ? 'สั่งพิมพ์งาน' : (canPrint ? 'พิมพ์งานค้าง' : 'สั่งพิมพ์งาน');
+      function createPhotoCard(type) {
+        const done = isFilled(type); const card = document.createElement('article'); card.className = 'photo-card' + (done ? ' done' : '');
+        const thumb = document.createElement('div'); thumb.className = 'photo-thumb';
+        if (previews[type]) { const img = document.createElement('img'); img.src = previews[type]; img.alt = PHOTO_LABELS[type]; thumb.appendChild(img); } else { thumb.textContent = done ? '✓' : '＋'; }
+        const text = document.createElement('div'); const name = document.createElement('div'); name.className = 'photo-name'; name.textContent = PHOTO_LABELS[type]; const status = document.createElement('div'); status.className = 'photo-status'; status.textContent = done ? 'มีรูปแล้ว — แตะเพื่อเปลี่ยนหรือลบ' : 'ยังขาด — แตะเพื่อใส่รูป'; text.appendChild(name); text.appendChild(status);
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'photo-action'; button.textContent = done ? 'จัดการรูป' : 'ใส่รูป'; button.addEventListener('click', function() { openModal(type); });
+        card.appendChild(thumb); card.appendChild(text); card.appendChild(button); return card;
       }
 
-      function renderProgressBoard(progress) {
-        const title = document.getElementById('progressTitle');
-        const count = document.getElementById('progressCount');
-        const chips = document.getElementById('progressChips');
-        const selectedJob = getSelectedJob();
-        const filled = (progress && progress.filledTypes) || [];
-        if (!selectedJob) {
-          title.textContent = 'ยังไม่เลือก Job';
-          count.textContent = '0/9';
-          chips.innerHTML = '';
-          return;
-        }
-        const complete = filled.length === Object.keys(PHOTO_LABELS).length;
-        title.textContent = complete ? 'งานครบทุกช่องแล้ว' : 'งานยังขาด ' + (Object.keys(PHOTO_LABELS).length - filled.length) + ' ช่อง';
-        count.textContent = filled.length + '/' + Object.keys(PHOTO_LABELS).length;
-        chips.innerHTML = Object.keys(PHOTO_LABELS).map(function(type) {
-          const done = filled.indexOf(type) !== -1;
-          return '<span class="progress-chip ' + (done ? 'done' : 'missing') + '">' + (done ? '✓ ' : 'ขาด ') + PHOTO_LABELS[type] + '</span>';
-        }).join('');
-      }
+      function openNextMissing() { const next = Object.keys(PHOTO_LABELS).find(function(type) { return !isFilled(type); }); if (next) openModal(next); }
+      function openModal(type) { if (!getJob()) { setStatus('กรุณาเลือก Job ก่อน', true); return; } activeType = type; resetPending(); const done = isFilled(type); document.getElementById('modalTitle').textContent = done ? 'จัดการรูป: ' + PHOTO_LABELS[type] : 'ใส่รูป: ' + PHOTO_LABELS[type]; document.getElementById('existingBox').classList.toggle('visible', done); document.getElementById('deletePhotoButton').hidden = !done; document.getElementById('photoModal').classList.add('open'); }
+      function closeModal() { resetPending(); document.getElementById('photoModal').classList.remove('open'); activeType = ''; }
+      function chooseGallery() { document.getElementById('galleryFile').click(); }
+      function chooseCamera() { document.getElementById('cameraFile').click(); }
 
-      function updateProgressFromSlots() {
-        const filled = Array.from(document.querySelectorAll('.photo-slot.is-filled')).map(function(slot) {
-          return slot.getAttribute('data-photo-type');
-        });
-        const complete = filled.length === Object.keys(PHOTO_LABELS).length;
-        renderProgressBoard({ filledTypes: filled, complete: complete });
-        setJobActions(!!getSelectedJob(), filled.length > 0, complete);
-        document.getElementById('progressNote').textContent = filled.length + '/9 ช่องมีรูปแล้ว' + (complete ? ' งานครบทุกช่องแล้ว' : ' กดบันทึกงานเพื่อให้คนอื่นทำต่อได้');
-      }
+      function handleFile(event) { const file = event.target.files && event.target.files[0]; if (!file) return; if (!['image/jpeg','image/png','image/gif','image/webp'].includes(file.type)) { setStatus('รองรับเฉพาะ JPG, PNG, GIF หรือ WEBP', true); return; } if (file.size > MAX_FILE_SIZE) { setStatus('ไฟล์รูปต้องไม่เกิน 2 MB', true); return; } pendingFile = file; const reader = new FileReader(); reader.onload = function(e) { pendingDataUrl = e.target.result; document.getElementById('pendingImage').src = pendingDataUrl; document.getElementById('pendingName').textContent = file.name; document.getElementById('pending').classList.add('visible'); document.getElementById('savePhotoButton').disabled = false; }; reader.readAsDataURL(file); }
 
-      function clearRenderedSlots() {
-        document.querySelectorAll('[data-photo-type]').forEach(function(slot) {
-          const photoType = slot.getAttribute('data-photo-type');
-          slot.classList.remove('is-filled');
-          slot.innerHTML = '<span class="slot-doc-label">' + PHOTO_LABELS[photoType] + '</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>';
-        });
-      }
+      function savePhoto() { const job = getJob(); if (!job || !activeType || !pendingFile || !pendingDataUrl) { setStatus('กรุณาเลือก Job และรูปก่อนบันทึก', true); return; } const button = document.getElementById('savePhotoButton'); button.disabled = true; button.textContent = 'กำลังบันทึก...'; google.script.run.withSuccessHandler(function(message) { previews[activeType] = pendingDataUrl; if (!isFilled(activeType)) currentProgress.filledTypes = (currentProgress.filledTypes || []).concat(activeType); renderProgress(); renderGroups(); updateButtons(); closeModal(); setStatus(message, false, true); button.textContent = 'บันทึกรูปช่องนี้'; }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'บันทึกรูปช่องนี้'; setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error), true); }).uploadImageToSheet(job.jobNo, job.location, activeType, pendingDataUrl, pendingFile.name, document.getElementById('installDate').value); }
 
-      function renderSavedSlot(photoType) {
-        const slot = document.querySelector('[data-photo-type="' + photoType + '"]');
-        if (!slot) return;
-        slot.classList.add('is-filled');
-        slot.innerHTML = '<span class="slot-doc-label">' + PHOTO_LABELS[photoType] + '</span><span class="slot-content"><span class="slot-hint">แตะเพื่อเปลี่ยนรูป</span></span><span class="slot-status">มีรูปแล้ว</span>';
-      }
+      function deletePhoto() { const job = getJob(); if (!job || !activeType) return; if (!window.confirm('ยืนยันลบรูปช่องนี้หรือไม่? ไฟล์ต้นฉบับใน Drive จะยังคงอยู่')) return; const button = document.getElementById('deletePhotoButton'); button.disabled = true; button.textContent = 'กำลังลบ...'; google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || (currentProgress.filledTypes || []).filter(function(type) { return type !== activeType; }); delete previews[activeType]; renderProgress(); renderGroups(); updateButtons(); closeModal(); button.disabled = false; button.textContent = 'ลบรูปช่องนี้'; setStatus(result.message, false, true); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'ลบรูปช่องนี้'; setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error), true); }).deleteImageFromSheet(job.jobNo, job.location, activeType, document.getElementById('installDate').value); }
 
-      function saveJob() {
-        const job = getSelectedJob();
-        if (!job) {
-          setStatus('กรุณาเลือก Job ก่อนบันทึก', true);
-          return;
-        }
+      function saveJob() { const job = getJob(); if (!job) { setStatus('กรุณาเลือก Job ก่อน', true); return; } const button = document.getElementById('saveJobButton'); button.disabled = true; button.textContent = 'กำลังบันทึก...'; google.script.run.withSuccessHandler(function(result) { button.disabled = false; button.textContent = 'บันทึกงาน'; currentProgress.filledTypes = result.filledTypes || currentProgress.filledTypes; currentProgress.complete = !!result.complete; renderProgress(); renderGroups(); updateButtons(); setStatus(result.message, false, true); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'บันทึกงาน'; setStatus('บันทึกงานไม่สำเร็จ: ' + errorMessage(error), true); }).saveJobProgress(job.jobNo, job.location, document.getElementById('installDate').value); }
 
-        const button = document.getElementById('saveJobBtn');
-        button.disabled = true;
-        button.textContent = 'กำลังบันทึก...';
-        setStatus('กำลังบันทึกงาน ' + job.jobNo + '...');
+      function printJob() { const job = getJob(); if (!job) { setStatus('กรุณาเลือก Job ก่อน', true); return; } const button = document.getElementById('printJobButton'); button.disabled = true; button.textContent = 'กำลังสร้าง PDF...'; const popup = window.open('about:blank','_blank'); google.script.run.withSuccessHandler(function(result) { button.disabled = false; button.textContent = currentProgress.complete ? 'พิมพ์งาน' : 'พิมพ์งานค้าง'; if (popup) popup.location = result.fileUrl; setStatus(result.message, false, true); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'พิมพ์งาน'; if (popup) popup.close(); setStatus('พิมพ์ไม่สำเร็จ: ' + errorMessage(error), true); }).createJobPdf(job.jobNo); }
 
-        google.script.run
-          .withSuccessHandler(function(result) {
-            button.disabled = false;
-            button.textContent = 'บันทึกงาน';
-            setJobActions(true, !!(result.filledTypes && result.filledTypes.length), !!result.complete);
-            renderProgressBoard(result);
-            document.getElementById('progressNote').textContent = (result.filledTypes || []).length + '/9 ช่องมีรูปแล้ว' + (result.complete ? ' งานครบทุกช่องแล้ว' : ' สามารถกลับมาทำต่อได้');
-            setStatus(result.message, false, true);
-          })
-          .withFailureHandler(function(error) {
-            button.disabled = false;
-            button.textContent = 'บันทึกงาน';
-            setStatus('บันทึกงานไม่สำเร็จ: ' + getErrorMessage(error), true);
-          })
-          .saveJobProgress(job.jobNo, document.getElementById('locationDisplay').value, document.getElementById('installDate').value);
-      }
-
-      function printJob() {
-        const job = getSelectedJob();
-        if (!job) {
-          setStatus('กรุณาเลือก Job ก่อนสั่งพิมพ์', true);
-          return;
-        }
-
-        const button = document.getElementById('printJobBtn');
-        button.disabled = true;
-        button.textContent = 'กำลังสร้าง PDF...';
-        setStatus('กำลังสร้าง PDF A4 ของ ' + job.jobNo + '...');
-        const popup = window.open('about:blank', '_blank');
-
-        google.script.run
-          .withSuccessHandler(function(result) {
-            button.disabled = false;
-            button.textContent = 'สั่งพิมพ์งาน';
-            showPrintLink(result.fileUrl);
-            if (popup) popup.location = result.fileUrl;
-            setStatus(result.message, false, true);
-          })
-          .withFailureHandler(function(error) {
-            button.disabled = false;
-            button.textContent = 'สั่งพิมพ์งาน';
-            if (popup) popup.close();
-            setStatus('สร้าง PDF ไม่สำเร็จ: ' + getErrorMessage(error), true);
-          })
-          .createJobPdf(job.jobNo);
-      }
-
-      function showPrintLink(url) {
-        const link = document.getElementById('printLink');
-        link.href = url;
-        link.classList.add('is-visible');
-      }
-
-      function hidePrintLink() {
-        const link = document.getElementById('printLink');
-        link.href = '#';
-        link.classList.remove('is-visible');
-      }
-
-      function openPhotoModal(photoType) {
-        if (document.getElementById('jobSelect').value === '') {
-          setStatus('กรุณาเลือก Job ก่อนใส่รูป', true);
-          return;
-        }
-
-        activePhotoType = photoType;
-        resetPendingPhoto();
-        const slot = document.querySelector('[data-photo-type="' + photoType + '"]');
-        const hasExistingPhoto = !!(slot && slot.classList.contains('is-filled'));
-        document.getElementById('modalTitle').textContent = hasExistingPhoto ? 'จัดการรูป: ' + PHOTO_LABELS[photoType] : 'ใส่รูป: ' + PHOTO_LABELS[photoType];
-        document.getElementById('existingPhotoActions').classList.toggle('is-visible', hasExistingPhoto);
-        document.getElementById('existingPhotoNote').textContent = hasExistingPhoto ? 'ช่องนี้มีรูปแล้ว สามารถลบหรือเลือกรูปใหม่แทนได้' : '';
-        document.getElementById('photoModal').classList.add('is-open');
-      }
-
-      function closePhotoModal() {
-        resetPendingPhoto();
-        document.getElementById('existingPhotoActions').classList.remove('is-visible');
-        document.getElementById('existingPhotoNote').textContent = '';
-        document.getElementById('photoModal').classList.remove('is-open');
-        activePhotoType = '';
-      }
-
-      function deletePhoto() {
-        const job = getSelectedJob();
-        if (!job || !activePhotoType) {
-          setStatus('กรุณาเลือก Job และช่องรูปก่อนลบ', true);
-          return;
-        }
-        if (!window.confirm('ยืนยันลบรูปช่อง ' + PHOTO_LABELS[activePhotoType] + ' หรือไม่? ไฟล์ต้นฉบับใน Drive จะยังคงอยู่')) return;
-
-        const deleteButton = document.querySelector('.button-delete');
-        deleteButton.disabled = true;
-        deleteButton.textContent = 'กำลังลบรูป...';
-        setStatus('กำลังลบรูป ' + PHOTO_LABELS[activePhotoType] + '...');
-        google.script.run
-          .withSuccessHandler(function(result) {
-            const type = activePhotoType;
-            const slot = document.querySelector('[data-photo-type="' + type + '"]');
-            if (slot) {
-              slot.classList.remove('is-filled');
-              slot.innerHTML = '<span class="slot-doc-label">' + PHOTO_LABELS[type] + '</span><span class="slot-content"><span class="slot-hint">แตะเพื่อใส่รูป</span></span>';
-            }
-            closePhotoModal();
-            deleteButton.disabled = false;
-            deleteButton.textContent = 'ลบรูปช่องนี้';
-            updateProgressFromSlots();
-            setStatus(result.message, false, true);
-          })
-          .withFailureHandler(function(error) {
-            deleteButton.disabled = false;
-            deleteButton.textContent = 'ลบรูปช่องนี้';
-            setStatus('ลบรูปไม่สำเร็จ: ' + getErrorMessage(error), true);
-          })
-          .deleteImageFromSheet(job.jobNo, job.location, activePhotoType, document.getElementById('installDate').value);
-      }
-
-      function openGallery() {
-        document.getElementById('galleryFile').click();
-      }
-
-      function openCamera() {
-        document.getElementById('cameraFile').click();
-      }
-
-      function handleFileChange(event) {
-        const file = event.target.files && event.target.files[0];
-        if (!file) return;
-
-        const validationMessage = validateFile(file);
-        if (validationMessage) {
-          resetPendingPhoto();
-          setStatus(validationMessage, true);
-          return;
-        }
-
-        pendingFile = file;
-        const reader = new FileReader();
-        reader.onload = function(loadEvent) {
-          pendingDataUrl = loadEvent.target.result;
-          document.getElementById('pendingImage').src = pendingDataUrl;
-          document.getElementById('pendingFile').textContent = file.name + ' (' + formatBytes(file.size) + ')';
-          document.getElementById('pendingPreview').classList.add('is-visible');
-          document.getElementById('savePhotoBtn').disabled = false;
-        };
-        reader.onerror = function() {
-          resetPendingPhoto();
-          setStatus('ไม่สามารถอ่านไฟล์รูปภาพได้', true);
-        };
-        reader.readAsDataURL(file);
-      }
-
-      function savePhoto() {
-        if (!pendingFile || !pendingDataUrl || !activePhotoType) {
-          setStatus('กรุณาเลือกรูปภาพก่อนบันทึก', true);
-          return;
-        }
-
-        const selectedIndex = document.getElementById('jobSelect').value;
-        if (selectedIndex === '') {
-          closePhotoModal();
-          setStatus('กรุณาเลือก Job ก่อนใส่รูป', true);
-          return;
-        }
-
-        const job = jobDataList[selectedIndex];
-        const saveButton = document.getElementById('savePhotoBtn');
-        saveButton.disabled = true;
-        saveButton.textContent = 'กำลังบันทึกรูป...';
-        setStatus('กำลังบันทึก ' + PHOTO_LABELS[activePhotoType] + ' โปรดรอสักครู่');
-
-        google.script.run
-          .withSuccessHandler(function(message) {
-            renderFilledSlot(activePhotoType, pendingDataUrl);
-            closePhotoModal();
-            saveButton.textContent = 'บันทึกรูปช่องนี้';
-            updateProgressFromSlots();
-            setStatus(message, false, true);
-          })
-          .withFailureHandler(function(error) {
-            saveButton.disabled = false;
-            saveButton.textContent = 'บันทึกรูปช่องนี้';
-            setStatus('เกิดข้อผิดพลาด: ' + getErrorMessage(error), true);
-          })
-          .uploadImageToSheet(
-            job.jobNo,
-            job.location,
-            activePhotoType,
-            pendingDataUrl,
-            pendingFile.name,
-            document.getElementById('installDate').value
-          );
-      }
-
-      function renderFilledSlot(photoType, dataUrl) {
-        const slot = document.querySelector('[data-photo-type="' + photoType + '"]');
-        if (!slot) return;
-        slot.classList.add('is-filled');
-        slot.innerHTML = '<span class="slot-doc-label">' + PHOTO_LABELS[photoType] + '</span><img class="slot-image" alt="' + PHOTO_LABELS[photoType] + '" src="' + dataUrl + '"><span class="slot-status">บันทึกแล้ว</span>';
-      }
-
-      function countFilledSlots() {
-        return document.querySelectorAll('.photo-slot.is-filled').length;
-      }
-
-      function resetPendingPhoto() {
-        pendingFile = null;
-        pendingDataUrl = '';
-        document.getElementById('galleryFile').value = '';
-        document.getElementById('cameraFile').value = '';
-        document.getElementById('pendingImage').removeAttribute('src');
-        document.getElementById('pendingFile').textContent = '';
-        document.getElementById('pendingPreview').classList.remove('is-visible');
-        document.getElementById('savePhotoBtn').disabled = true;
-        document.getElementById('savePhotoBtn').textContent = 'บันทึกรูปช่องนี้';
-      }
-
-      function validateFile(file) {
-        if (!ALLOWED_TYPES.includes(file.type)) {
-          return 'รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP';
-        }
-        if (file.size > MAX_FILE_SIZE) {
-          return 'ไฟล์รูปภาพต้องมีขนาดไม่เกิน 2 MB';
-        }
-        return '';
-      }
-
-      function formatBytes(bytes) {
-        return (bytes / 1024).toFixed(0) + ' KB';
-      }
-
-      function getErrorMessage(error) {
-        return error && error.message ? error.message : String(error || 'ไม่ทราบสาเหตุ');
-      }
-
-      function setStatus(message, isError, isSuccess) {
-        const status = document.getElementById('status');
-        status.textContent = message || '';
-        status.className = 'status' + (isError ? ' error' : '') + (isSuccess ? ' success' : '');
-      }
+      function updateButtons() { const job = getJob(); const filled = (currentProgress.filledTypes || []).length; document.getElementById('saveJobButton').disabled = !job; document.getElementById('printJobButton').disabled = !job || filled === 0; document.getElementById('printJobButton').textContent = currentProgress.complete ? 'พิมพ์งาน' : 'พิมพ์งานค้าง'; document.getElementById('nextButton').disabled = !job || currentProgress.complete; }
+      function resetPending() { pendingFile = null; pendingDataUrl = ''; document.getElementById('galleryFile').value = ''; document.getElementById('cameraFile').value = ''; document.getElementById('pendingImage').removeAttribute('src'); document.getElementById('pendingName').textContent = ''; document.getElementById('pending').classList.remove('visible'); document.getElementById('savePhotoButton').disabled = true; document.getElementById('savePhotoButton').textContent = 'บันทึกรูปช่องนี้'; }
+      function loadSheetLinks() { google.script.run.withSuccessHandler(function(links) { document.getElementById('assetLink').href = links.assetMasterUrl; document.getElementById('reportLink').href = links.templateUrl; }).withFailureHandler(function(error) { setStatus('โหลดลิงก์ชีตไม่สำเร็จ: ' + errorMessage(error), true); }).getSheetEditLinks(); }
+      function errorMessage(error) { return error && error.message ? error.message : String(error || 'ไม่ทราบสาเหตุ'); }
+      function setStatus(message, isError, isSuccess) { const status = document.getElementById('status'); status.textContent = message || ''; status.className = 'status' + (isError ? ' error' : '') + (isSuccess ? ' success' : ''); }
+      document.getElementById('photoModal').addEventListener('click', function(event) { if (event.target === this) closeModal(); });
+      document.addEventListener('keydown', function(event) { if (event.key === 'Escape') closeModal(); });
     </script>
   </body>
 </html>
