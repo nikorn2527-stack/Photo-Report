@@ -27,8 +27,13 @@
       .subtitle { margin:5px 0 0; color:var(--muted); font-size:14px; }
       .job-card { position:sticky; top:0; z-index:5; padding:13px; border:1px solid #b8c0ca; border-radius:14px; background:rgba(255,255,255,.97); box-shadow:0 4px 15px rgba(32,33,36,.1); backdrop-filter:blur(8px); }
       .job-label { display:block; margin-bottom:7px; font-size:15px; font-weight:900; }
-      .job-search-row { display:grid; grid-template-columns:minmax(0,1fr) 50px; gap:8px; margin-bottom:9px; }
+      .job-search-row { display:grid; grid-template-columns:minmax(0,1fr) 50px 50px; gap:8px; margin-bottom:9px; }
       .job-search { width:100%; min-height:54px; padding:11px 13px; border:1px solid #8a9098; border-radius:10px; background:#fff; color:var(--ink); font-size:17px; }
+      .job-results { display:none; max-height:230px; margin:0 0 8px; padding:6px; overflow:auto; border:1px solid var(--line); border-radius:11px; background:#f8fafc; }
+      .job-results.visible { display:grid; gap:6px; }
+      .job-result { width:100%; min-height:48px; padding:9px 11px; border:1px solid #d1d6dd; border-radius:9px; background:#fff; color:var(--ink); font:inherit; font-size:15px; font-weight:800; text-align:left; cursor:pointer; }
+      .job-result:active { transform:scale(.985); }
+      .job-result.selected { border-color:#8bb89a; background:#e8f5ec; color:var(--green-dark); }
       .job-search-hint { margin:5px 2px 8px; color:var(--muted); font-size:12px; line-height:1.3; }
       .clear-search { min-height:54px; border:1px solid #9aa0a6; border-radius:10px; background:#f8fafc; color:var(--muted); font-size:25px; font-weight:700; cursor:pointer; }
       .job-row { display:grid; grid-template-columns:1fr 50px; gap:8px; }
@@ -162,8 +167,10 @@
         .subtitle { margin-top:7px; font-size:18px; }
         .job-card { padding:17px; border-radius:17px; }
         .job-label { margin-bottom:9px; font-size:19px; }
-        .job-search-row { grid-template-columns:minmax(0,1fr) 58px; gap:10px; margin-bottom:10px; }
+        .job-search-row { grid-template-columns:minmax(0,1fr) 58px 58px; gap:10px; margin-bottom:10px; }
         .job-search { min-height:66px; padding:14px 15px; border-radius:12px; font-size:20px; }
+        .job-results { max-height:260px; padding:8px; border-radius:13px; }
+        .job-result { min-height:58px; padding:11px 13px; border-radius:11px; font-size:18px; }
         .job-search-hint { margin:6px 2px 9px; font-size:14px; }
         .clear-search { min-height:66px; border-radius:12px; font-size:29px; }
         .job-row { grid-template-columns:minmax(0,1fr) 62px; gap:10px; }
@@ -226,9 +233,10 @@
 
         <section class="job-card">
           <label class="job-label" for="jobSearch">1. เลือก Job</label>
-          <div class="job-search-row"><input id="jobSearch" class="job-search" type="search" inputmode="search" placeholder="พิมพ์บางส่วน เช่น 1234 หรือ JOB 12" autocomplete="off"><button id="clearJobSearch" class="clear-search" type="button" onclick="clearJobSearch()" aria-label="ล้างคำค้นหา">×</button></div>
-          <div id="jobSearchHint" class="job-search-hint">ค้นหาแบบบางส่วนได้ ไม่ต้องพิมพ์ครบ และไม่ต้องใส่ขีด</div>
-          <div class="job-row"><select id="jobSelect"><option value="">กำลังโหลดรายการ Job...</option></select><button id="refreshButton" class="refresh" type="button" onclick="loadJobs()" aria-label="รีเฟรชรายการ Job">↻</button></div>
+          <div class="job-search-row"><input id="jobSearch" class="job-search" type="search" inputmode="search" placeholder="ค้นหาเลข Job เช่น 1234 หรือ JOB 12" autocomplete="off"><button id="clearJobSearch" class="clear-search" type="button" onclick="clearJobSearch()" aria-label="ล้างคำค้นหา">×</button><button id="refreshButton" class="refresh" type="button" onclick="loadJobs()" aria-label="รีเฟรชรายการ Job">↻</button></div>
+          <div id="jobSearchHint" class="job-search-hint">ช่องเดียว: พิมพ์บางส่วนแล้วแตะ Job ที่ต้องการ</div>
+          <div id="jobResults" class="job-results" role="listbox" aria-label="ผลการค้นหา Job"></div>
+          <select id="jobSelect" class="hidden" aria-hidden="true" tabindex="-1"><option value="">กำลังโหลดรายการ Job...</option></select>
           <div class="job-meta"><span id="locationValue" class="job-location">ยังไม่ได้เลือกสถานที่</span><span id="installDateText" class="job-date">วันนี้</span></div>
           <input id="installDate" class="hidden" type="date">
           <div id="jobStatus" class="job-status">เลือก Job เพื่อเริ่มเก็บรูป</div>
@@ -287,7 +295,9 @@
     <div id="fullscreenViewer" class="fullscreen-viewer" role="dialog" aria-modal="true" aria-label="ดูรูปเต็มจอ"><button class="viewer-close" type="button" onclick="closeViewer()" aria-label="ปิดการดูรูป">×</button><img id="fullscreenImage" class="fullscreen-image" alt="รูปภาพเต็มจอ"><div id="viewerCaption" class="viewer-caption"></div></div>
 
     <script>
-      const MAX_FILE_SIZE = 2 * 1024 * 1024;
+      const MAX_FILE_SIZE = 10 * 1024 * 1024;
+      const MAX_UPLOAD_BYTES = 1.8 * 1024 * 1024;
+      const MAX_IMAGE_DIMENSION = 2048;
       const LAST_JOB_KEY = 'photoReport.lastJob';
       const PHOTO_LABELS = { signage:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง', before1:'ก่อนติดตั้ง 1', after1:'หลังติดตั้ง 1', before2:'ก่อนติดตั้ง 2', after2:'หลังติดตั้ง 2', before3:'ก่อนติดตั้ง 3', after3:'หลังติดตั้ง 3', before4:'ก่อนติดตั้ง 4', after4:'หลังติดตั้ง 4' };
       const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'เก็บสภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'เก็บผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
@@ -305,6 +315,7 @@
         document.getElementById('cameraFile').addEventListener('change', handleFile);
         document.getElementById('jobSelect').addEventListener('change', handleJobChange);
         document.getElementById('jobSearch').addEventListener('input', filterJobs);
+        document.getElementById('jobSearch').addEventListener('focus', renderJobOptions);
         document.getElementById('installDate').value = todayString();
         renderAll();
         loadSheetLinks();
@@ -326,6 +337,7 @@
         const lastIndex = jobs.findIndex(function(job) { return job.jobNo === old; });
         const select = document.getElementById('jobSelect');
         select.value = lastIndex >= 0 ? String(lastIndex) : '';
+        document.getElementById('jobSearch').value = lastIndex >= 0 ? jobs[lastIndex].jobNo : '';
         renderJobOptions();
         if (lastIndex >= 0) select.value = String(lastIndex);
         handleJobChange();
@@ -496,7 +508,7 @@
         const files = Array.from(event.target.files || []);
         if (!files.length || uploading) return;
         const invalid = files.find(function(file) { return !['image/jpeg','image/png','image/gif','image/webp'].includes(file.type) || file.size > MAX_FILE_SIZE; });
-        if (invalid) { setStatus('ทุกไฟล์ต้องเป็น JPG, PNG, GIF หรือ WEBP และไม่เกิน 2 MB ต่อไฟล์', true); event.target.value = ''; return; }
+        if (invalid) { setStatus('ทุกไฟล์ต้องเป็น JPG, PNG, GIF หรือ WEBP และไม่เกิน 10 MB ต่อไฟล์', true); event.target.value = ''; return; }
         if (activeMode === 'group') {
           const group = GROUPS[activeGroupKey];
           const emptyTypes = group.types.filter(function(type) { return !isFilled(type); });
@@ -524,7 +536,7 @@
         uploading = true; updateButtons();
         try {
           if (activeMode === 'single') {
-            const dataUrl = await readFileAsDataUrl(files[0]);
+            const dataUrl = await prepareUploadDataUrl(files[0]);
             await uploadOne(job, activeType, dataUrl, files[0].name);
             previews[activeType] = dataUrl;
             markFilled(activeType);
@@ -533,7 +545,7 @@
             const group = GROUPS[activeGroupKey];
             const emptyTypes = group.types.filter(function(type) { return !isFilled(type); });
             for (let index = 0; index < files.length; index += 1) {
-              const dataUrl = await readFileAsDataUrl(files[index]);
+              const dataUrl = await prepareUploadDataUrl(files[index]);
               await uploadOne(job, emptyTypes[index], dataUrl, files[index].name);
               previews[emptyTypes[index]] = dataUrl;
               markFilled(emptyTypes[index]);
@@ -548,6 +560,44 @@
       function finishUpload(message) { uploading = false; renderAll(); closeModal(); setStatus(message, false, true); }
       function markFilled(type) { if (!isFilled(type)) currentProgress.filledTypes = (currentProgress.filledTypes || []).concat(type); }
       function readFileAsDataUrl(file) { return new Promise(function(resolve, reject) { const reader = new FileReader(); reader.onload = function(event) { resolve(event.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); }); }
+
+      function prepareUploadDataUrl(file) {
+        return readFileAsDataUrl(file).then(function(dataUrl) {
+          if (file.size <= MAX_UPLOAD_BYTES) return dataUrl;
+          return compressImageDataUrl(dataUrl);
+        });
+      }
+
+      function compressImageDataUrl(dataUrl) {
+        return new Promise(function(resolve, reject) {
+          const image = new Image();
+          image.onload = function() {
+            const sourceWidth = image.naturalWidth || image.width;
+            const sourceHeight = image.naturalHeight || image.height;
+            const longestSide = Math.max(sourceWidth, sourceHeight);
+            let scale = Math.min(1, MAX_IMAGE_DIMENSION / longestSide);
+            let quality = 0.84;
+            let result = '';
+            const canvas = document.createElement('canvas');
+            for (let attempt = 0; attempt < 8; attempt += 1) {
+              canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+              canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+              const context = canvas.getContext('2d', { alpha:false });
+              context.fillStyle = '#fff';
+              context.fillRect(0, 0, canvas.width, canvas.height);
+              context.drawImage(image, 0, 0, canvas.width, canvas.height);
+              result = canvas.toDataURL('image/jpeg', quality);
+              if (Math.ceil((result.length - result.indexOf(',') - 1) * 0.75) <= MAX_UPLOAD_BYTES) break;
+              if (quality > 0.56) quality -= 0.06;
+              else scale *= 0.82;
+            }
+            resolve(result);
+          };
+          image.onerror = reject;
+          image.src = dataUrl;
+        });
+      }
+
       function uploadOne(job, type, dataUrl, filename) { return new Promise(function(resolve, reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadImageToSheet(job.jobNo, job.location, type, dataUrl, filename, document.getElementById('installDate').value); }); }
 
       function deletePhoto() {

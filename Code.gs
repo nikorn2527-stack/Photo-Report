@@ -16,7 +16,7 @@ const CONFIG = Object.freeze({
   JOB_CELL: 'B4',
   LOCATION_CELL: 'D4',
   DATE_CELL: 'H4',
-  MAX_IMAGE_BYTES: 2 * 1024 * 1024,
+  MAX_IMAGE_BYTES: 10 * 1024 * 1024,
   IMAGE_CELL_MAP: Object.freeze({
     signage: 'A7',
     before1: 'A15',
@@ -834,7 +834,7 @@ function dataUrlToImageBlob_(dataUrl, filename) {
 
   const bytes = Utilities.base64Decode(match[2]);
   if (bytes.length > CONFIG.MAX_IMAGE_BYTES) {
-    throw new Error('ไฟล์รูปภาพต้องมีขนาดไม่เกิน 2 MB');
+    throw new Error('ไฟล์รูปภาพต้องมีขนาดไม่เกิน 10 MB');
   }
 
   return Utilities.newBlob(bytes, contentType, filename || 'photo');
