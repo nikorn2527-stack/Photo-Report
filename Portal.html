@@ -274,7 +274,17 @@
 
       let currentPlanKey = 'B69';
 
-      function renderPlan() {
+      function formatPlanDate(value) {
+        const text = String(value || '').trim();
+        if (!text) return '-';
+        let match = text.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+        if (match) return String(match[3]).padStart(2, '0') + '/' + String(match[2]).padStart(2, '0') + '/' + match[1];
+        match = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+        if (match) return String(match[2]).padStart(2, '0') + '/' + String(match[1]).padStart(2, '0') + '/' + match[3];
+        return text;
+      }
+
+      function renderPlanView() {
         const locations = (portalData.planOverview && portalData.planOverview.locations) || {};
         const keys = ['B69', 'BMT'].filter(function(key) { return locations[key]; });
         const tabs = document.getElementById('planLocationTabs');
@@ -304,7 +314,7 @@
         document.getElementById('planTableTitle').textContent = 'รายละเอียดแผนงาน — ' + item.label;
         const rows = item.planRows || [];
         document.getElementById('planTableBody').innerHTML = rows.length ? rows.map(function(row) {
-          return '<tr><td>' + escapeHtml(row.building || '-') + '</td><td>' + escapeHtml(row.department || '-') + '</td><td><strong>' + (row.quantity || 0) + '</strong></td><td>' + escapeHtml(row.start || '-') + '</td><td>' + escapeHtml(row.days || '-') + '</td><td>' + escapeHtml(row.finish || '-') + '</td></tr>';
+          return '<tr><td>' + escapeHtml(row.building || '-') + '</td><td>' + escapeHtml(row.department || '-') + '</td><td><strong>' + (row.quantity || 0) + '</strong></td><td>' + escapeHtml(formatPlanDate(row.start)) + '</td><td>' + escapeHtml(row.days || '-') + '</td><td>' + escapeHtml(formatPlanDate(row.finish)) + '</td></tr>';
         }).join('') : '<tr><td colspan="6">ยังไม่มีรายการแผนที่อ่านได้จากชีทนี้</td></tr>';
       }
 
