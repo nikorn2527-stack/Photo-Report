@@ -43,6 +43,15 @@
       .return-sn { display:block; margin-top:2px; color:var(--text); font-weight:800; }
       .ip-cell { min-width:125px; white-space:nowrap; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
       .dashboard-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:14px; }
+      .plan-location-tabs { display:flex; gap:8px; margin:12px 0; overflow-x:auto; }
+      .plan-location-tab { min-height:44px; padding:9px 14px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--muted); font:inherit; font-weight:800; white-space:nowrap; cursor:pointer; }
+      .plan-location-tab.active { border-color:var(--blue); background:var(--blue-soft); color:var(--blue); }
+      .plan-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:14px; }
+      .plan-summary .metric { padding:13px; border:1px solid var(--border); border-radius:10px; background:#fff; }
+      .plan-summary .metric-label { color:var(--muted); font-size:12px; }
+      .plan-summary .metric-value { margin-top:4px; font-size:24px; font-weight:900; }
+      .plan-note { margin:0 0 12px; color:var(--muted); font-size:12px; }
+      @media (max-width:900px) { .plan-summary{grid-template-columns:repeat(2,1fr)} }
       .panel { padding:14px; border:1px solid var(--border); border-radius:10px; background:#fff; }
       .panel-title { margin:0 0 10px; font-size:16px; }
       .status-line { display:grid; grid-template-columns:140px 1fr 56px; gap:8px; align-items:center; margin:9px 0; font-size:13px; }
@@ -121,6 +130,7 @@
           <button id="dashboardTab" class="active" type="button" onclick="showView('dashboard')">ภาพรวม</button>
           <button id="assetTab" type="button" onclick="showView('asset')">Asset_Master</button>
           <button id="documentsTab" type="button" onclick="showView('documents')">เอกสารและพิมพ์</button>
+          <button id="planTab" type="button" onclick="showView('plan')">แผนการดำเนินงาน</button>
         </nav>
 
         <section id="dashboardView" class="view">
@@ -132,6 +142,14 @@
             <section class="panel"><h3 class="panel-title">สถานะเตรียมเครื่อง</h3><div id="prepStatusChart"></div></section>
             <section class="panel"><h3 class="panel-title">ตัวชี้วัดอุปกรณ์</h3><div id="equipmentMetrics"></div></section>
           </div>
+        </section>
+
+        <section id="planView" class="view" hidden>
+          <h2 class="view-title">แผนการดำเนินงาน</h2>
+          <p class="view-note">เปรียบเทียบจำนวนตามแผนกับข้อมูลอุปกรณ์ใน Asset_Master โดยแยกพื้นที่ปฏิบัติงาน</p>
+          <div id="planLocationTabs" class="plan-location-tabs"></div>
+          <div id="planSummary" class="plan-summary"></div>
+          <section class="panel plan-panel"><h3 id="planTableTitle" class="panel-title">รายการตามแผน</h3><div class="table-wrap"><table class="plan-table"><thead><tr><th>ตึก / ชั้น</th><th>หน่วยงาน</th><th>จำนวนตามแผน</th><th>เริ่ม</th><th>วัน</th><th>เสร็จ</th></tr></thead><tbody id="planTableBody"></tbody></table></div></section>
         </section>
 
         <section id="assetView" class="view" hidden>
@@ -232,6 +250,7 @@
           portalData = data || portalData;
           setPhotoReportLink();
           renderDashboard();
+          renderPlan();
           renderAssetFilters();
           renderAssetTable();
           renderDocuments();
@@ -243,10 +262,45 @@
 
       function showView(view) {
         currentView = view;
-        ['dashboard','asset','documents'].forEach(function(name) {
+        ['dashboard','asset','documents','plan'].forEach(function(name) {
           document.getElementById(name + 'View').hidden = name !== view;
           document.getElementById(name + 'Tab').classList.toggle('active', name === view);
         });
+      }
+
+      let currentPlanKey = 'B69';
+
+      function renderPlan() {
+        const locations = (portalData.planOverview && portalData.planOverview.locations) || {};
+        const keys = ['B69', 'BMT'].filter(function(key) { return locations[key]; });
+        const tabs = document.getElementById('planLocationTabs');
+        if (!keys.length) {
+          tabs.innerHTML = '<div class="plan-note">ยังไม่พบข้อมูลชีทแผนการดำเนินงาน</div>';
+          document.getElementById('planSummary').innerHTML = '';
+          document.getElementById('planTableBody').innerHTML = '';
+          return;
+        }
+        if (!locations[currentPlanKey]) currentPlanKey = keys[0];
+        tabs.innerHTML = keys.map(function(key) {
+          const item = locations[key];
+          return '<button type="button" class="plan-location-tab ' + (key === currentPlanKey ? 'active' : '') + '" onclick="selectPlanLocation(\'' + key + '\')">' + escapeHtml(item.label) + '</button>';
+        }).join('');
+        const item = locations[currentPlanKey];
+        const remaining = Math.max(0, (item.planCount || 0) - (item.installedCount || 0));
+        document.getElementById('planSummary').innerHTML = '<div class="metric"><div class="metric-label">ตามแผน</div><div class="metric-value">' + (item.planCount || 0) + '</div></div>' +
+          '<div class="metric"><div class="metric-label">พบใน Asset_Master</div><div class="metric-value">' + (item.actualCount || 0) + '</div></div>' +
+          '<div class="metric"><div class="metric-label">จ่ายออก / ยังไม่คืน</div><div class="metric-value">' + (item.deliveredCount || 0) + '</div></div>' +
+          '<div class="metric"><div class="metric-label">ติดตั้งแล้ว</div><div class="metric-value">' + (item.installedCount || 0) + '</div></div>';
+        document.getElementById('planTableTitle').textContent = 'รายการตามแผน — ' + item.label;
+        const rows = item.planRows || [];
+        document.getElementById('planTableBody').innerHTML = rows.length ? rows.map(function(row) {
+          return '<tr><td>' + escapeHtml(row.building || '-') + '</td><td>' + escapeHtml(row.department || '-') + '</td><td><strong>' + (row.quantity || 0) + '</strong></td><td>' + escapeHtml(row.start || '-') + '</td><td>' + escapeHtml(row.days || '-') + '</td><td>' + escapeHtml(row.finish || '-') + '</td></tr>';
+        }).join('') : '<tr><td colspan="6">ยังไม่มีรายการแผนที่อ่านได้จากชีทนี้</td></tr>';
+      }
+
+      function selectPlanLocation(key) {
+        currentPlanKey = key;
+        renderPlan();
       }
 
       function renderDashboard() {

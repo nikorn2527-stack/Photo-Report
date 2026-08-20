@@ -393,6 +393,49 @@ function getSheetEditLinks() {
 /**
  * อ่านข้อมูลรวมสำหรับหน้า IT Rental Portal
  */
+function getPlanOverviewData_(spreadsheet, assetRows) {
+  const definitions = [
+    { sheetName: 'B69', label: 'ตึก 69 ปี', aliases: ['69'], hasExtra: false },
+    { sheetName: 'BMT', label: 'ตึกเมตตาธรรม', aliases: ['เมตตาธรรม', 'BMT'], hasExtra: true }
+  ];
+  const locations = {};
+  definitions.forEach(function(definition) {
+    const sheet = spreadsheet.getSheetByName(definition.sheetName);
+    const planRows = [];
+    if (sheet && sheet.getLastRow() > 0) {
+      const values = sheet.getDataRange().getDisplayValues();
+      values.forEach(function(row, index) {
+        const offset = definition.hasExtra ? 1 : 0;
+        const building = String(row[0] || '').trim();
+        const department = String(row[1] || '').trim();
+        const quantityText = String(row[2] || '').replace(/,/g, '').trim();
+        const quantity = Number(quantityText) || 0;
+        const start = String(row[3 + offset] || '').trim();
+        const days = String(row[4 + offset] || '').trim();
+        const finish = String(row[5 + offset] || '').trim();
+        if (index < 4 || (!department && !quantity && !building) || /หน่วยงาน|จำนวนเครื่อง|แผนการดำเนินการ/.test(department + building)) return;
+        planRows.push({ rowNumber: index + 1, building, department, quantity, start, days, finish });
+      });
+    }
+    const actualRows = assetRows.filter(function(row) {
+      const text = [row.building, row.department, row.room].join(' ').toLowerCase();
+      return definition.aliases.some(function(alias) { return text.indexOf(String(alias).toLowerCase()) !== -1; });
+    });
+    const installed = actualRows.filter(function(row) { return row.status === 'ติดตั้งแล้ว'; }).length;
+    const delivered = actualRows.filter(function(row) { return row.status !== 'รับคืนแล้ว' && row.status !== 'ส่งซ่อม' && row.status !== 'ตัดจำหน่าย'; }).length;
+    locations[definition.sheetName] = {
+      key: definition.sheetName,
+      label: definition.label,
+      planCount: planRows.reduce(function(total, row) { return total + row.quantity; }, 0),
+      planRows: planRows,
+      actualCount: actualRows.length,
+      deliveredCount: delivered,
+      installedCount: installed
+    };
+  });
+  return { locations: locations };
+}
+
 function getWorkbookPortalData() {
   const spreadsheet = getSpreadsheet_();
   const assetSheet = spreadsheet.getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
@@ -409,6 +452,7 @@ function getWorkbookPortalData() {
 
   return {
     dashboard: buildPortalDashboard_(rows),
+    planOverview: getPlanOverviewData_(spreadsheet, rows),
     assetRows: rows,
     sheetLinks: sheetLinks,
     spreadsheetUrl: buildSpreadsheetEditUrl_(),
