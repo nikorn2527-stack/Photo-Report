@@ -100,8 +100,8 @@
     .mobile-slot.signage img { min-height:91px; object-fit:contain; }
     .mobile-slot-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px; text-align:center; }
     .mobile-slot-icon { display:flex; width:40px; height:40px; align-items:center; justify-content:center; border-radius:12px; background:#eef2f6; color:#7a8795; font-size:24px; font-weight:800; }
-    .mobile-slot.before .mobile-slot-icon { background:var(--before-soft); color:var(--before); }
-    .mobile-slot.after .mobile-slot-icon { background:var(--after-soft); color:var(--after); }
+    .mobile-slot.before .mobile-slot-icon { background:var(--orange-soft); color:var(--orange); }
+    .mobile-slot.after .mobile-slot-icon { background:var(--green-soft); color:var(--green); }
     .mobile-slot.signage .mobile-slot-icon { background:var(--blue-soft); color:var(--blue); }
     .mobile-slot-label { font-size:14px; font-weight:950; }
     .mobile-slot-note { color:var(--muted); font-size:10px; }
@@ -148,45 +148,55 @@
     .hidden { display:none !important; }
     /* iPhone-native capture surface */
     body { background:#f2f2f7; }
-    .phone-shell { width:100% !important; max-width:680px !important; margin:0 auto !important; padding:0 14px calc(22px + env(safe-area-inset-bottom)) !important; }
-    .ios-header { display:flex; align-items:center; justify-content:space-between; min-height:70px; padding:10px 0 8px; }
-    .ios-back { width:36px; height:36px; padding:0; border:0; border-radius:18px; background:#fff; color:var(--blue); font-size:33px; line-height:30px; cursor:pointer; }
+    .phone-shell { width:100% !important; max-width:none !important; margin:0 auto !important; padding:0 16px calc(92px + env(safe-area-inset-bottom)) !important; }
+    .ios-header { display:flex; align-items:center; justify-content:space-between; min-height:72px; padding:10px 0 8px; }
+    .ios-back { width:44px; height:44px; padding:0; border:0; border-radius:22px; background:transparent; color:#071d49; font-size:42px; line-height:36px; cursor:pointer; }
     .ios-title { min-width:0; flex:1; padding:0 10px; text-align:center; }
     .ios-kicker { display:block; color:var(--blue); font-size:9px; font-weight:950; letter-spacing:.09em; }
-    .ios-title h1 { margin:1px 0 0; font-size:23px; letter-spacing:-.03em; }
+    .ios-title h1 { margin:1px 0 0; color:#071d49; font-size:34px; letter-spacing:-.04em; }
     .ios-dot { width:11px; height:11px; border-radius:50%; background:#34c759; box-shadow:0 0 0 4px #dff8e6; }
-    .ios-search-panel { padding:13px 0 10px; border-bottom:1px solid #dedee3; }
+    .ios-search-panel { padding:13px 0 10px; border-bottom:0; }
     .ios-label { display:block; margin:0 0 7px 2px; color:#3c3c43; font-size:13px; font-weight:850; }
-    .ios-search-row { display:grid; grid-template-columns:minmax(0,1fr) 44px; gap:8px; }
-    .ios-search { width:100%; min-height:49px; padding:11px 14px; border:1px solid #d1d1d6; border-radius:13px; background:#fff; color:#111; font-size:18px; box-shadow:0 1px 2px rgba(0,0,0,.03); }
-    .ios-clear { min-height:49px; border:1px solid #d1d1d6; border-radius:13px; background:#fff; color:#6b6b72; font-size:24px; cursor:pointer; }
+    .ios-search-row { position:relative; display:block; }
+    .ios-search { width:100%; min-height:70px; padding:28px 62px 9px 74px; border:2px solid var(--blue); border-radius:16px; background:#fff; color:#071d49; font-size:28px; line-height:1; box-shadow:0 3px 10px rgba(7,29,73,.10); }
+    .ios-search::placeholder { color:#1769e0; opacity:1; }
+    .ios-search-row::before { content:"⌕"; position:absolute; left:24px; top:50%; z-index:1; transform:translateY(-50%); color:#071d49; font-size:48px; line-height:1; pointer-events:none; }
+    .ios-search-row::after { content:"ค้นหา Job"; position:absolute; left:74px; top:14px; z-index:1; color:#1769e0; font-size:16px; line-height:1; pointer-events:none; }
+    .ios-clear { position:absolute; right:14px; top:50%; width:42px; height:42px; min-height:0; padding:0; transform:translateY(-50%); border:0; border-radius:50%; background:#eef1f6; color:#071d49; font-size:34px; line-height:38px; cursor:pointer; }
     .ios-hint { min-height:16px; margin:5px 2px 0; color:#8e8e93; font-size:11px; }
-    .ios-job-strip { display:flex; align-items:center; gap:9px; margin-top:14px; padding:11px 12px; border-radius:14px; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.05); }
+    .ios-job-strip { display:flex; align-items:center; gap:16px; margin-top:14px; padding:14px 16px; border-radius:14px; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.10); }
+    .ios-job-strip::before { content:"▣"; color:var(--blue); font-size:38px; line-height:1; }
     .ios-job-strip > div { min-width:0; flex:1; }
-    .ios-job-strip strong { display:block; color:#1769e0; font-size:19px; line-height:1.05; }
+    .ios-job-strip strong { display:block; color:#071d49; font-size:28px; line-height:1.05; }
     .ios-job-strip span:not(.ios-saved) { display:block; margin-top:3px; overflow:hidden; color:#8e8e93; font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
     .ios-job-strip b { color:#1769e0; font-size:12px; }
     .ios-saved { display:flex; flex:none; align-items:center; gap:3px; color:#16834b; font-size:10px; font-weight:800; white-space:nowrap; }
     .ios-saved i { display:inline-flex; width:16px; height:16px; align-items:center; justify-content:center; border-radius:50%; background:#34c759; color:#fff; font-style:normal; font-size:10px; }
-    .ios-capture-area { margin-top:13px; padding:13px 11px 11px; border-radius:17px; background:#fff; box-shadow:0 2px 11px rgba(0,0,0,.06); }
-    .ios-capture-heading { display:flex; align-items:end; justify-content:space-between; padding:0 2px 8px; }
-    .ios-capture-heading h2 { margin:0; font-size:19px; }
-    .ios-capture-heading span { color:#8e8e93; font-size:10px; }
-    .mobile-photo-grid { gap:8px; }
-    .mobile-section-label { padding:8px 2px 3px; font-size:12px; letter-spacing:.01em; }
-    .mobile-slot { min-height:122px; border-radius:13px; box-shadow:none; }
-    .mobile-slot img { min-height:122px; }
-    .mobile-slot.signage, .mobile-slot.signage img { min-height:91px; }
+    .ios-capture-area { margin-top:18px; padding:0 0 12px; border-radius:0; background:transparent; box-shadow:none; }
+    .ios-capture-heading { display:none; }
+    .mobile-photo-grid { gap:12px 14px; }
+    .mobile-section-label { padding:4px 4px 0; font-size:22px; letter-spacing:.01em; }
+    .mobile-slot { height:170px; min-height:0; border:2px dashed #cbd5e1; border-radius:16px; background:#fff; box-shadow:none; }
+    .mobile-slot img { width:100%; height:100%; min-height:0; object-fit:cover; }
+    .mobile-slot.signage { height:138px; min-height:0; }
+    .mobile-slot.signage img { height:100%; min-height:0; object-fit:cover; }
     .mobile-slot-empty { gap:4px; }
-    .mobile-slot-icon { width:34px; height:34px; border-radius:10px; font-size:22px; }
-    .mobile-slot-label { font-size:13px; }
-    .mobile-slot-note { font-size:9px; }
+    .mobile-slot-icon { width:64px; height:64px; border-radius:50%; font-size:44px; font-weight:400; }
+    .mobile-slot-label { position:absolute; left:22px; top:14px; padding:3px 12px; border-radius:10px; font-size:18px; }
+    .mobile-slot.before { color:var(--orange); }
+    .mobile-slot.after { color:var(--green); }
+    .mobile-slot.signage { color:var(--blue); }
+    .mobile-slot-note { color:currentColor; font-size:18px; }
     .mobile-slot-x { width:31px; height:31px; font-size:21px; }
-    .ios-hint-bottom { margin:9px 0 0; color:#8e8e93; font-size:10px; text-align:center; }
+    .ios-hint-bottom { margin:12px 0 0; color:#8e8e93; font-size:16px; text-align:center; }
+    .bottom-actions { position:fixed; right:0; bottom:0; left:0; z-index:12; display:none; grid-template-columns:1fr 1fr; gap:16px; padding:14px 16px calc(14px + env(safe-area-inset-bottom)); border-top:1px solid #d9dee8; border-radius:16px 16px 0 0; background:rgba(255,255,255,.96); box-shadow:0 -4px 18px rgba(7,29,73,.10); }
+    .workspace.open .bottom-actions { display:grid; }
+    .bottom-action { min-height:56px; border:2px solid var(--blue); border-radius:12px; background:#fff; color:var(--blue); font-size:22px; font-weight:900; cursor:pointer; }
+    .bottom-action.primary { background:var(--blue); color:#fff; }
     .ios-more { margin:10px 0 0; }
     .ios-more summary { padding:8px 2px; color:#8e8e93; font-size:11px; text-align:center; cursor:pointer; }
     .status { margin-top:8px; font-size:12px; }
-    @media (min-width:521px) { .phone-shell { max-width:680px !important; } }
+    @media (min-width:521px) { .phone-shell { max-width:none !important; } }
 
     .print-preview { position:fixed; z-index:50; inset:0; display:none; overflow:auto; padding:12px; background:#eef1f5; }
     .print-preview.open { display:block; }
@@ -262,7 +272,7 @@
       <div id="workspace" class="workspace">
         <section class="ios-job-strip"><div><strong id="mobileJobNo"></strong><span id="mobileJobLocation"></span></div><span class="ios-saved"><i>✓</i> บันทึกอัตโนมัติ</span><b id="mobileJobCount">0/9</b></section>
         <section class="ios-capture-area"><div class="ios-capture-heading"><h2>รูปงาน</h2><span>แตะช่องเพื่อเพิ่มรูป</span></div><div id="mobilePhotoGrid" class="mobile-photo-grid"></div><p class="ios-hint-bottom">รูปจะถูกบันทึกอัตโนมัติทันที</p></section>
-        <details class="ios-more"><summary>เครื่องมือเพิ่มเติม</summary><div class="mobile-more-grid"><a id="portalLink" href="#" target="_top">IT Rental Portal</a><a id="photoIndexLink" href="#" target="_blank">ประวัติ URL รูป</a><a id="assetLink" href="#" target="_blank">Asset_Master</a><a id="reportLink" href="#" target="_blank">Template ในชีต</a><a id="printLink" href="#" onclick="openPrintTemplate();return false">ดูใบงาน A4 / พิมพ์</a></div></details>
+        <div class="bottom-actions"><button class="bottom-action" type="button" onclick="openPrintTemplate()">▤ ดูใบงาน A4</button><button class="bottom-action primary" type="button" onclick="startCameraNextEmpty()">▣ ถ่ายรูป</button></div><details class="ios-more"><summary>เครื่องมือเพิ่มเติม</summary><div class="mobile-more-grid"><a id="portalLink" href="#" target="_top">IT Rental Portal</a><a id="photoIndexLink" href="#" target="_blank">ประวัติ URL รูป</a><a id="assetLink" href="#" target="_blank">Asset_Master</a><a id="reportLink" href="#" target="_blank">Template ในชีต</a><a id="printLink" href="#" onclick="openPrintTemplate();return false">ดูใบงาน A4 / พิมพ์</a></div></details>
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
     </section>
@@ -310,6 +320,7 @@
     function resetPending() { pendingFiles = []; document.getElementById('galleryFile').value = ''; document.getElementById('cameraFile').value = ''; document.getElementById('pendingGrid').innerHTML = ''; document.getElementById('pendingName').textContent = ''; document.getElementById('uploadNote').textContent = ''; document.getElementById('pending').classList.remove('open'); document.getElementById('saveButton').disabled = true; document.getElementById('saveButton').style.display = 'none'; document.getElementById('saveButton').textContent = 'บันทึก'; }
     function chooseGallery() { if (!uploading) document.getElementById('galleryFile').click(); }
     function chooseCamera() { if (!uploading) document.getElementById('cameraFile').click(); }
+    function startCameraNextEmpty() { if (!currentJob || uploading) return; const emptyType = allTypes().find(function(type) { return !isFilled(type); }) || allTypes()[0]; openSingleSlot(emptyType); chooseCamera(); }
     function handleFile(event) { const files = Array.from(event.target.files || []); if (!files.length || uploading) return; const invalid = files.find(function(file) { return !['image/jpeg','image/png','image/gif','image/webp'].includes(file.type) || file.size > MAX_FILE_SIZE; }); if (invalid) { setStatus('ทุกไฟล์ต้องเป็น JPG, PNG, GIF หรือ WEBP และไม่เกิน 10 MB', true); event.target.value = ''; return; } if (activeMode === 'group') { const empty = GROUPS[activeGroupKey].types.filter(function(type) { return !isFilled(type); }); if (!empty.length || files.length > empty.length) { setStatus('จำนวนรูปเกินช่องที่ว่างอยู่', true); event.target.value = ''; return; } } else if (files.length !== 1) { setStatus('ช่องนี้รับครั้งละ 1 รูป', true); event.target.value = ''; return; } showPending(files); savePendingPhotos(files); }
     function showPending(files) { pendingFiles = files; const root = document.getElementById('pendingGrid'); root.innerHTML = ''; document.getElementById('pendingName').textContent = files.length === 1 ? files[0].name : 'เลือกแล้ว ' + files.length + ' รูป'; document.getElementById('uploadNote').textContent = 'กำลังบันทึกอัตโนมัติ...'; document.getElementById('pending').classList.add('open'); document.getElementById('saveButton').disabled = true; files.forEach(function(file) { const img = document.createElement('img'); root.appendChild(img); readFileAsDataUrl(file).then(function(url) { img.src = url; }); }); }
     function saveSelectedPhotos() { if (!pendingFiles.length || uploading) return; savePendingPhotos(pendingFiles); }
