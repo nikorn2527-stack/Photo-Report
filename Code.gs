@@ -743,6 +743,7 @@ function deleteImageFromSheet(jobNo, location, imageType, installDate) {
     const imageArea = mergedRanges.length > 0 ? mergedRanges[0] : targetRange;
     const anchorCell = imageArea.getCell(1, 1);
     removeImageAtAnchor_(sheet, anchorCell.getA1Notation());
+    clearPhotoFileIndexUrl_(jobNo, imageType);
     sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
     sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
     sheet.getRange(CONFIG.DATE_CELL).setValue(parsePortalDate_(installDate) || new Date());
@@ -819,6 +820,15 @@ function findPhotoFileIndexRow_(sheet, jobNo) {
     if (String(jobs[index][0] || '') === targetJobNo) return index + 2;
   }
   return 0;
+}
+
+function clearPhotoFileIndexUrl_(jobNo, imageType) {
+  const sheet = ensurePhotoFileIndexSheet_();
+  const rowNumber = findPhotoFileIndexRow_(sheet, jobNo);
+  if (!rowNumber) return;
+  const columnIndex = getPhotoFileIndexColumnIndex_(imageType) + 1;
+  sheet.getRange(rowNumber, 1).setValue(new Date());
+  sheet.getRange(rowNumber, columnIndex).clearContent();
 }
 
 function upsertPhotoFileIndexUrl_(jobNo, imageType, fileUrl, reportSheetName, updatedAt) {
