@@ -27,7 +27,7 @@
       .subtitle { margin:5px 0 0; color:var(--muted); font-size:14px; }
       .job-card { position:sticky; top:0; z-index:5; padding:13px; border:1px solid #b8c0ca; border-radius:14px; background:rgba(255,255,255,.97); box-shadow:0 4px 15px rgba(32,33,36,.1); backdrop-filter:blur(8px); }
       .job-label { display:block; margin-bottom:7px; font-size:15px; font-weight:900; }
-      .job-search-row { display:grid; grid-template-columns:minmax(0,1fr) 50px 50px; gap:8px; margin-bottom:9px; }
+      .job-search-row { display:grid; grid-template-columns:minmax(0,1fr) 54px 50px 50px; gap:8px; margin-bottom:9px; }
       .job-search { width:100%; min-height:54px; padding:11px 13px; border:1px solid #8a9098; border-radius:10px; background:#fff; color:var(--ink); font-size:17px; }
       .job-results { display:none; max-height:230px; margin:0 0 8px; padding:6px; overflow:auto; border:1px solid var(--line); border-radius:11px; background:#f8fafc; }
       .job-results.visible { display:grid; gap:6px; }
@@ -44,6 +44,7 @@
       .page-navigation { margin-top:10px; }
       .portal-link { display:flex; min-height:50px; align-items:center; justify-content:center; padding:10px 14px; border:1px solid #9bbce8; border-radius:12px; background:#eef5ff; color:var(--blue); font-size:15px; font-weight:900; text-decoration:none; }
       .portal-link:active { transform:scale(.985); }
+      .go-search { min-height:54px; border:1px solid var(--green); border-radius:10px; background:#e8f5ec; color:var(--green-dark); font-size:16px; font-weight:900; cursor:pointer; }
       .clear-search { min-height:54px; border:1px solid #9aa0a6; border-radius:10px; background:#f8fafc; color:var(--muted); font-size:25px; font-weight:700; cursor:pointer; }
       .job-row { display:grid; grid-template-columns:1fr 50px; gap:8px; }
       select { width:100%; min-height:54px; padding:11px 12px; border:1px solid #8a9098; border-radius:10px; background:#fff; color:var(--ink); font-size:17px; }
@@ -110,7 +111,7 @@
       .slot-picker { display:none; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-bottom:14px; }
       .slot-picker.visible { display:grid; }
       .slot-button { min-height:58px; border:1px solid #c7cbd1; border-radius:12px; background:#f8fafc; color:var(--muted); font-size:16px; font-weight:900; cursor:pointer; }
-      .slot-button:active, .modal-button:active, .delete-button:active, .cancel-button:active, .signage-button:active, .clear-search:active { transform:scale(.97); }
+      .slot-button:active, .modal-button:active, .delete-button:active, .cancel-button:active, .signage-button:active, .go-search:active, .clear-search:active { transform:scale(.97); }
       .slot-button.filled { border-color:#9bc3a6; background:#e8f5ec; color:var(--green-dark); }
       .source-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
       .modal-button { min-height:60px; padding:10px 12px; border:0; border-radius:12px; color:#fff; font-size:16px; font-weight:900; line-height:1.25; cursor:pointer; }
@@ -177,7 +178,7 @@
         .subtitle { margin-top:7px; font-size:18px; }
         .job-card { padding:17px; border-radius:17px; }
         .job-label { margin-bottom:9px; font-size:19px; }
-        .job-search-row { grid-template-columns:minmax(0,1fr) 58px 58px; gap:10px; margin-bottom:10px; }
+        .job-search-row { grid-template-columns:minmax(0,1fr) 58px 58px 58px; gap:10px; margin-bottom:10px; }
         .job-search { min-height:66px; padding:14px 15px; border-radius:12px; font-size:20px; }
         .job-results { max-height:260px; padding:8px; border-radius:13px; }
         .job-result { min-height:58px; padding:11px 13px; border-radius:11px; font-size:18px; }
@@ -188,6 +189,7 @@
         .job-result-meta { font-size:14px; }
         .page-navigation { margin-top:12px; }
         .portal-link { min-height:62px; border-radius:14px; font-size:19px; }
+        .go-search { min-height:66px; border-radius:12px; font-size:19px; }
         .clear-search { min-height:66px; border-radius:12px; font-size:29px; }
         .job-row { grid-template-columns:minmax(0,1fr) 62px; gap:10px; }
         select { min-height:66px; padding:14px 15px; border-radius:12px; font-size:22px; }
@@ -251,7 +253,7 @@
 
         <section class="job-card">
           <label class="job-label" for="jobSearch">1. ค้นหา Job</label>
-          <div class="job-search-row"><input id="jobSearch" class="job-search" type="search" inputmode="search" placeholder="พิมพ์เลขบางส่วน เช่น 1234 หรือ JOB 12" autocomplete="off"><button id="clearJobSearch" class="clear-search" type="button" onclick="clearJobSearch()" aria-label="ล้างคำค้นหา">×</button><button id="refreshButton" class="refresh" type="button" onclick="loadJobs()" aria-label="รีเฟรชรายการ Job">↻</button></div>
+          <div class="job-search-row"><input id="jobSearch" class="job-search" type="search" inputmode="search" placeholder="พิมพ์เลขบางส่วน เช่น 1234 หรือ JOB 12" autocomplete="off"><button id="goJobSearch" class="go-search" type="button" onclick="goToBestJobMatch()" aria-label="ไปยัง Job ที่ค้นพบ">ไป</button><button id="clearJobSearch" class="clear-search" type="button" onclick="clearJobSearch()" aria-label="ล้างคำค้นหา">×</button><button id="refreshButton" class="refresh" type="button" onclick="loadJobs()" aria-label="รีเฟรชรายการ Job">↻</button></div>
           <div id="jobSearchHint" class="job-search-hint">พิมพ์เลขบางส่วน ระบบจะเข้า Job ให้อัตโนมัติเมื่อพบรายการเดียว</div>
           <div id="jobSearchResults" class="job-search-results" aria-live="polite"></div>
           <select id="jobSelect" class="hidden" aria-hidden="true" tabindex="-1"><option value="">กำลังโหลดรายการ Job...</option></select>
@@ -315,8 +317,9 @@
 
     <script>
       const MAX_FILE_SIZE = 10 * 1024 * 1024;
-      const MAX_UPLOAD_BYTES = 1.8 * 1024 * 1024;
-      const MAX_IMAGE_DIMENSION = 2048;
+      const MAX_UPLOAD_BYTES = 2.45 * 1024 * 1024;
+      const MAX_IMAGE_DIMENSION = 2560;
+      const MIN_IMAGE_DIMENSION = 960;
       const LAST_JOB_KEY = 'photoReport.lastJob';
       const PHOTO_LABELS = { signage:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง', before1:'ก่อนติดตั้ง 1', after1:'หลังติดตั้ง 1', before2:'ก่อนติดตั้ง 2', after2:'หลังติดตั้ง 2', before3:'ก่อนติดตั้ง 3', after3:'หลังติดตั้ง 3', before4:'ก่อนติดตั้ง 4', after4:'หลังติดตั้ง 4' };
       const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'เก็บสภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'เก็บผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
@@ -335,6 +338,7 @@
         document.getElementById('cameraFile').addEventListener('change', handleFile);
         document.getElementById('jobSelect').addEventListener('change', handleJobChange);
         document.getElementById('jobSearch').addEventListener('input', filterJobs);
+        document.getElementById('jobSearch').addEventListener('keydown', handleJobSearchKeydown);
         document.getElementById('jobSearch').addEventListener('focus', renderJobOptions);
         document.getElementById('installDate').value = todayString();
         renderAll();
@@ -367,6 +371,7 @@
 
       function jobSearchScore(job, query) {
         const raw = String(job && job.jobNo || '').toLowerCase();
+        const searchText = [job && job.jobNo, job && job.location].join(' ').toLowerCase();
         const normalizedJob = normalizeJobSearch(raw);
         const normalizedQuery = normalizeJobSearch(query);
         if (!normalizedQuery) return 99;
@@ -376,17 +381,24 @@
         const queryDigits = String(query || '').replace(/\D/g, '');
         const jobDigits = raw.replace(/\D/g, '');
         if (queryDigits && jobDigits.indexOf(queryDigits) !== -1) return 3;
+        if (normalizeJobSearch(searchText).indexOf(normalizedQuery) !== -1) return 4;
         return -1;
+      }
+
+      function getRankedJobMatches(query) {
+        return jobs.map(function(job, index) { return { job:job, index:index, score:jobSearchScore(job, query) }; }).filter(function(item) { return item.score >= 0; }).sort(function(a,b) { return a.score - b.score || a.index - b.index; });
       }
 
       function renderJobOptions() {
         const select = document.getElementById('jobSelect');
         const query = String(document.getElementById('jobSearch').value || '').trim();
-        const ranked = jobs.map(function(job, index) { return { job:job, index:index, score:jobSearchScore(job, query) }; }).filter(function(item) { return item.score >= 0; }).sort(function(a,b) { return a.score - b.score || a.index - b.index; });
+        const ranked = getRankedJobMatches(query);
         const hint = document.getElementById('jobSearchHint');
         const oldValue = select.value;
         let nextValue = '';
-        if (query && ranked.length === 1) nextValue = String(ranked[0].index);
+        const exactMatch = query ? ranked.find(function(item) { return normalizeJobSearch(item.job.jobNo) === normalizeJobSearch(query); }) : null;
+        if (exactMatch) nextValue = String(exactMatch.index);
+        else if (query && ranked.length === 1) nextValue = String(ranked[0].index);
         const resultRoot = document.getElementById('jobSearchResults');
         resultRoot.innerHTML = '';
         resultRoot.classList.remove('visible');
@@ -412,6 +424,14 @@
       }
 
       function filterJobs() { renderJobOptions(); }
+      function handleJobSearchKeydown(event) { if (event.key === 'Enter') { event.preventDefault(); goToBestJobMatch(); } }
+      function goToBestJobMatch() {
+        const query = String(document.getElementById('jobSearch').value || '').trim();
+        const ranked = getRankedJobMatches(query);
+        if (!query) { setStatus('พิมพ์เลข Job ก่อน แล้วกด ไป', true); return; }
+        if (!ranked.length) { setStatus('ไม่พบ Job ที่ตรงกับ: ' + query, true); return; }
+        selectJobFromSearch(ranked[0].index);
+      }
       function selectJobFromSearch(index) {
         if (!jobs[index]) return;
         document.getElementById('jobSelect').value = String(index);
@@ -567,7 +587,7 @@
         pendingFiles = files;
         root.innerHTML = '';
         document.getElementById('pendingName').textContent = files.length === 1 ? files[0].name : 'เลือกแล้ว ' + files.length + ' รูป';
-        document.getElementById('uploadingNote').textContent = 'ตรวจรูปแล้ว หากถูกต้องให้กด “บันทึก”';
+        document.getElementById('uploadingNote').textContent = 'ตรวจรูปแล้ว หากถูกต้องให้กด “บันทึก” (ระบบจะบีบอัดรูปใหญ่ให้อัตโนมัติ)';
         document.getElementById('savePhotoButton').disabled = false;
         document.getElementById('pending').classList.add('visible');
         files.forEach(function(file) { const image = document.createElement('img'); image.alt = file.name; root.appendChild(image); readFileAsDataUrl(file).then(function(dataUrl) { image.src = dataUrl; }).catch(function() {}); });
@@ -627,7 +647,7 @@
             let quality = 0.84;
             let result = '';
             const canvas = document.createElement('canvas');
-            for (let attempt = 0; attempt < 8; attempt += 1) {
+            for (let attempt = 0; attempt < 14; attempt += 1) {
               canvas.width = Math.max(1, Math.round(sourceWidth * scale));
               canvas.height = Math.max(1, Math.round(sourceHeight * scale));
               const context = canvas.getContext('2d', { alpha:false });
@@ -636,8 +656,9 @@
               context.drawImage(image, 0, 0, canvas.width, canvas.height);
               result = canvas.toDataURL('image/jpeg', quality);
               if (Math.ceil((result.length - result.indexOf(',') - 1) * 0.75) <= MAX_UPLOAD_BYTES) break;
-              if (quality > 0.56) quality -= 0.06;
-              else scale *= 0.82;
+              if (quality > 0.48) quality -= 0.05;
+              else if (Math.max(sourceWidth * scale, sourceHeight * scale) > MIN_IMAGE_DIMENSION) scale *= 0.86;
+              else break;
             }
             resolve(result);
           };
