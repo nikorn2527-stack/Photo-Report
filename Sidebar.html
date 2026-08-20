@@ -212,7 +212,7 @@
     .print-toolbar-actions { display:flex; gap:7px; }
     .print-action { min-height:42px; padding:8px 12px; border:1px solid var(--blue); border-radius:9px; background:var(--blue); color:#fff; font-size:13px; font-weight:900; cursor:pointer; }
     .print-close { border-color:#9aa0a6; background:#fff; color:var(--ink); }
-    .print-page { width:210mm; min-width:210mm; min-height:297mm; margin:0 auto; padding:10mm 9mm; background:#fff; color:#202124; box-shadow:0 4px 18px rgba(32,33,36,.18); font-family:Arial,"Noto Sans Thai",sans-serif; }
+    .print-page { width:210mm; min-width:210mm; height:297mm; min-height:0; margin:0 auto; padding:6mm 7mm; overflow:hidden; background:#fff; color:#202124; box-shadow:0 4px 18px rgba(32,33,36,.18); font-family:Arial,"Noto Sans Thai",sans-serif; }
     .print-company { margin:0; color:#1f3c64; font-size:10pt; font-weight:900; text-align:center; }
     .print-document-title { margin:2mm 0 3mm; color:#1f3c64; font-size:13pt; font-weight:900; text-align:center; }
     .print-meta { display:grid; grid-template-columns:1.1fr 2fr 1fr; gap:2mm; margin-bottom:3mm; font-size:8pt; }
@@ -220,17 +220,17 @@
     .print-meta-label { color:#555; font-weight:700; }
     .print-meta-value { color:#1f3c64; font-weight:900; }
     .print-section-title { padding:1.7mm 2mm; color:#fff; background:#285b91; font-size:8.5pt; font-weight:900; text-align:center; }
-    .print-signage { display:flex; min-height:38mm; border:1px solid #285b91; border-top:0; }
+    .print-signage { display:flex; height:30mm; border:1px solid #285b91; border-top:0; }
     .print-signage .print-image-box { width:100%; border-right:0; }
-    .print-image-box { display:flex; min-width:0; min-height:34mm; align-items:center; justify-content:center; overflow:hidden; padding:2mm; background:#fff; }
-    .print-image-box img { display:block; max-width:100%; max-height:100%; object-fit:contain; }
+    .print-image-box { display:flex; width:100%; height:100%; min-width:0; min-height:0; align-items:center; justify-content:center; overflow:hidden; padding:1.5mm; background:#fff; }
+    .print-image-box img { display:block; width:100%; height:100%; object-fit:cover; }
     .print-empty { color:#9aa0a6; font-size:8pt; text-align:center; }
-    .print-pair-head { display:grid; grid-template-columns:1fr 1fr; margin-top:4mm; }
+    .print-pair-head { display:grid; grid-template-columns:1fr 1fr; margin-top:2mm; }
     .print-pair-head div { padding:1.5mm; font-size:8pt; font-weight:900; text-align:center; }
     .print-before-head { color:#8a4b0f; background:#f4d7bb; }
     .print-after-head { color:#166534; background:#ccebd5; }
-    .print-pair { display:grid; grid-template-columns:1fr 1fr; min-height:44mm; border:1px solid #b8c0ca; border-top:0; }
-    .print-pair .print-image-box { min-height:44mm; }
+    .print-pair { display:grid; grid-template-columns:1fr 1fr; height:38mm; border:1px solid #b8c0ca; border-top:0; }
+    .print-pair .print-image-box { height:38mm; }
     .print-pair .print-image-box:first-child { border-right:1px solid #b8c0ca; }
     .print-preview-note { max-width:210mm; margin:8px auto 0; color:#68707a; font-size:12px; text-align:center; }
     @media print {
@@ -239,7 +239,7 @@
       body > main, body > .modal-backdrop { display:none !important; }
       .print-preview { position:static; display:block !important; width:210mm; min-height:297mm; padding:0; overflow:visible; background:#fff; }
       .print-toolbar, .print-preview-note { display:none !important; }
-      .print-page { width:210mm; min-height:297mm; margin:0; padding:10mm 9mm; box-shadow:none; }
+      .print-page { width:210mm; height:297mm; min-height:0; margin:0; padding:6mm 7mm; overflow:hidden; box-shadow:none; }
     }
     @media (max-width:520px), (pointer:coarse) {
       .page { width:100%; max-width:none; padding:8px 6px calc(20px + env(safe-area-inset-bottom)); }
@@ -353,7 +353,7 @@
     function closePrintPreview() { document.getElementById('printPreview').classList.remove('open'); }
     function printNow() { window.print(); }
     function printImage(type,label) { const url=previews[type] || previewUrls[type]; return '<div class="print-image-box">' + (url ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(label) + '">' : '<span class="print-empty">ยังไม่มีรูป<br>' + escapeHtml(label) + '</span>') + '</div>'; }
-    function renderPrintTemplate() { const job=currentJob, date=todayString(), location=job.location || 'ไม่ระบุสถานที่'; document.getElementById('printToolbarTitle').textContent='Template A4 · ' + job.jobNo; document.getElementById('printPage').innerHTML='<p class="print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p><h1 class="print-document-title">ใบรับรองภาพถ่ายการติดตั้งอุปกรณ์</h1><div class="print-meta"><div class="print-meta-box"><span class="print-meta-label">เลข Job: </span><span class="print-meta-value">' + escapeHtml(job.jobNo) + '</span></div><div class="print-meta-box"><span class="print-meta-label">สถานที่ติดตั้ง: </span><span class="print-meta-value">' + escapeHtml(location) + '</span></div><div class="print-meta-box"><span class="print-meta-label">วันที่: </span><span class="print-meta-value">' + formatDate(date) + '</span></div></div><div class="print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="print-signage">' + printImage('signage','ป้ายจุดติดตั้ง') + '<div></div></div>' + pair('before1','after1',1) + pair('before2','after2',2) + pair('before3','after3',3) + pair('before4','after4',4); }
+    function renderPrintTemplate() { const job=currentJob, date=todayString(), location=job.location || 'ไม่ระบุสถานที่'; document.getElementById('printToolbarTitle').textContent='Template A4 · ' + job.jobNo; document.getElementById('printPage').innerHTML='<p class="print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p><h1 class="print-document-title">ภาพถ่ายการติดตั้งอุปกรณ์</h1><div class="print-meta"><div class="print-meta-box"><span class="print-meta-label">เลข Job: </span><span class="print-meta-value">' + escapeHtml(job.jobNo) + '</span></div><div class="print-meta-box"><span class="print-meta-label">สถานที่ติดตั้ง: </span><span class="print-meta-value">' + escapeHtml(location) + '</span></div><div class="print-meta-box"><span class="print-meta-label">วันที่: </span><span class="print-meta-value">' + formatDate(date) + '</span></div></div><div class="print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="print-signage">' + printImage('signage','ป้ายจุดติดตั้ง') + '<div></div></div>' + pair('before1','after1',1) + pair('before2','after2',2) + pair('before3','after3',3) + pair('before4','after4',4); }
     function pair(before,after,index) { return '<div class="print-pair-head"><div class="print-before-head">ก่อนติดตั้ง ' + index + '</div><div class="print-after-head">หลังติดตั้ง ' + index + '</div></div><div class="print-pair">' + printImage(before,'ก่อนติดตั้ง ' + index) + printImage(after,'หลังติดตั้ง ' + index) + '</div>'; }
     function openPortal() { const url = document.getElementById('portalLink').href; if (url && url !== '#') window.open(url, '_top'); }
     function loadSheetLinks() { google.script.run.withSuccessHandler(function(links) { document.getElementById('portalLink').href=links.portalWebUrl || '#'; document.getElementById('photoIndexLink').href=links.photoFileIndexUrl || '#'; document.getElementById('assetLink').href=links.assetMasterUrl || '#'; document.getElementById('reportLink').href=links.templateUrl || '#'; }).withFailureHandler(function(error) { setStatus('โหลดลิงก์เพิ่มเติมไม่สำเร็จ: ' + errorMessage(error),true); }).getSheetEditLinks(); }
