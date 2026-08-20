@@ -642,6 +642,7 @@ function buildPortalDashboard_(rows) {
   });
   return {
     total: rows.length,
+    deliveryCompleted: counts['ติดตั้งแล้ว'] || 0,
     installed: counts['ติดตั้งแล้ว'] || 0,
     ready: counts['พร้อมส่ง'] || 0,
     returned: counts['รับคืนแล้ว'] || 0,

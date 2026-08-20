@@ -306,25 +306,23 @@
       function renderDashboard() {
         const d = portalData.dashboard || {};
         const cards = [
-          ['เครื่องทั้งหมด', d.total || 0, 'green'],
-          ['สถานะชุด: พร้อมส่ง', d.ready || 0, 'green'],
-          ['สถานะชุด: ติดตั้งแล้ว', d.installed || 0, 'blue'],
-          ['สถานะชุด: รับคืนแล้ว', d.returned || 0, 'gray'],
-          ['เตรียมเครื่อง: พร้อมติดตั้ง', d.prepReady || 0, 'green'],
-          ['เตรียมเครื่อง: ติดตั้งเสร็จ', d.prepInstalled || 0, 'blue'],
-          ['เตรียมเครื่อง: ติดปัญหา', d.prepBlocked || 0, 'red']
+          ['ส่งมอบแล้ว / ทั้งหมด', (d.deliveryCompleted || 0) + '/' + (d.total || 0), 'blue'],
+          ['เตรียมเครื่อง: รับเข้าแล้ว', (d.prepStatuses && d.prepStatuses['รับเข้าแล้ว']) || 0, 'gray'],
+          ['เตรียมเครื่อง: ลง Windows', (d.prepStatuses && d.prepStatuses['ลง Windows']) || 0, 'orange'],
+          ['เตรียมเครื่อง: ลงโปรแกรม', (d.prepStatuses && d.prepStatuses['ลงโปรแกรม']) || 0, 'orange'],
+          ['เตรียมเครื่อง: รอ Activate', (d.prepStatuses && d.prepStatuses['รอ Activate']) || 0, 'orange'],
+          ['เตรียมเครื่อง: พร้อมติดตั้ง', (d.prepStatuses && d.prepStatuses['พร้อมติดตั้ง']) || 0, 'green'],
+          ['เตรียมเครื่อง: ติดตั้งเสร็จ', (d.prepStatuses && d.prepStatuses['ติดตั้งเสร็จ']) || 0, 'blue'],
+          ['เตรียมเครื่อง: ติดปัญหา', (d.prepStatuses && d.prepStatuses['ติดปัญหา']) || 0, 'red']
         ];
         document.getElementById('summaryCards').innerHTML = cards.map(function(card) {
           return '<div class="card ' + card[2] + '"><div class="card-label">' + card[0] + '</div><div class="card-value">' + card[1] + '</div></div>';
         }).join('');
 
         const total = Math.max(1, d.total || 0);
-        const assetStatuses = ['พร้อมส่ง', 'ติดตั้งแล้ว', 'รับคืนแล้ว', 'ส่งซ่อม', 'ตัดจำหน่าย'];
-        document.getElementById('assetStatusChart').innerHTML = assetStatuses.map(function(status) {
-          const count = (d.statuses && d.statuses[status]) || 0;
-          const percent = Math.round(count / total * 100);
-          return '<div class="status-line"><span>' + status + '</span><span class="bar"><span style="width:' + percent + '%"></span></span><strong>' + count + '</strong></div>';
-        }).join('');
+        const delivered = d.deliveryCompleted || 0;
+        const deliveryPercent = Math.round(delivered / total * 100);
+        document.getElementById('assetStatusChart').innerHTML = '<div class="status-line"><span>ส่งมอบแล้ว</span><span class="bar"><span style="width:' + deliveryPercent + '%"></span></span><strong>' + delivered + '/' + (d.total || 0) + '</strong></div><p class="plan-note">แสดงจำนวนอุปกรณ์ที่ส่งมอบแล้วเทียบกับอุปกรณ์ทั้งหมด โดยไม่แยกสถานะชุดอุปกรณ์ย่อย</p>';
         document.getElementById('prepStatusChart').innerHTML = PREP_STATUS_OPTIONS.map(function(status) {
           const count = (d.prepStatuses && d.prepStatuses[status]) || 0;
           const percent = Math.round(count / total * 100);
