@@ -383,7 +383,6 @@ function getSheetEditLinks() {
   }
 
   const photoFileIndex = ensurePhotoFileIndexSheet_();
-  const pdfIndex = ensurePdfIndexSheet_();
   if (photoFileIndex.getLastRow() === 1) backfillPhotoFileIndex_();
   const webAppUrl = ScriptApp.getService().getUrl() || '';
   return {
@@ -391,7 +390,6 @@ function getSheetEditLinks() {
     templateUrl: buildSheetEditUrl_(template),
     assetMasterUrl: buildSheetEditUrl_(assetMaster),
     photoFileIndexUrl: buildSheetEditUrl_(photoFileIndex),
-    pdfIndexUrl: buildSheetEditUrl_(pdfIndex),
     reportWebUrl: webAppUrl || '?page=report',
     portalWebUrl: webAppUrl ? webAppUrl + '?page=portal' : '?page=portal',
     assetWebUrl: webAppUrl ? webAppUrl + '?page=asset' : '?page=asset'
