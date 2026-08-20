@@ -100,15 +100,15 @@
     .mobile-slot.signage img { min-height:91px; object-fit:contain; }
     .mobile-slot-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px; text-align:center; }
     .mobile-slot-icon { display:flex; width:40px; height:40px; align-items:center; justify-content:center; border-radius:12px; background:#eef2f6; color:#7a8795; font-size:24px; font-weight:800; }
-    .mobile-slot.before .mobile-slot-icon { background:var(--before-soft); color:var(--before); }
-    .mobile-slot.after .mobile-slot-icon { background:var(--after-soft); color:var(--after); }
+    .mobile-slot.before .mobile-slot-icon { background:var(--orange-soft); color:var(--orange); }
+    .mobile-slot.after .mobile-slot-icon { background:var(--green-soft); color:var(--green); }
     .mobile-slot.signage .mobile-slot-icon { background:var(--blue-soft); color:var(--blue); }
     .mobile-slot-label { font-size:14px; font-weight:950; }
     .mobile-slot-note { color:var(--muted); font-size:10px; }
     .mobile-slot.has-image .mobile-slot-label { position:absolute; right:5px; bottom:5px; left:5px; padding:3px 5px; border-radius:5px; background:rgba(0,0,0,.58); color:#fff; font-size:11px; text-align:left; }
     .mobile-slot.has-image .mobile-slot-empty { display:none; }
-    .mobile-slot-x { position:absolute; z-index:3; top:6px; right:6px; display:none; width:34px; height:34px; padding:0; border:2px solid #fff; border-radius:50%; background:var(--danger); color:#fff; font-size:23px; font-weight:950; line-height:26px; box-shadow:0 2px 8px rgba(0,0,0,.28); }
-    .mobile-slot.hold-on .mobile-slot-x { display:block; }
+    .mobile-slot-x { position:absolute; z-index:3; top:8px; right:8px; display:block; width:42px; height:42px; padding:0; border:0; border-radius:50%; background:rgba(255,255,255,.92); color:#071d49; font-size:36px; font-weight:400; line-height:38px; box-shadow:0 2px 8px rgba(0,0,0,.22); }
+    .mobile-slot:not(.has-image) .mobile-slot-x { display:none; }
     .mobile-help { margin:9px 2px 0; color:var(--muted); font-size:11px; text-align:center; }
     .mobile-more { margin-top:11px; }
     .mobile-more summary { padding:7px 2px; color:#9aa5b2; font-size:11px; text-align:center; cursor:pointer; }
@@ -119,74 +119,90 @@
     .status.success { color:var(--green); }
     .modal-backdrop { position:fixed; z-index:30; inset:0; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(15,23,42,.62); }
     .modal-backdrop.open { display:flex; }
-    .modal { width:100%; max-width:560px; max-height:86vh; overflow:auto; margin:auto; padding:19px 16px calc(20px + env(safe-area-inset-bottom)); border-radius:18px; background:#fff; box-shadow:0 12px 36px rgba(0,0,0,.28); }
+    .viewer-backdrop { position:fixed; z-index:40; inset:0; display:none; flex-direction:column; gap:14px; align-items:center; justify-content:center; padding:18px; background:rgba(0,0,0,.86); }
+    .viewer-backdrop.open { display:flex; }
+    .viewer-image { max-width:100%; max-height:72vh; border-radius:16px; object-fit:contain; background:#111; }
+    .viewer-actions { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; width:100%; max-width:520px; }
+    .viewer-actions button { min-height:48px; border:0; border-radius:12px; background:#fff; color:#071d49; font-weight:900; }
+    .viewer-actions .danger { background:#fff0f0; color:var(--danger); }
+    .modal { width:100%; max-width:640px; max-height:90vh; overflow:auto; margin:auto; padding:28px 22px calc(28px + env(safe-area-inset-bottom)); border-radius:24px; background:#fff; box-shadow:0 16px 42px rgba(0,0,0,.30); }
     .modal-handle { width:42px; height:4px; margin:0 auto 12px; border-radius:4px; background:#cbd5e1; }
-    .modal-title { margin:0; font-size:23px; }
-    .modal-note { margin:5px 0 14px; color:var(--muted); font-size:13px; }
+    .modal-title { margin:0; font-size:32px; }
+    .modal-note { margin:8px 0 18px; color:var(--muted); font-size:20px; }
     .slot-picker { display:none; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
     .slot-picker.open { display:grid; }
-    .slot-button { min-height:62px; padding:9px; border:1px solid #cbd5e1; border-radius:13px; background:#fff; color:var(--ink); font-size:15px; font-weight:900; cursor:pointer; }
+    .slot-button { min-height:76px; padding:12px; border:1px solid #cbd5e1; border-radius:16px; background:#fff; color:var(--ink); font-size:22px; font-weight:900; cursor:pointer; }
     .slot-button.filled { border-color:#9bd0ad; background:var(--green-soft); color:var(--green); }
-    .existing-box { display:none; margin-bottom:12px; padding:11px; border-radius:11px; background:var(--orange-soft); color:#8a4b0f; font-size:13px; font-weight:800; }
+    .existing-box { display:none; margin-bottom:14px; padding:14px; border-radius:14px; background:var(--orange-soft); color:#8a4b0f; font-size:18px; font-weight:800; }
     .existing-box.open { display:block; }
     .source-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
-    .source-button { min-height:65px; border:0; border-radius:13px; color:#fff; font-size:16px; font-weight:950; cursor:pointer; }
+    .source-button { min-height:82px; border:0; border-radius:16px; color:#fff; font-size:22px; font-weight:950; cursor:pointer; }
     .source-button.gallery { background:var(--blue); }
     .source-button.camera { background:#4b5563; }
     .pending { display:none; margin-top:13px; }
     .pending.open { display:block; }
     .pending-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
     .pending-grid img { width:100%; aspect-ratio:1; object-fit:cover; border:1px solid var(--line); border-radius:8px; }
-    .pending-name { margin-top:6px; color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
-    .upload-note { margin-top:7px; color:var(--blue); font-size:12px; font-weight:800; }
+    .pending-name { margin-top:8px; color:var(--muted); font-size:16px; overflow-wrap:anywhere; }
+    .upload-note { margin-top:9px; color:var(--blue); font-size:18px; font-weight:900; }
     .modal-actions { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:13px; }
     .save-button { grid-column:1 / -1; min-height:61px; border:0; border-radius:12px; background:var(--green); color:#fff; font-size:18px; font-weight:950; cursor:pointer; }
     .save-button:disabled { background:#c6ced8; cursor:not-allowed; }
-    .delete-button,.cancel-button { min-height:55px; border:0; border-radius:12px; font-size:16px; font-weight:900; cursor:pointer; }
+    .delete-button,.cancel-button { min-height:68px; border:0; border-radius:14px; font-size:22px; font-weight:900; cursor:pointer; }
     .delete-button { background:#fff0f0; color:var(--danger); }
     .cancel-button { border:1px solid #b9c4d2; background:#fff; color:var(--ink); }
     .hidden { display:none !important; }
     /* iPhone-native capture surface */
     body { background:#f2f2f7; }
-    .phone-shell { width:100% !important; max-width:680px !important; margin:0 auto !important; padding:0 14px calc(22px + env(safe-area-inset-bottom)) !important; }
-    .ios-header { display:flex; align-items:center; justify-content:space-between; min-height:70px; padding:10px 0 8px; }
-    .ios-back { width:36px; height:36px; padding:0; border:0; border-radius:18px; background:#fff; color:var(--blue); font-size:33px; line-height:30px; cursor:pointer; }
+    .phone-shell { width:100% !important; max-width:none !important; margin:0 auto !important; padding:0 16px calc(92px + env(safe-area-inset-bottom)) !important; }
+    .ios-header { display:flex; align-items:center; justify-content:space-between; min-height:72px; padding:10px 0 8px; }
+    .ios-back { width:44px; height:44px; padding:0; border:0; border-radius:22px; background:transparent; color:#071d49; font-size:42px; line-height:36px; cursor:pointer; }
     .ios-title { min-width:0; flex:1; padding:0 10px; text-align:center; }
     .ios-kicker { display:block; color:var(--blue); font-size:9px; font-weight:950; letter-spacing:.09em; }
-    .ios-title h1 { margin:1px 0 0; font-size:23px; letter-spacing:-.03em; }
-    .ios-dot { width:11px; height:11px; border-radius:50%; background:#34c759; box-shadow:0 0 0 4px #dff8e6; }
-    .ios-search-panel { padding:13px 0 10px; border-bottom:1px solid #dedee3; }
-    .ios-label { display:block; margin:0 0 7px 2px; color:#3c3c43; font-size:13px; font-weight:850; }
-    .ios-search-row { display:grid; grid-template-columns:minmax(0,1fr) 44px; gap:8px; }
-    .ios-search { width:100%; min-height:49px; padding:11px 14px; border:1px solid #d1d1d6; border-radius:13px; background:#fff; color:#111; font-size:18px; box-shadow:0 1px 2px rgba(0,0,0,.03); }
-    .ios-clear { min-height:49px; border:1px solid #d1d1d6; border-radius:13px; background:#fff; color:#6b6b72; font-size:24px; cursor:pointer; }
-    .ios-hint { min-height:16px; margin:5px 2px 0; color:#8e8e93; font-size:11px; }
-    .ios-job-strip { display:flex; align-items:center; gap:9px; margin-top:14px; padding:11px 12px; border-radius:14px; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.05); }
+    .ios-title h1 { margin:1px 0 0; color:#071d49; font-size:38px; letter-spacing:-.04em; }
+    .ios-portal { min-height:44px; padding:8px 12px; border:1px solid #cfe0ff; border-radius:14px; background:#fff; color:var(--blue); font-size:16px; font-weight:950; cursor:pointer; box-shadow:0 2px 8px rgba(7,29,73,.08); }
+    .ios-search-panel { padding:13px 0 10px; border-bottom:0; }
+    .ios-label { display:block; margin:0 0 8px 2px; color:#3c3c43; font-size:18px; font-weight:900; }
+    .ios-search-row { position:relative; display:block; }
+    .ios-search { width:100%; min-height:78px; padding:31px 66px 10px 78px; border:2px solid var(--blue); border-radius:16px; background:#fff; color:#071d49; font-size:34px; line-height:1; box-shadow:0 3px 10px rgba(7,29,73,.10); }
+    .ios-search::placeholder { color:#1769e0; opacity:1; }
+    .ios-search-row::before { content:"⌕"; position:absolute; left:24px; top:50%; z-index:1; transform:translateY(-50%); color:#071d49; font-size:48px; line-height:1; pointer-events:none; }
+    .ios-search-row::after { content:"ค้นหา Job"; position:absolute; left:78px; top:13px; z-index:1; color:#1769e0; font-size:20px; font-weight:800; line-height:1; pointer-events:none; }
+    .ios-clear { position:absolute; right:14px; top:50%; width:42px; height:42px; min-height:0; padding:0; transform:translateY(-50%); border:0; border-radius:50%; background:#eef1f6; color:#071d49; font-size:34px; line-height:38px; cursor:pointer; }
+    .ios-hint { min-height:22px; margin:7px 2px 0; color:#6f7785; font-size:16px; }
+    .ios-job-strip { display:flex; align-items:center; gap:16px; margin-top:14px; padding:14px 16px; border-radius:14px; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.10); }
+    .ios-job-strip::before { content:"▣"; color:var(--blue); font-size:38px; line-height:1; }
     .ios-job-strip > div { min-width:0; flex:1; }
-    .ios-job-strip strong { display:block; color:#1769e0; font-size:19px; line-height:1.05; }
-    .ios-job-strip span:not(.ios-saved) { display:block; margin-top:3px; overflow:hidden; color:#8e8e93; font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
-    .ios-job-strip b { color:#1769e0; font-size:12px; }
-    .ios-saved { display:flex; flex:none; align-items:center; gap:3px; color:#16834b; font-size:10px; font-weight:800; white-space:nowrap; }
+    .ios-job-strip strong { display:block; color:#071d49; font-size:34px; line-height:1.05; }
+    .ios-job-strip span:not(.ios-saved) { display:block; margin-top:4px; overflow:hidden; color:#6f7785; font-size:16px; text-overflow:ellipsis; white-space:nowrap; }
+    .ios-job-strip b { color:#1769e0; font-size:18px; }
+    .ios-saved { display:flex; flex:none; align-items:center; gap:5px; color:#16834b; font-size:16px; font-weight:900; white-space:nowrap; }
     .ios-saved i { display:inline-flex; width:16px; height:16px; align-items:center; justify-content:center; border-radius:50%; background:#34c759; color:#fff; font-style:normal; font-size:10px; }
-    .ios-capture-area { margin-top:13px; padding:13px 11px 11px; border-radius:17px; background:#fff; box-shadow:0 2px 11px rgba(0,0,0,.06); }
-    .ios-capture-heading { display:flex; align-items:end; justify-content:space-between; padding:0 2px 8px; }
-    .ios-capture-heading h2 { margin:0; font-size:19px; }
-    .ios-capture-heading span { color:#8e8e93; font-size:10px; }
-    .mobile-photo-grid { gap:8px; }
-    .mobile-section-label { padding:8px 2px 3px; font-size:12px; letter-spacing:.01em; }
-    .mobile-slot { min-height:122px; border-radius:13px; box-shadow:none; }
-    .mobile-slot img { min-height:122px; }
-    .mobile-slot.signage, .mobile-slot.signage img { min-height:91px; }
+    .ios-capture-area { margin-top:18px; padding:0 0 12px; border-radius:0; background:transparent; box-shadow:none; }
+    .ios-capture-heading { display:none; }
+    .mobile-photo-grid { gap:12px 14px; }
+    .mobile-section-label { padding:8px 4px 3px; font-size:30px; letter-spacing:.01em; }
+    .mobile-slot { height:clamp(210px, 24vh, 270px); min-height:0; border:2px dashed #cbd5e1; border-radius:16px; background:#fff; box-shadow:none; }
+    .mobile-slot img { width:100%; height:100%; min-height:0; object-fit:cover; }
+    .mobile-slot.signage { height:clamp(210px, 24vh, 280px); min-height:0; }
+    .mobile-slot.signage img { height:100%; min-height:0; object-fit:cover; }
     .mobile-slot-empty { gap:4px; }
-    .mobile-slot-icon { width:34px; height:34px; border-radius:10px; font-size:22px; }
-    .mobile-slot-label { font-size:13px; }
-    .mobile-slot-note { font-size:9px; }
-    .mobile-slot-x { width:31px; height:31px; font-size:21px; }
-    .ios-hint-bottom { margin:9px 0 0; color:#8e8e93; font-size:10px; text-align:center; }
+    .mobile-slot-icon { width:64px; height:64px; border-radius:50%; font-size:44px; font-weight:400; }
+    .mobile-slot-label { position:absolute; left:22px; top:14px; padding:5px 14px; border-radius:10px; font-size:26px; }
+    .mobile-slot.before { color:var(--orange); }
+    .mobile-slot.after { color:var(--green); }
+    .mobile-slot.signage { color:var(--blue); }
+    .mobile-slot-note { color:currentColor; font-size:26px; font-weight:850; }
+    .mobile-slot-x { width:42px; height:42px; font-size:36px; }
+    .ios-hint-bottom { margin:12px 0 0; color:#6f7785; font-size:20px; text-align:center; }
+    .bottom-actions { position:fixed; right:0; bottom:0; left:0; z-index:12; display:none; grid-template-columns:1fr 1fr; gap:16px; padding:14px 16px calc(14px + env(safe-area-inset-bottom)); border-top:1px solid #d9dee8; border-radius:16px 16px 0 0; background:rgba(255,255,255,.96); box-shadow:0 -4px 18px rgba(7,29,73,.10); }
+    .workspace.open .bottom-actions { display:grid; }
+    .bottom-action { min-height:66px; border:2px solid var(--blue); border-radius:12px; background:#fff; color:var(--blue); font-size:26px; font-weight:950; cursor:pointer; }
+    .bottom-action.primary { background:var(--blue); color:#fff; }
     .ios-more { margin:10px 0 0; }
     .ios-more summary { padding:8px 2px; color:#8e8e93; font-size:11px; text-align:center; cursor:pointer; }
     .status { margin-top:8px; font-size:12px; }
-    @media (min-width:521px) { .phone-shell { max-width:680px !important; } }
+    @media (min-width:521px) { .phone-shell { max-width:none !important; } }
 
     .print-preview { position:fixed; z-index:50; inset:0; display:none; overflow:auto; padding:12px; background:#eef1f5; }
     .print-preview.open { display:block; }
@@ -195,7 +211,7 @@
     .print-toolbar-actions { display:flex; gap:7px; }
     .print-action { min-height:42px; padding:8px 12px; border:1px solid var(--blue); border-radius:9px; background:var(--blue); color:#fff; font-size:13px; font-weight:900; cursor:pointer; }
     .print-close { border-color:#9aa0a6; background:#fff; color:var(--ink); }
-    .print-page { width:min(100%,210mm); min-height:297mm; margin:0 auto; padding:10mm 9mm; background:#fff; color:#202124; box-shadow:0 4px 18px rgba(32,33,36,.18); font-family:Arial,"Noto Sans Thai",sans-serif; }
+    .print-page { width:210mm; min-width:210mm; min-height:297mm; margin:0 auto; padding:10mm 9mm; background:#fff; color:#202124; box-shadow:0 4px 18px rgba(32,33,36,.18); font-family:Arial,"Noto Sans Thai",sans-serif; }
     .print-company { margin:0; color:#1f3c64; font-size:10pt; font-weight:900; text-align:center; }
     .print-document-title { margin:2mm 0 3mm; color:#1f3c64; font-size:13pt; font-weight:900; text-align:center; }
     .print-meta { display:grid; grid-template-columns:1.1fr 2fr 1fr; gap:2mm; margin-bottom:3mm; font-size:8pt; }
@@ -248,7 +264,7 @@
       <header class="ios-header">
         <button class="ios-back" type="button" aria-label="ย้อนกลับ" onclick="clearSearch()">‹</button>
         <div class="ios-title"><span class="ios-kicker">IT RENTAL PHOTO REPORT</span><h1>เก็บรูปหน้างาน</h1></div>
-        <span class="ios-dot" aria-hidden="true"></span>
+        <button class="ios-portal" type="button" onclick="openPortal()">IT Portal</button>
       </header>
 
       <section class="ios-search-panel">
@@ -262,11 +278,13 @@
       <div id="workspace" class="workspace">
         <section class="ios-job-strip"><div><strong id="mobileJobNo"></strong><span id="mobileJobLocation"></span></div><span class="ios-saved"><i>✓</i> บันทึกอัตโนมัติ</span><b id="mobileJobCount">0/9</b></section>
         <section class="ios-capture-area"><div class="ios-capture-heading"><h2>รูปงาน</h2><span>แตะช่องเพื่อเพิ่มรูป</span></div><div id="mobilePhotoGrid" class="mobile-photo-grid"></div><p class="ios-hint-bottom">รูปจะถูกบันทึกอัตโนมัติทันที</p></section>
-        <details class="ios-more"><summary>เครื่องมือเพิ่มเติม</summary><div class="mobile-more-grid"><a id="portalLink" href="#" target="_top">IT Rental Portal</a><a id="photoIndexLink" href="#" target="_blank">ประวัติ URL รูป</a><a id="assetLink" href="#" target="_blank">Asset_Master</a><a id="reportLink" href="#" target="_blank">Template ในชีต</a><a id="printLink" href="#" onclick="openPrintTemplate();return false">ดูใบงาน A4 / พิมพ์</a></div></details>
+        <div class="bottom-actions"><button class="bottom-action" type="button" onclick="openPrintTemplate()">▤ ดูใบงาน A4</button><button class="bottom-action primary" type="button" onclick="startCameraNextEmpty()">▣ ถ่ายรูป</button></div><details class="ios-more"><summary>เครื่องมือเพิ่มเติม</summary><div class="mobile-more-grid"><a id="portalLink" href="#" target="_top">IT Rental Portal</a><a id="photoIndexLink" href="#" target="_blank">ประวัติ URL รูป</a><a id="assetLink" href="#" target="_blank">Asset_Master</a><a id="reportLink" href="#" target="_blank">Template ในชีต</a><a id="printLink" href="#" onclick="openPrintTemplate();return false">ดูใบงาน A4 / พิมพ์</a></div></details>
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
     </section>
   </main>
+
+  <div id="photoViewer" class="viewer-backdrop" role="dialog" aria-modal="true" aria-label="ดูรูป"><img id="viewerImage" class="viewer-image" alt="รูปตัวอย่าง"><div class="viewer-actions"><button type="button" onclick="closePhotoViewer()">ปิด</button><button type="button" onclick="replaceViewedPhoto()">เปลี่ยนรูป</button><button class="danger" type="button" onclick="deleteViewedPhoto()">ลบ</button></div></div>
 
   <div id="photoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><section class="modal"><div class="modal-handle"></div><h2 id="modalTitle" class="modal-title">เพิ่มรูป</h2><p id="modalNote" class="modal-note">เลือกช่อง แล้วเลือกรูปจากคลังหรือกล้อง</p><div id="slotPicker" class="slot-picker"></div><div id="existingBox" class="existing-box">ช่องนี้มีรูปเดิมอยู่แล้ว เลือกรูปใหม่เพื่อแทนที่ หรือกดลบรูปนี้</div><div class="source-grid"><button class="source-button gallery" type="button" onclick="chooseGallery()">เลือกรูปจากคลัง</button><button class="source-button camera" type="button" onclick="chooseCamera()">ถ่ายรูปด้วยกล้อง</button></div><input id="galleryFile" class="hidden" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple><input id="cameraFile" class="hidden" type="file" accept="image/*" capture="environment"><div id="pending" class="pending"><div id="pendingGrid" class="pending-grid"></div><div id="pendingName" class="pending-name"></div><div id="uploadNote" class="upload-note"></div></div><div class="modal-actions"><button id="saveButton" class="save-button" type="button" onclick="saveSelectedPhotos()" disabled>บันทึก</button><button id="deleteButton" class="delete-button" type="button" onclick="deletePhoto()" hidden>ลบรูปนี้</button><button class="cancel-button" type="button" onclick="closeModal()">ยกเลิก</button></div></section></div>
 
@@ -279,7 +297,7 @@
     const MAX_IMAGE_DIMENSION = 1000;
     const PHOTO_LABELS = { signage:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง', before1:'ก่อนติดตั้ง 1', after1:'หลังติดตั้ง 1', before2:'ก่อนติดตั้ง 2', after2:'หลังติดตั้ง 2', before3:'ก่อนติดตั้ง 3', after3:'หลังติดตั้ง 3', before4:'ก่อนติดตั้ง 4', after4:'หลังติดตั้ง 4' };
     const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'สภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'ผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
-    let jobs = [], currentJob = null, currentProgress = { filledTypes:[], missingTypes:[] }, previewUrls = {}, previews = {}, pendingFiles = [], activeType = '', activeGroupKey = '', activeMode = 'group', uploading = false;
+    let jobs = [], currentJob = null, currentProgress = { filledTypes:[], missingTypes:[] }, previewUrls = {}, previews = {}, pendingFiles = [], activeType = '', activeGroupKey = '', activeMode = 'group', uploading = false, canceledUploads = {};
 
     window.addEventListener('load', function() { document.getElementById('jobSearch').value = ''; document.getElementById('galleryFile').addEventListener('change', handleFile); document.getElementById('cameraFile').addEventListener('change', handleFile); document.getElementById('jobSearch').addEventListener('input', renderSearch); loadSheetLinks(); loadJobs(); });
     function allTypes() { return Object.keys(PHOTO_LABELS); }
@@ -299,10 +317,14 @@
     function renderStage() { renderMobileGrid(); }
     function renderMobileGrid() { if (!currentJob) return; const filled = currentProgress.filledTypes || []; const root = document.getElementById('mobilePhotoGrid'); document.getElementById('mobileJobNo').textContent = currentJob.jobNo; document.getElementById('mobileJobLocation').textContent = currentJob.location || 'ไม่ระบุสถานที่'; document.getElementById('mobileJobCount').textContent = filled.length + '/9'; let html = '<div class="mobile-section-label signage">รูปชื่อหน่วยงาน / จุดติดตั้ง</div>' + mobileSlot('signage', 'signage', 'รูปชื่อหน่วยงาน'); html += '<div class="mobile-section-label before">ก่อนติดตั้ง</div>'; for (let i = 1; i <= 4; i += 1) html += mobileSlot('before' + i, 'before', 'ก่อน ' + i); html += '<div class="mobile-section-label after">หลังติดตั้ง</div>'; for (let i = 1; i <= 4; i += 1) html += mobileSlot('after' + i, 'after', 'หลัง ' + i); root.innerHTML = html; }
     function mobileSlot(type, kind, label) { const has = (currentProgress.filledTypes || []).indexOf(type) !== -1; const url = previews[type] || previewUrls[type] || ''; const image = url ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(label) + '">' : '<div class="mobile-slot-empty"><span class="mobile-slot-icon">' + (has ? '✓' : '+') + '</span><span class="mobile-slot-label">' + escapeHtml(label) + '</span><span class="mobile-slot-note">' + (has ? 'แตะเพื่อเปลี่ยน' : 'แตะเพื่อเพิ่ม') + '</span></div>'; const remove = has ? '<button class="mobile-slot-x" type="button" aria-label="ลบ ' + escapeHtml(label) + '" onclick="event.stopPropagation(); mobileDelete(\'' + type + '\')">×</button>' : ''; return '<div class="mobile-slot ' + kind + (has ? ' has-image' : '') + (type === 'signage' ? ' signage' : '') + '" role="button" tabindex="0" onclick="mobileSlotClick(\'' + type + '\', this)" onpointerdown="mobileStartHold(\'' + type + '\', this)" onpointerup="mobileEndHold(this)" onpointercancel="mobileEndHold(this)" onpointerleave="mobileEndHold(this)" oncontextmenu="return false">' + image + (has ? '<span class="mobile-slot-label">' + escapeHtml(label) + '</span>' : '') + remove + '</div>'; }
-    function mobileSlotClick(type, element) { if (element.classList.contains('hold-on')) return; if (holdTriggered) { holdTriggered = false; return; } openSingleSlot(type); }
+    function mobileSlotClick(type, element) { if (element.classList.contains('hold-on')) return; if (holdTriggered) { holdTriggered = false; return; } if (isFilled(type)) { openPhotoViewer(type); return; } openSingleSlot(type); }
     function mobileStartHold(type, element) { holdTriggered = false; clearTimeout(holdTimer); if (!isFilled(type)) return; holdTimer = setTimeout(function() { element.classList.add('hold-on'); holdTriggered = true; }, 520); }
     function mobileEndHold(element) { clearTimeout(holdTimer); if (!holdTriggered) element.classList.remove('hold-on'); }
     function mobileDelete(type) { clearTimeout(holdTimer); holdTriggered = false; activeType = type; deletePhoto(); }
+    function openPhotoViewer(type) { const url = previews[type] || previewUrls[type]; if (!url) { openSingleSlot(type); return; } activeType = type; document.getElementById('viewerImage').src = url; document.getElementById('photoViewer').classList.add('open'); }
+    function closePhotoViewer() { document.getElementById('photoViewer').classList.remove('open'); document.getElementById('viewerImage').src = ''; }
+    function replaceViewedPhoto() { const type = activeType; closePhotoViewer(); openSingleSlot(type); }
+    function deleteViewedPhoto() { closePhotoViewer(); deletePhoto(); }
     function openGroupModal(groupKey) { if (!currentJob || uploading) return; activeMode = 'group'; activeGroupKey = groupKey; activeType = ''; resetPending(); const group = GROUPS[groupKey]; document.getElementById('modalTitle').textContent = group.title; document.getElementById('modalNote').textContent = 'เลือกช่องที่ต้องการ แล้วเลือกรูปจากคลังหรือกล้อง'; document.getElementById('existingBox').classList.remove('open'); document.getElementById('deleteButton').hidden = true; document.getElementById('slotPicker').classList.add('open'); renderSlotPicker(group.types); document.getElementById('galleryFile').setAttribute('multiple','multiple'); document.getElementById('photoModal').classList.add('open'); }
     function renderSlotPicker(types) { const root = document.getElementById('slotPicker'); root.innerHTML = types.map(function(type,index) { return '<button type="button" class="slot-button' + (isFilled(type) ? ' filled' : '') + '" onclick="openSingleSlot(\'' + type + '\')">ช่อง ' + (index + 1) + (isFilled(type) ? ' · มีรูปเดิม' : ' · ว่าง') + '</button>'; }).join(''); }
     function openSingleSlot(type) { if (!currentJob || uploading) return; activeMode = 'single'; activeGroupKey = ''; activeType = type; resetPending(); const filled = isFilled(type); document.getElementById('modalTitle').textContent = filled ? 'เปลี่ยนรูป: ' + PHOTO_LABELS[type] : 'เพิ่มรูป: ' + PHOTO_LABELS[type]; document.getElementById('modalNote').textContent = 'เลือกรูปหรือถ่ายรูป ระบบจะบันทึกอัตโนมัติทันที'; document.getElementById('existingBox').classList.toggle('open', filled); document.getElementById('deleteButton').hidden = !filled; document.getElementById('slotPicker').classList.remove('open'); document.getElementById('galleryFile').removeAttribute('multiple'); document.getElementById('photoModal').classList.add('open'); }
@@ -310,12 +332,17 @@
     function resetPending() { pendingFiles = []; document.getElementById('galleryFile').value = ''; document.getElementById('cameraFile').value = ''; document.getElementById('pendingGrid').innerHTML = ''; document.getElementById('pendingName').textContent = ''; document.getElementById('uploadNote').textContent = ''; document.getElementById('pending').classList.remove('open'); document.getElementById('saveButton').disabled = true; document.getElementById('saveButton').style.display = 'none'; document.getElementById('saveButton').textContent = 'บันทึก'; }
     function chooseGallery() { if (!uploading) document.getElementById('galleryFile').click(); }
     function chooseCamera() { if (!uploading) document.getElementById('cameraFile').click(); }
+    function startCameraNextEmpty() { if (!currentJob || uploading) return; const emptyType = allTypes().find(function(type) { return !isFilled(type); }) || allTypes()[0]; openSingleSlot(emptyType); chooseCamera(); }
     function handleFile(event) { const files = Array.from(event.target.files || []); if (!files.length || uploading) return; const invalid = files.find(function(file) { return !['image/jpeg','image/png','image/gif','image/webp'].includes(file.type) || file.size > MAX_FILE_SIZE; }); if (invalid) { setStatus('ทุกไฟล์ต้องเป็น JPG, PNG, GIF หรือ WEBP และไม่เกิน 10 MB', true); event.target.value = ''; return; } if (activeMode === 'group') { const empty = GROUPS[activeGroupKey].types.filter(function(type) { return !isFilled(type); }); if (!empty.length || files.length > empty.length) { setStatus('จำนวนรูปเกินช่องที่ว่างอยู่', true); event.target.value = ''; return; } } else if (files.length !== 1) { setStatus('ช่องนี้รับครั้งละ 1 รูป', true); event.target.value = ''; return; } showPending(files); savePendingPhotos(files); }
     function showPending(files) { pendingFiles = files; const root = document.getElementById('pendingGrid'); root.innerHTML = ''; document.getElementById('pendingName').textContent = files.length === 1 ? files[0].name : 'เลือกแล้ว ' + files.length + ' รูป'; document.getElementById('uploadNote').textContent = 'กำลังบันทึกอัตโนมัติ...'; document.getElementById('pending').classList.add('open'); document.getElementById('saveButton').disabled = true; files.forEach(function(file) { const img = document.createElement('img'); root.appendChild(img); readFileAsDataUrl(file).then(function(url) { img.src = url; }); }); }
     function saveSelectedPhotos() { if (!pendingFiles.length || uploading) return; savePendingPhotos(pendingFiles); }
-    async function savePendingPhotos(files) { if (!currentJob) return; uploading = true; document.getElementById('saveButton').disabled = true; document.getElementById('uploadNote').textContent = 'กำลังบันทึกอัตโนมัติ...'; renderStage(); try { if (activeMode === 'single') { const originalData = await readFileAsDataUrl(files[0]); const data = await compressImage(originalData); await uploadOne(activeType,data,files[0].name,originalData); previews[activeType] = data; if (!isFilled(activeType)) currentProgress.filledTypes.push(activeType); } else { const empty = GROUPS[activeGroupKey].types.filter(function(type) { return !isFilled(type); }); for (let i=0;i<files.length;i++) { const originalData = await readFileAsDataUrl(files[i]); const data = await compressImage(originalData); await uploadOne(empty[i],data,files[i].name,originalData); previews[empty[i]] = data; if (!isFilled(empty[i])) currentProgress.filledTypes.push(empty[i]); } } uploading = false; renderStage(); closeModal(); setStatus('บันทึกรูปอัตโนมัติเรียบร้อยแล้ว',false,true); } catch (error) { uploading = false; document.getElementById('saveButton').disabled = false; document.getElementById('saveButton').style.display = 'block'; document.getElementById('saveButton').textContent = 'ลองอีกครั้ง'; document.getElementById('uploadNote').textContent = 'บันทึกอัตโนมัติไม่สำเร็จ กดลองอีกครั้ง'; renderStage(); setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
-    function uploadOne(type,data,filename,originalData) { return new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadImageToSheet(currentJob.jobNo,currentJob.location,type,data,filename,todayString(),originalData); }); }
-    function deletePhoto() { if (!currentJob || !activeType || uploading) return; uploading = true; document.getElementById('deleteButton').disabled = true; renderStage(); google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || currentProgress.filledTypes.filter(function(type) { return type !== activeType; }); delete previews[activeType]; delete previewUrls[activeType]; uploading = false; closeModal(); renderStage(); setStatus(result.message,false,true); }).withFailureHandler(function(error) { uploading = false; document.getElementById('deleteButton').disabled = false; renderStage(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error),true); }).deleteImageFromSheet(currentJob.jobNo,currentJob.location,activeType,todayString()); }
+    async function savePendingPhotos(files) { if (!currentJob) return; const jobNo = currentJob.jobNo, location = currentJob.location, mode = activeMode, groupKey = activeGroupKey, type = activeType; document.getElementById('saveButton').disabled = true; document.getElementById('uploadNote').textContent = 'กำลังเตรียมรูป...'; try { if (mode === 'single') { const originalData = await readFileAsDataUrl(files[0]); previews[type] = originalData; if (!isFilled(type)) currentProgress.filledTypes.push(type); closeModal(); renderStage(); setStatus('แสดงรูปแล้ว กำลังอัปโหลดพื้นหลัง...',false,true); uploadPreparedPhoto(jobNo, location, type, files[0], originalData); } else { const empty = GROUPS[groupKey].types.filter(function(slotType) { return !isFilled(slotType); }); closeModal(); for (let i=0;i<files.length;i++) { const slotType = empty[i], originalData = await readFileAsDataUrl(files[i]); previews[slotType] = originalData; if (!isFilled(slotType)) currentProgress.filledTypes.push(slotType); renderStage(); uploadPreparedPhoto(jobNo, location, slotType, files[i], originalData); } setStatus('แสดงรูปแล้ว กำลังอัปโหลดพื้นหลัง...',false,true); } } catch (error) { document.getElementById('saveButton').disabled = false; document.getElementById('saveButton').style.display = 'block'; document.getElementById('saveButton').textContent = 'ลองอีกครั้ง'; document.getElementById('uploadNote').textContent = 'เตรียมรูปไม่สำเร็จ กดลองอีกครั้ง'; renderStage(); setStatus('เตรียมรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
+    async function uploadPreparedPhoto(jobNo, location, type, file, originalData) { const key = uploadKey(jobNo,type); delete canceledUploads[key]; try { const data = await compressImage(originalData); await uploadOneForJob(jobNo,location,type,data,file.name,originalData); if (canceledUploads[key]) { await deleteImageForJob(jobNo,location,type); delete previews[type]; renderStage(); return; } previews[type] = data; renderStage(); setStatus('บันทึกรูปอัตโนมัติเรียบร้อยแล้ว',false,true); } catch (error) { if (!canceledUploads[key]) setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
+    function uploadKey(jobNo,type) { return String(jobNo || '') + '::' + String(type || ''); }
+    function uploadOneForJob(jobNo,location,type,data,filename,originalData) { return new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadImageToSheet(jobNo,location,type,data,filename,todayString(),originalData); }); }
+    function uploadOne(type,data,filename,originalData) { return uploadOneForJob(currentJob.jobNo,currentJob.location,type,data,filename,originalData); }
+    function deleteImageForJob(jobNo,location,type) { return new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).deleteImageFromSheet(jobNo,location,type,todayString()); }); }
+    function deletePhoto() { if (!currentJob || !activeType || uploading) return; const deletingType = activeType; canceledUploads[uploadKey(currentJob.jobNo,deletingType)] = true; uploading = true; document.getElementById('deleteButton').disabled = true; renderStage(); google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || currentProgress.filledTypes.filter(function(type) { return type !== deletingType; }); delete previews[deletingType]; delete previewUrls[deletingType]; uploading = false; closeModal(); renderStage(); setStatus(result.message,false,true); }).withFailureHandler(function(error) { uploading = false; document.getElementById('deleteButton').disabled = false; renderStage(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error),true); }).deleteImageFromSheet(currentJob.jobNo,currentJob.location,deletingType,todayString()); }
     function readFileAsDataUrl(file) { return new Promise(function(resolve,reject) { const reader = new FileReader(); reader.onload = function(e) { resolve(e.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); }); }
     function estimateBytes(data) { const comma = String(data || '').indexOf(','); return comma < 0 ? Infinity : Math.ceil((data.length - comma - 1) * .75); }
     function prepareUpload(file) { return readFileAsDataUrl(file).then(compressImage); }
@@ -326,6 +353,7 @@
     function printImage(type,label) { const url=previews[type] || previewUrls[type]; return '<div class="print-image-box">' + (url ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(label) + '">' : '<span class="print-empty">ยังไม่มีรูป<br>' + escapeHtml(label) + '</span>') + '</div>'; }
     function renderPrintTemplate() { const job=currentJob, date=todayString(), location=job.location || 'ไม่ระบุสถานที่'; document.getElementById('printToolbarTitle').textContent='Template A4 · ' + job.jobNo; document.getElementById('printPage').innerHTML='<p class="print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p><h1 class="print-document-title">ใบรับรองภาพถ่ายการติดตั้งอุปกรณ์</h1><div class="print-meta"><div class="print-meta-box"><span class="print-meta-label">เลข Job: </span><span class="print-meta-value">' + escapeHtml(job.jobNo) + '</span></div><div class="print-meta-box"><span class="print-meta-label">สถานที่ติดตั้ง: </span><span class="print-meta-value">' + escapeHtml(location) + '</span></div><div class="print-meta-box"><span class="print-meta-label">วันที่: </span><span class="print-meta-value">' + formatDate(date) + '</span></div></div><div class="print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="print-signage">' + printImage('signage','ป้ายจุดติดตั้ง') + '<div></div></div>' + pair('before1','after1',1) + pair('before2','after2',2) + pair('before3','after3',3) + pair('before4','after4',4); }
     function pair(before,after,index) { return '<div class="print-pair-head"><div class="print-before-head">ก่อนติดตั้ง ' + index + '</div><div class="print-after-head">หลังติดตั้ง ' + index + '</div></div><div class="print-pair">' + printImage(before,'ก่อนติดตั้ง ' + index) + printImage(after,'หลังติดตั้ง ' + index) + '</div>'; }
+    function openPortal() { const url = document.getElementById('portalLink').href; if (url && url !== '#') window.open(url, '_top'); }
     function loadSheetLinks() { google.script.run.withSuccessHandler(function(links) { document.getElementById('portalLink').href=links.portalWebUrl || '#'; document.getElementById('photoIndexLink').href=links.photoFileIndexUrl || '#'; document.getElementById('assetLink').href=links.assetMasterUrl || '#'; document.getElementById('reportLink').href=links.templateUrl || '#'; }).withFailureHandler(function(error) { setStatus('โหลดลิงก์เพิ่มเติมไม่สำเร็จ: ' + errorMessage(error),true); }).getSheetEditLinks(); }
     function escapeHtml(value) { return String(value || '').replace(/[&<>'"]/g,function(ch) { return {'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[ch]; }); }
     document.getElementById('photoModal').addEventListener('click',function(e) { if(e.target===this && !uploading) closeModal(); });
