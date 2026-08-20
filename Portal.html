@@ -192,7 +192,7 @@
           <div class="field"><label>วันเริ่มเช่า</label><input id="startDate" class="input" type="date"></div>
           <div class="field"><label>วันหมดสัญญา</label><input id="endDate" class="input" type="date"></div>
           <div class="field"><label>สถานะชุด</label><select id="assetStatus" class="select"><option>พร้อมส่ง</option><option>ติดตั้งแล้ว</option><option>รับคืนแล้ว</option><option>ส่งซ่อม</option><option>ตัดจำหน่าย</option></select></div>
-          <div class="field"><label>สถานะเตรียมเครื่อง</label><select id="prepStatus" class="select"><option>รับเข้าแล้ว</option><option>ลง Windows</option><option>ลงโปรแกรม</option><option>รอ Activate</option><option>พร้อมติดตั้ง</option><option>รับคืนแล้ว</option><option>ติดปัญหา</option></select></div>
+          <div class="field"><label>สถานะเตรียมเครื่อง</label><select id="prepStatus" class="select"><option>รับเข้าแล้ว</option><option>ลง Windows</option><option>ลงโปรแกรม</option><option>รอ Activate</option><option>พร้อมติดตั้ง</option><option>ติดปัญหา</option></select></div>
         </div></div>
         <div class="modal-actions"><button id="saveAssetButton" type="button" class="button button-primary" onclick="saveAsset()">บันทึกข้อมูล</button><button type="button" class="button button-outline" onclick="closeAssetEditor()">ยกเลิก</button></div>
       </section>
@@ -201,7 +201,7 @@
     <script>
       let portalData = { dashboard:{}, assetRows:[], sheetLinks:{} };
       let currentView = 'dashboard';
-      const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','รับคืนแล้ว','ติดปัญหา'];
+      const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดปัญหา'];
       const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','startDate','endDate','assetStatus','prepStatus'];
       const CHECK_IDS = ['deliverAio','deliverUps','deliverHub','deliverKbMouse','deliverAdapter','deliverUpsCord'];
       const DOCS = [
@@ -308,7 +308,7 @@
 
       function prepStatusControl(row) {
         const current = row.prepStatus || PREP_STATUS_OPTIONS[0];
-        const cls = current === 'พร้อมติดตั้ง' ? 'prep-ready' : (current === 'รับคืนแล้ว' ? 'prep-returned' : (current === 'ติดปัญหา' ? 'prep-blocked' : (current === 'รับเข้าแล้ว' ? 'prep-received' : 'prep-progress')));
+        const cls = current === 'พร้อมติดตั้ง' ? 'prep-ready' : (current === 'ติดปัญหา' ? 'prep-blocked' : (current === 'รับเข้าแล้ว' ? 'prep-received' : 'prep-progress'));
         const options = PREP_STATUS_OPTIONS.map(function(status) { return '<option value="' + escapeHtml(status) + '"' + (status === current ? ' selected' : '') + '>' + escapeHtml(status) + '</option>'; }).join('');
         return '<select class="prep-select ' + cls + '" aria-label="สถานะเตรียมเครื่อง ' + escapeHtml(row.jobNo) + '" onchange="updatePrepStatus(' + row.rowNumber + ', this.value)">' + options + '</select>';
       }

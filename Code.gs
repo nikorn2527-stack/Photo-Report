@@ -49,7 +49,6 @@ const CONFIG = Object.freeze({
     'ลงโปรแกรม',
     'รอ Activate',
     'พร้อมติดตั้ง',
-    'รับคืนแล้ว',
     'ติดปัญหา'
   ])
 });
@@ -475,7 +474,7 @@ function getAssetPortalRows_(sheet) {
       alert: toPortalValue_(row[27]),
       oldComSn: toPortalValue_(row[28]),
       oldUpsSn: toPortalValue_(row[29]),
-      prepStatus: toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) || (toPortalValue_(row[28]) ? 'รับคืนแล้ว' : CONFIG.PREP_STATUS_DEFAULT),
+      prepStatus: toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) || CONFIG.PREP_STATUS_DEFAULT,
     };
   }).filter(function(row) {
     return row.jobNo || row.setCode || row.building || row.department;
@@ -536,7 +535,7 @@ function buildPortalDashboard_(rows) {
     disposed: counts['ตัดจำหน่าย'] || 0,
     prepWindows: prepCounts['ลง Windows'] || 0,
     prepReady: prepCounts['พร้อมติดตั้ง'] || 0,
-    prepReturned: prepCounts['รับคืนแล้ว'] || 0,
+    prepReturned: rows.filter(function(row) { return !!row.oldComSn; }).length,
     prepInProgress: (prepCounts['ลงโปรแกรม'] || 0) + (prepCounts['รอ Activate'] || 0),
     prepReceived: prepCounts['รับเข้าแล้ว'] || 0,
     prepBlocked: prepCounts['ติดปัญหา'] || 0,
