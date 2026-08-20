@@ -27,6 +27,9 @@
       .subtitle { margin:5px 0 0; color:var(--muted); font-size:14px; }
       .job-card { position:sticky; top:0; z-index:5; padding:13px; border:1px solid #b8c0ca; border-radius:14px; background:rgba(255,255,255,.97); box-shadow:0 4px 15px rgba(32,33,36,.1); backdrop-filter:blur(8px); }
       .job-label { display:block; margin-bottom:7px; font-size:15px; font-weight:900; }
+      .job-search-row { display:grid; grid-template-columns:minmax(0,1fr) 50px; gap:8px; margin-bottom:9px; }
+      .job-search { width:100%; min-height:54px; padding:11px 13px; border:1px solid #8a9098; border-radius:10px; background:#fff; color:var(--ink); font-size:17px; }
+      .clear-search { min-height:54px; border:1px solid #9aa0a6; border-radius:10px; background:#f8fafc; color:var(--muted); font-size:25px; font-weight:700; cursor:pointer; }
       .job-row { display:grid; grid-template-columns:1fr 50px; gap:8px; }
       select { width:100%; min-height:54px; padding:11px 12px; border:1px solid #8a9098; border-radius:10px; background:#fff; color:var(--ink); font-size:17px; }
       .refresh { min-height:54px; border:1px solid #8a9098; border-radius:10px; background:#f8fafc; color:var(--ink); font-size:21px; cursor:pointer; }
@@ -67,7 +70,9 @@
       .bento-footer { display:flex; align-items:center; justify-content:space-between; gap:5px; margin-top:auto; color:var(--blue); font-size:11px; font-weight:900; }
       .bento-footer span:last-child { color:var(--muted); font-weight:700; }
       .signage-card { display:flex; align-items:center; gap:10px; margin-top:10px; padding:10px 11px; border:1px solid var(--line); border-radius:12px; background:#fafbfc; }
-      .signage-icon { display:flex; width:42px; height:42px; flex:none; align-items:center; justify-content:center; border-radius:10px; background:#e9eef7; color:var(--blue); font-size:20px; }
+      .signage-icon { display:flex; width:64px; height:64px; flex:none; align-items:center; justify-content:center; overflow:hidden; padding:0; border:1px solid #b8c0ca; border-radius:12px; background:#e9eef7; color:var(--blue); font-size:24px; cursor:pointer; }
+      .signage-icon img { width:100%; height:100%; object-fit:cover; }
+      .signage-icon.has-preview { border-color:#8bb89a; background:#e8f5ec; }
       .signage-copy { min-width:0; flex:1; }
       .signage-title { font-size:14px; font-weight:900; }
       .signage-status { margin-top:2px; color:var(--muted); font-size:12px; }
@@ -85,12 +90,13 @@
       .modal-handle { width:42px; height:4px; margin:0 auto 12px; border-radius:4px; background:#c5c9cf; }
       .modal-title { margin:0; font-size:22px; }
       .modal-note { margin:5px 0 13px; color:var(--muted); font-size:13px; }
-      .slot-picker { display:none; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px; }
+      .slot-picker { display:none; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-bottom:14px; }
       .slot-picker.visible { display:grid; }
-      .slot-button { min-height:42px; border:1px solid #c7cbd1; border-radius:8px; background:#f8fafc; color:var(--muted); font-size:12px; font-weight:900; cursor:pointer; }
+      .slot-button { min-height:58px; border:1px solid #c7cbd1; border-radius:12px; background:#f8fafc; color:var(--muted); font-size:16px; font-weight:900; cursor:pointer; }
+      .slot-button:active, .modal-button:active, .delete-button:active, .cancel-button:active, .signage-button:active, .clear-search:active { transform:scale(.97); }
       .slot-button.filled { border-color:#9bc3a6; background:#e8f5ec; color:var(--green-dark); }
-      .source-grid { display:grid; grid-template-columns:1fr; gap:9px; }
-      .modal-button { min-height:52px; border:0; border-radius:10px; color:#fff; font-size:15px; font-weight:900; cursor:pointer; }
+      .source-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+      .modal-button { min-height:60px; padding:10px 12px; border:0; border-radius:12px; color:#fff; font-size:16px; font-weight:900; line-height:1.25; cursor:pointer; }
       .gallery-button { background:var(--blue); }
       .camera-button { background:#5f6368; }
       .existing-box { display:none; margin-bottom:12px; padding:10px; border:1px solid #e0b28b; border-radius:9px; background:#fff7ed; color:#8a4b0f; font-size:12px; font-weight:800; }
@@ -101,8 +107,9 @@
       .pending-grid img { width:100%; aspect-ratio:1; object-fit:cover; border:1px solid var(--line); border-radius:8px; background:#f1f3f4; }
       .pending-name { margin-top:6px; color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
       .uploading-note { margin-top:8px; color:var(--blue); font-size:13px; font-weight:800; }
-      .delete-button { width:100%; min-height:47px; margin-top:10px; border:0; border-radius:9px; background:var(--danger); color:#fff; font-size:14px; font-weight:900; cursor:pointer; }
-      .cancel-button { width:100%; min-height:47px; margin-top:8px; border:1px solid #9aa0a6; border-radius:10px; background:#fff; color:var(--ink); font-weight:900; cursor:pointer; }
+      .modal-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+      .delete-button { width:100%; min-height:56px; margin-top:0; border:0; border-radius:11px; background:var(--danger); color:#fff; font-size:16px; font-weight:900; cursor:pointer; }
+      .cancel-button { width:100%; min-height:56px; margin-top:0; border:1px solid #9aa0a6; border-radius:11px; background:#fff; color:var(--ink); font-size:16px; font-weight:900; cursor:pointer; }
       .hidden { display:none !important; }
       .fullscreen-viewer { position:fixed; z-index:40; inset:0; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(0,0,0,.88); }
       .fullscreen-viewer.open { display:flex; }
@@ -150,6 +157,9 @@
         .subtitle { margin-top:7px; font-size:18px; }
         .job-card { padding:17px; border-radius:17px; }
         .job-label { margin-bottom:9px; font-size:19px; }
+        .job-search-row { grid-template-columns:minmax(0,1fr) 58px; gap:10px; margin-bottom:10px; }
+        .job-search { min-height:66px; padding:14px 15px; border-radius:12px; font-size:20px; }
+        .clear-search { min-height:66px; border-radius:12px; font-size:29px; }
         .job-row { grid-template-columns:minmax(0,1fr) 62px; gap:10px; }
         select { min-height:66px; padding:14px 15px; border-radius:12px; font-size:22px; }
         .refresh { min-height:66px; border-radius:12px; font-size:27px; }
@@ -176,7 +186,7 @@
         .mosaic-tile { min-height:118px; border-radius:11px; font-size:28px; }
         .bento-footer { gap:8px; font-size:15px; }
         .signage-card { gap:13px; margin-top:14px; padding:14px; border-radius:15px; }
-        .signage-icon { width:50px; height:50px; border-radius:12px; font-size:24px; }
+        .signage-icon { width:72px; height:72px; border-radius:13px; font-size:27px; }
         .signage-title { font-size:19px; }
         .signage-status { font-size:16px; }
         .signage-button { min-height:48px; padding:8px 12px; border-radius:10px; font-size:16px; }
@@ -188,10 +198,12 @@
         .modal { max-height:92vh; padding:22px 18px calc(24px + env(safe-area-inset-bottom)); border-radius:20px; }
         .modal-title { font-size:28px; }
         .modal-note { font-size:18px; }
-        .slot-picker { grid-template-columns:repeat(2,1fr); gap:9px; }
-        .slot-button { min-height:55px; font-size:16px; }
-        .modal-button { min-height:62px; font-size:20px; }
-        .delete-button, .cancel-button { min-height:56px; font-size:19px; }
+        .slot-picker { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+        .slot-button { min-height:64px; border-radius:13px; font-size:18px; }
+        .source-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+        .modal-button { min-height:68px; padding:12px 10px; border-radius:13px; font-size:19px; }
+        .modal-actions { grid-template-columns:1fr 1fr; gap:10px; margin-top:13px; }
+        .delete-button, .cancel-button { min-height:60px; font-size:18px; }
       }
       @media print { .job-card,.capture-summary,.capture-heading,.bento-grid,.signage-card,.more-tools,.status,.modal-backdrop,.fullscreen-viewer { display:none !important; } }
     </style>
@@ -206,7 +218,8 @@
         </header>
 
         <section class="job-card">
-          <label class="job-label" for="jobSelect">1. เลือก Job</label>
+          <label class="job-label" for="jobSearch">1. เลือก Job</label>
+          <div class="job-search-row"><input id="jobSearch" class="job-search" type="search" inputmode="search" placeholder="ค้นหาเลข Job เช่น JOB-1234" autocomplete="off"><button id="clearJobSearch" class="clear-search" type="button" onclick="clearJobSearch()" aria-label="ล้างคำค้นหา">×</button></div>
           <div class="job-row"><select id="jobSelect"><option value="">กำลังโหลดรายการ Job...</option></select><button id="refreshButton" class="refresh" type="button" onclick="loadJobs()" aria-label="รีเฟรชรายการ Job">↻</button></div>
           <div class="job-meta"><span id="locationValue" class="job-location">ยังไม่ได้เลือกสถานที่</span><span id="installDateText" class="job-date">วันนี้</span></div>
           <input id="installDate" class="hidden" type="date">
@@ -238,7 +251,7 @@
         </section>
 
         <section class="signage-card">
-          <span class="signage-icon">⌖</span>
+          <button id="signagePreview" class="signage-icon" type="button" onclick="openSignagePreview()" aria-label="ดูรูปหัวตาราง">⌖</button>
           <div class="signage-copy"><div class="signage-title">รูปหัวตาราง / จุดติดตั้ง</div><div id="signageStatus" class="signage-status">ถ้ามีรูปป้ายหรือจุดติดตั้ง ให้เพิ่ม 1 รูป</div></div>
           <button id="signageButton" class="signage-button" type="button" onclick="openSingleSlot('signage')" disabled>เพิ่มรูป</button>
         </section>
@@ -259,8 +272,7 @@
         <input id="galleryFile" class="hidden" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
         <input id="cameraFile" class="hidden" type="file" accept="image/*" capture="environment">
         <div id="pending" class="pending"><div id="pendingGrid" class="pending-grid"></div><div id="pendingName" class="pending-name"></div><div id="uploadingNote" class="uploading-note"></div></div>
-        <button id="deletePhotoButton" class="delete-button" type="button" onclick="deletePhoto()" hidden>ลบรูปนี้</button>
-        <button class="cancel-button" type="button" onclick="closeModal()">ปิด</button>
+        <div class="modal-actions"><button id="deletePhotoButton" class="delete-button" type="button" onclick="deletePhoto()" hidden>ลบรูปนี้</button><button class="cancel-button" type="button" onclick="closeModal()">ปิด</button></div>
       </section>
     </div>
 
@@ -277,12 +289,14 @@
       let activeGroupKey = '';
       let activeMode = 'group';
       let previews = {};
+      let previewUrls = {};
       let uploading = false;
 
       window.addEventListener('load', function() {
         document.getElementById('galleryFile').addEventListener('change', handleFile);
         document.getElementById('cameraFile').addEventListener('change', handleFile);
         document.getElementById('jobSelect').addEventListener('change', handleJobChange);
+        document.getElementById('jobSearch').addEventListener('input', filterJobs);
         document.getElementById('installDate').value = todayString();
         renderAll();
         loadSheetLinks();
@@ -300,18 +314,34 @@
       }
 
       function populateJobs() {
-        const select = document.getElementById('jobSelect');
         const old = localStorage.getItem(LAST_JOB_KEY);
-        select.innerHTML = '<option value="">-- เลือก Job --</option>';
-        jobs.forEach(function(job, index) { const option = document.createElement('option'); option.value = index; option.textContent = job.jobNo + (job.complete ? '  ✓ ครบ 9/9' : (job.hasReport ? '  • มีแล้ว ' + job.filledCount + '/9' : '  • ยังไม่เริ่ม')); select.appendChild(option); });
         const lastIndex = jobs.findIndex(function(job) { return job.jobNo === old; });
-        if (lastIndex >= 0) select.value = lastIndex;
+        const select = document.getElementById('jobSelect');
+        select.value = lastIndex >= 0 ? String(lastIndex) : '';
+        renderJobOptions();
+        if (lastIndex >= 0) select.value = String(lastIndex);
         handleJobChange();
       }
+
+      function renderJobOptions() {
+        const select = document.getElementById('jobSelect');
+        const currentValue = select.value;
+        const query = String(document.getElementById('jobSearch').value || '').trim().toLowerCase();
+        const matches = jobs.filter(function(job) { return !query || String(job.jobNo).toLowerCase().indexOf(query) !== -1; });
+        const selectedIndex = currentValue === '' ? -1 : Number(currentValue);
+        if (selectedIndex >= 0 && jobs[selectedIndex] && matches.indexOf(jobs[selectedIndex]) === -1) matches.unshift(jobs[selectedIndex]);
+        select.innerHTML = '<option value="">' + (query ? '-- เลือกจากผลค้นหา --' : '-- เลือก Job --') + '</option>';
+        matches.forEach(function(job) { const index = jobs.indexOf(job); const option = document.createElement('option'); option.value = index; option.textContent = job.jobNo + (job.complete ? '  ✓ ครบ 9/9' : (job.hasReport ? '  • มีแล้ว ' + job.filledCount + '/9' : '  • ยังไม่เริ่ม')); select.appendChild(option); });
+        select.value = currentValue;
+      }
+
+      function filterJobs() { renderJobOptions(); }
+      function clearJobSearch() { document.getElementById('jobSearch').value = ''; renderJobOptions(); document.getElementById('jobSearch').focus(); }
 
       function handleJobChange() {
         const job = getJob();
         previews = {};
+        previewUrls = {};
         currentProgress = { filledTypes:[], complete:false };
         document.getElementById('locationValue').textContent = job ? (job.location || 'ไม่ระบุสถานที่') : 'ยังไม่ได้เลือกสถานที่';
         document.getElementById('installDate').value = todayString();
@@ -322,7 +352,7 @@
         if (!job) { localStorage.removeItem(LAST_JOB_KEY); return; }
         localStorage.setItem(LAST_JOB_KEY, job.jobNo);
         setStatus('กำลังโหลดรูปของ ' + job.jobNo + '...');
-        google.script.run.withSuccessHandler(function(progress) { currentProgress = progress || { filledTypes:[] }; if (progress && progress.date) { document.getElementById('installDate').value = normalizeDate(progress.date); document.getElementById('installDateText').textContent = 'วันที่ ' + formatDate(document.getElementById('installDate').value); } renderAll(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรูปไม่สำเร็จ: ' + errorMessage(error), true); }).getJobProgress(job.jobNo);
+        google.script.run.withSuccessHandler(function(progress) { currentProgress = progress || { filledTypes:[] }; previewUrls = (progress && progress.previewUrls) || {}; if (progress && progress.date) { document.getElementById('installDate').value = normalizeDate(progress.date); document.getElementById('installDateText').textContent = 'วันที่ ' + formatDate(document.getElementById('installDate').value); } renderAll(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรูปไม่สำเร็จ: ' + errorMessage(error), true); }).getJobProgress(job.jobNo);
       }
 
       function renderAll() { renderProgress(); renderBento(); updateButtons(); }
@@ -348,6 +378,7 @@
           document.getElementById(key + 'Card').className = 'bento-card' + (filledCount ? ' ready' : '');
           renderMosaic(document.getElementById(key + 'Mosaic'), group.types);
         });
+        renderSignagePreview();
         const signageDone = isFilled('signage');
         document.getElementById('signageStatus').textContent = signageDone ? 'มีรูปแล้ว — แตะเพิ่มเพื่อเปลี่ยนรูป' : 'ถ้ามีรูปป้ายหรือจุดติดตั้ง ให้เพิ่ม 1 รูป';
         document.getElementById('signageButton').textContent = signageDone ? 'เปลี่ยนรูป' : 'เพิ่มรูป';
@@ -358,9 +389,28 @@
         types.forEach(function(type, index) {
           const tile = document.createElement('span');
           tile.className = 'mosaic-tile' + (isFilled(type) ? ' filled' : '');
-          if (previews[type]) { const image = document.createElement('img'); image.src = previews[type]; image.alt = PHOTO_LABELS[type]; tile.appendChild(image); tile.addEventListener('click', function(event) { event.preventDefault(); event.stopPropagation(); openViewer(previews[type], PHOTO_LABELS[type]); }); } else { tile.textContent = isFilled(type) ? '✓' : String(index + 1); }
+          const imageUrl = previews[type] || previewUrls[type];
+          if (imageUrl) { const image = document.createElement('img'); image.src = imageUrl; image.alt = PHOTO_LABELS[type]; tile.appendChild(image); tile.addEventListener('click', function(event) { event.preventDefault(); event.stopPropagation(); openViewer(imageUrl, PHOTO_LABELS[type]); }); } else { tile.textContent = isFilled(type) ? '✓' : String(index + 1); }
           root.appendChild(tile);
         });
+      }
+
+      function renderSignagePreview() {
+        const root = document.getElementById('signagePreview');
+        const imageUrl = previews.signage || previewUrls.signage;
+        root.innerHTML = '';
+        root.classList.toggle('has-preview', !!imageUrl);
+        if (!imageUrl) { root.textContent = '⌖'; return; }
+        const image = document.createElement('img');
+        image.src = imageUrl;
+        image.alt = PHOTO_LABELS.signage;
+        root.appendChild(image);
+      }
+
+      function openSignagePreview() {
+        const imageUrl = previews.signage || previewUrls.signage;
+        if (imageUrl) openViewer(imageUrl, PHOTO_LABELS.signage);
+        else openSingleSlot('signage');
       }
 
       function updateButtons() {
@@ -476,7 +526,7 @@
         if (!job || !activeType || uploading) return;
         if (!window.confirm('ยืนยันลบรูปช่องนี้หรือไม่? ไฟล์ต้นฉบับใน Drive จะยังคงอยู่')) return;
         const button = document.getElementById('deletePhotoButton'); button.disabled = true; button.textContent = 'กำลังลบ...'; uploading = true; updateButtons();
-        google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || (currentProgress.filledTypes || []).filter(function(type) { return type !== activeType; }); delete previews[activeType]; uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; renderAll(); closeModal(); setStatus(result.message, false, true); }).withFailureHandler(function(error) { uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; updateButtons(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error), true); }).deleteImageFromSheet(job.jobNo, job.location, activeType, document.getElementById('installDate').value);
+        google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || (currentProgress.filledTypes || []).filter(function(type) { return type !== activeType; }); delete previews[activeType]; delete previewUrls[activeType]; uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; renderAll(); closeModal(); setStatus(result.message, false, true); }).withFailureHandler(function(error) { uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; updateButtons(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error), true); }).deleteImageFromSheet(job.jobNo, job.location, activeType, document.getElementById('installDate').value);
       }
 
       function printJob() {

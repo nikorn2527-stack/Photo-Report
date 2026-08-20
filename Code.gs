@@ -259,11 +259,44 @@ function getJobProgress(jobNo) {
     location: sheet ? sheet.getRange(CONFIG.LOCATION_CELL).getDisplayValue() : '',
     date: sheet ? sheet.getRange(CONFIG.DATE_CELL).getDisplayValue() : '',
     filledTypes: filledTypes,
+    previewUrls: getPhotoPreviewUrls_(jobNo),
     missingTypes: missingTypes,
     filledCount: filledTypes.length,
     requiredCount: CONFIG.IMAGE_TYPES.length,
     complete: missingTypes.length === 0
   };
+}
+
+/**
+ * คืน URL thumbnail ของรูปไฟล์ล่าสุดของแต่ละช่องจากโฟลเดอร์รูป
+ * ใช้ชื่อไฟล์รูปแบบ JOB_imageType_timestamp_originalName
+ */
+function getPhotoPreviewUrls_(jobNo) {
+  const safeJobNo = String(jobNo || '').replace(/[^a-zA-Z0-9ก-๙_-]/g, '_');
+  const previewUrls = {};
+  if (!safeJobNo) return previewUrls;
+
+  const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
+  const files = folder.searchFiles("trashed = false and title contains '" + safeJobNo + "_'");
+  const latestByType = {};
+  while (files.hasNext()) {
+    const file = files.next();
+    const name = file.getName();
+    CONFIG.IMAGE_TYPES.forEach(function(imageType) {
+      const prefix = safeJobNo + '_' + imageType + '_';
+      if (name.indexOf(prefix) === 0) {
+        const created = file.getDateCreated().getTime();
+        if (!latestByType[imageType] || created > latestByType[imageType].created) {
+          latestByType[imageType] = { id: file.getId(), created: created };
+        }
+      }
+    });
+  }
+
+  Object.keys(latestByType).forEach(function(imageType) {
+    previewUrls[imageType] = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(latestByType[imageType].id) + '&sz=w1200';
+  });
+  return previewUrls;
 }
 
 /**
