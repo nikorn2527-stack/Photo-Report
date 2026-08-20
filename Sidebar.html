@@ -5,26 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Photo Report</title>
   <style>
-    :root { --ink:#172033; --muted:#687386; --line:#dfe5ec; --blue:#1769e0; --blue-soft:#edf4ff; --green:#16834b; --green-soft:#eaf8f0; --orange:#b96a18; --orange-soft:#fff3e3; --danger:#c62828; --surface:#f5f7fa; }
+    :root { --ink:#172033; --muted:#687386; --line:#dfe5ec; --blue:#1769e0; --blue-soft:#edf4ff; --green:#16834b; --green-soft:#eaf8f0; --orange:#b96a18; --orange-soft:#fff3e3; --before:#b66a17; --before-soft:#fff1df; --after:#16834b; --after-soft:#e6f7ec; --danger:#c62828; --surface:#f5f7fa; }
     * { box-sizing:border-box; }
     html,body { width:100%; min-height:100%; margin:0; background:#f5f7fa; color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; font-size:16px; line-height:1.4; -webkit-text-size-adjust:100%; }
     body { overflow-x:hidden; }
     button,input { font:inherit; }
     button:focus-visible,input:focus-visible { outline:3px solid rgba(23,105,224,.25); outline-offset:2px; }
     .app { width:100%; min-height:100vh; }
-    .page { width:100%; max-width:none; margin:0; padding:12px 8px calc(24px + env(safe-area-inset-bottom)); }
-    .brand { padding:4px 2px 8px; }
+    .page { width:100%; max-width:none; margin:0; padding:8px 10px calc(18px + env(safe-area-inset-bottom)); }
+    .brand { display:flex; align-items:center; gap:9px; padding:5px 2px 9px; }
+    .brand::before { content:'รูป'; display:flex; width:34px; height:34px; flex:none; align-items:center; justify-content:center; border-radius:10px; background:var(--blue-soft); color:var(--blue); font-size:10px; font-weight:950; }
+    .brand > * { margin-left:0; }
     .brand .subtitle { display:none; }
+    .brand .eyebrow { display:none; }
     .eyebrow { margin:0 0 3px; color:var(--blue); font-size:12px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
-    h1 { margin:0; font-size:30px; line-height:1.1; letter-spacing:-.02em; }
+    h1 { margin:0; font-size:22px; line-height:1.1; letter-spacing:-.02em; }
     .subtitle { margin:6px 0 0; color:var(--muted); font-size:14px; }
-    .card { border:1px solid var(--line); border-radius:18px; background:#fff; box-shadow:0 4px 16px rgba(24,39,75,.06); }
-    .job-card { position:sticky; top:0; z-index:8; padding:14px; background:rgba(255,255,255,.97); backdrop-filter:blur(10px); }
-    .step-label { display:block; margin-bottom:8px; font-size:14px; font-weight:900; }
+    .card { background:transparent; }
+    .job-card { position:sticky; top:0; z-index:8; padding:7px 0 9px; border-bottom:1px solid #e7ebf0; background:rgba(255,255,255,.97); backdrop-filter:blur(10px); }
+    .step-label { display:block; margin:0 0 6px 2px; color:var(--muted); font-size:12px; font-weight:900; }
     .search-row { display:grid; grid-template-columns:minmax(0,1fr) 52px; gap:8px; }
-    .job-search { width:100%; min-height:56px; padding:13px 15px; border:1px solid #9aa7b7; border-radius:13px; background:#fff; color:var(--ink); font-size:18px; }
-    .clear-button { min-height:56px; border:1px solid #aeb8c5; border-radius:13px; background:#f8fafc; color:var(--muted); font-size:27px; font-weight:700; cursor:pointer; }
-    .search-hint { min-height:20px; margin:7px 2px 0; color:var(--muted); font-size:13px; }
+    .job-search { width:100%; min-height:50px; padding:11px 13px; border:1px solid #cbd5e1; border-radius:12px; background:#f8fafc; color:var(--ink); font-size:17px; }
+    .clear-button { min-height:50px; border:1px solid #cbd5e1; border-radius:12px; background:#fff; color:var(--muted); font-size:25px; font-weight:700; cursor:pointer; }
+    .search-hint { min-height:17px; margin:5px 2px 0; color:var(--muted); font-size:11px; }
     .search-results { display:none; gap:7px; max-height:260px; margin-top:9px; overflow:auto; }
     .search-results.open { display:grid; }
     .job-result { display:flex; min-height:59px; flex-direction:column; align-items:flex-start; justify-content:center; padding:9px 12px; border:1px solid #cbd5e1; border-radius:12px; background:#fff; color:var(--ink); text-align:left; cursor:pointer; }
@@ -77,27 +80,27 @@
     .tools summary { padding:12px 2px; color:var(--muted); font-size:14px; font-weight:900; cursor:pointer; }
     .tool-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .tool-link { display:flex; min-height:44px; align-items:center; justify-content:center; padding:8px; border:1px solid #b9c4d2; border-radius:10px; color:var(--blue); font-size:12px; font-weight:800; text-align:center; text-decoration:none; }
-    .mobile-job-bar { display:flex; align-items:center; gap:8px; margin-top:14px; padding:9px 11px; border-radius:12px; background:var(--blue-soft); }
-    .mobile-job-bar strong { color:var(--blue); font-size:20px; font-weight:950; }
+    .mobile-job-bar { display:flex; align-items:center; gap:8px; margin-top:12px; padding:7px 2px 8px; border-bottom:1px solid #e7ebf0; background:transparent; }
+    .mobile-job-bar strong { color:var(--blue); font-size:18px; font-weight:950; }
     .mobile-job-bar span { min-width:0; flex:1; overflow:hidden; color:var(--muted); font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
     .mobile-job-bar b { color:var(--blue); font-size:13px; }
-    .mobile-photo-card { margin-top:11px; padding:11px; border:1px solid var(--line); border-radius:17px; background:#fff; box-shadow:0 4px 14px rgba(24,39,75,.06); }
-    .mobile-photo-head { display:flex; align-items:end; justify-content:space-between; margin:0 2px 6px; }
-    .mobile-photo-head h2 { margin:0; font-size:20px; }
+    .mobile-photo-card { margin-top:8px; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; }
+    .mobile-photo-head { display:flex; align-items:end; justify-content:space-between; margin:0 2px 7px; }
+    .mobile-photo-head h2 { margin:0; font-size:17px; }
     .mobile-photo-head span { color:var(--muted); font-size:11px; }
     .mobile-photo-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .mobile-section-label { grid-column:1/-1; padding:5px 3px 1px; font-size:13px; font-weight:950; }
     .mobile-section-label.signage { color:var(--blue); }
     .mobile-section-label.before { color:#b66a17; }
     .mobile-section-label.after { color:#16834b; }
-    .mobile-slot { position:relative; display:flex; min-width:0; min-height:138px; align-items:center; justify-content:center; padding:0; overflow:hidden; border:1px solid #cbd5e1; border-radius:14px; background:#fafbfd; box-shadow:0 2px 8px rgba(24,39,75,.05); user-select:none; -webkit-user-select:none; touch-action:manipulation; }
-    .mobile-slot.signage { grid-column:1/-1; min-height:91px; }
+    .mobile-slot { position:relative; display:flex; min-width:0; min-height:0; aspect-ratio:1.22 / 1; align-items:center; justify-content:center; padding:0; overflow:hidden; border:1px solid #d4dbe4; border-radius:11px; background:#fafbfd; box-shadow:none; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+    .mobile-slot.signage { grid-column:1/-1; min-height:0; aspect-ratio:3.4 / 1; }
     .mobile-slot.before { border-color:#e6bd93; background:#fff9f2; }
     .mobile-slot.after { border-color:#a8d8b9; background:#f2fbf5; }
     .mobile-slot.has-image { background:#e9edf2; }
     .mobile-slot:active { transform:scale(.985); }
-    .mobile-slot img { width:100%; height:100%; min-height:138px; object-fit:cover; pointer-events:none; }
-    .mobile-slot.signage img { min-height:91px; }
+    .mobile-slot img { width:100%; height:100%; min-height:0; object-fit:cover; pointer-events:none; }
+    .mobile-slot.signage img { min-height:0; }
     .mobile-slot-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px; text-align:center; }
     .mobile-slot-icon { display:flex; width:40px; height:40px; align-items:center; justify-content:center; border-radius:12px; background:#eef2f6; color:#7a8795; font-size:24px; font-weight:800; }
     .mobile-slot.before .mobile-slot-icon { background:var(--before-soft); color:var(--before); }
@@ -183,14 +186,12 @@
       .print-page { width:210mm; min-height:297mm; margin:0; padding:10mm 9mm; box-shadow:none; }
     }
     @media (max-width:520px), (pointer:coarse) {
-      .page { width:100%; max-width:none; padding:8px 6px calc(20px + env(safe-area-inset-bottom)); }
+      .page { width:100%; max-width:none; padding:7px 10px calc(18px + env(safe-area-inset-bottom)); }
       .job-card, .mobile-photo-card { width:100%; }
-      .mobile-job-bar { margin-top:10px; }
-      .mobile-photo-card { padding:9px; }
-      .mobile-slot { min-height:133px; }
-      .mobile-slot img { min-height:133px; }
-      .mobile-slot.signage, .mobile-slot.signage img { min-height:88px; }
-      h1 { font-size:28px; }
+      .mobile-job-bar { margin-top:9px; }
+      .mobile-slot { aspect-ratio:1.08 / 1; }
+      .mobile-slot.signage { aspect-ratio:3 / 1; }
+      h1 { font-size:22px; }
       .capture-grid { gap:9px; }
       .capture-button { min-height:143px; padding:13px; }
       .capture-name { font-size:17px; }
@@ -209,8 +210,8 @@
         <p class="subtitle">หน้ากรอกสำหรับมือถือโดยเฉพาะ เลือก Job แล้วแตะเฉพาะประเภทภาพที่ต้องการบันทึก</p>
       </header>
 
-      <section class="card job-card">
-        <label class="step-label" for="jobSearch">1. ค้นหา Job</label>
+        <section class="job-card">
+        <label class="step-label" for="jobSearch">ค้นหา Job</label>
         <div class="search-row"><input id="jobSearch" class="job-search" type="search" inputmode="search" autocomplete="off" placeholder="พิมพ์เลขบางส่วน เช่น 031 หรือ JOB-031"><button id="clearSearch" class="clear-button" type="button" onclick="clearSearch()" aria-label="ล้างการค้นหา">×</button></div>
         <div id="searchHint" class="search-hint">พิมพ์เลขบางส่วน ระบบจะเข้า Job ให้อัตโนมัติเมื่อพบรายการเดียว</div>
         <div id="searchResults" class="search-results"></div>
