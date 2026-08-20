@@ -387,7 +387,8 @@ function getWorkbookPortalData() {
     dashboard: buildPortalDashboard_(rows),
     assetRows: rows,
     sheetLinks: sheetLinks,
-    spreadsheetUrl: buildSpreadsheetEditUrl_()
+    spreadsheetUrl: buildSpreadsheetEditUrl_(),
+    photoReportUrl: ScriptApp.getService().getUrl() || ''
   };
 }
 

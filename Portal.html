@@ -14,7 +14,9 @@
       .brand-name { margin:0; font-size:12px; font-weight:700; color:var(--muted); }
       .brand-title { margin:4px 0 0; font-size:25px; line-height:1.2; }
       .brand-note { margin:5px 0 0; color:var(--muted); font-size:13px; }
-      .sheet-button { flex:0 0 auto; min-height:44px; padding:9px 13px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font:inherit; font-weight:700; cursor:pointer; }
+      .brand-actions { display:flex; flex:0 0 auto; gap:8px; align-items:stretch; }
+      .sheet-button, .photo-report-button { min-height:44px; padding:9px 13px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font:inherit; font-weight:700; cursor:pointer; text-decoration:none; text-align:center; }
+      .photo-report-button { border-color:var(--green); color:var(--green-dark); }
       .nav { display:flex; gap:6px; margin:14px 0; padding:4px; overflow-x:auto; border-radius:10px; background:#e5e9ef; }
       .nav button { min-height:42px; padding:8px 14px; border:0; border-radius:8px; background:transparent; color:var(--muted); font:inherit; font-weight:700; white-space:nowrap; cursor:pointer; }
       .nav button.active { background:#fff; color:var(--text); box-shadow:0 1px 4px rgba(60,64,67,.16); }
@@ -94,7 +96,7 @@
       .status.success { color:var(--green-dark); }
       .error-box { padding:14px; border:1px solid #f4b8b4; border-radius:8px; background:#fce8e6; color:var(--danger); }
       @media (max-width:900px) { .cards{grid-template-columns:repeat(3,1fr)} .dashboard-grid{grid-template-columns:1fr} .document-grid{grid-template-columns:repeat(2,1fr)} }
-      @media (max-width:640px) { body{padding:5px} .shell{padding:12px;min-height:calc(100vh - 10px)} .brand{display:block} .sheet-button{width:100%;margin-top:10px} .cards{grid-template-columns:repeat(2,1fr)} .card-value{font-size:22px} .toolbar{display:grid;grid-template-columns:1fr 1fr} .search{grid-column:1 / -1;width:100%} .filter{width:100%;min-width:0} .button{width:100%} .document-grid{grid-template-columns:1fr} .form-grid{grid-template-columns:1fr 1fr;gap:8px} .field.full{grid-column:1 / -1} }
+      @media (max-width:640px) { body{padding:5px} .shell{padding:12px;min-height:calc(100vh - 10px)} .brand{display:block} .brand-actions{display:grid;grid-template-columns:1fr;width:100%;margin-top:10px} .sheet-button,.photo-report-button{width:100%;margin-top:0} .cards{grid-template-columns:repeat(2,1fr)} .card-value{font-size:22px} .toolbar{display:grid;grid-template-columns:1fr 1fr} .search{grid-column:1 / -1;width:100%} .filter{width:100%;min-width:0} .button{width:100%} .document-grid{grid-template-columns:1fr} .form-grid{grid-template-columns:1fr 1fr;gap:8px} .field.full{grid-column:1 / -1} }
       @media (max-width:380px) { .form-grid{grid-template-columns:1fr} .field.full{grid-column:auto} }
     </style>
   </head>
@@ -108,7 +110,10 @@
             <h1 class="brand-title">IT Rental Portal</h1>
             <p class="brand-note">ระบบติดตามชุดเครื่องเช่า ตึก 69 — Dashboard, Asset Master และเอกสารปฏิบัติงาน</p>
           </div>
-          <button id="openWorkbookButton" type="button" class="sheet-button" onclick="openWorkbook()">เปิด Google Sheet ทั้งไฟล์</button>
+          <div class="brand-actions">
+            <a id="photoReportLink" class="photo-report-button" href="#" target="_top" rel="noopener">← กลับ Photo Report</a>
+            <button id="openWorkbookButton" type="button" class="sheet-button" onclick="openWorkbook()">เปิด Google Sheet ทั้งไฟล์</button>
+          </div>
         </header>
 
         <nav class="nav" aria-label="เมนู Portal">
@@ -222,6 +227,7 @@
         setStatus('กำลังโหลดข้อมูลจาก IT_Rental.xlsx / Google Sheet...');
         google.script.run.withSuccessHandler(function(data) {
           portalData = data || portalData;
+          setPhotoReportLink();
           renderDashboard();
           renderAssetFilters();
           renderAssetTable();
@@ -332,6 +338,18 @@
           const url = links[doc[0]] || '#';
           return '<article class="document-card"><div><h3>' + doc[0] + '</h3><p>' + doc[1] + '</p></div><div class="document-actions"><button class="small-button green" type="button" onclick="openUrl(\'' + escapeJs(url) + '\')">เปิดชีตเพื่อแก้ไข/พิมพ์</button></div></article>';
         }).join('');
+      }
+
+      function setPhotoReportLink() {
+        const link = document.getElementById('photoReportLink');
+        const url = portalData.photoReportUrl || '';
+        if (url) {
+          link.href = url;
+          link.removeAttribute('aria-disabled');
+        } else {
+          link.href = '#';
+          link.setAttribute('aria-disabled', 'true');
+        }
       }
 
       function openWorkbook() { openUrl(portalData.spreadsheetUrl); }
