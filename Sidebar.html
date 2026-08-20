@@ -364,7 +364,6 @@
       const MAX_UPLOAD_BYTES = 1.2 * 1024 * 1024;
       const MAX_IMAGE_PIXELS = 600000;
       const MAX_IMAGE_DIMENSION = 1000;
-      const LAST_JOB_KEY = 'photoReport.lastJob';
       const PHOTO_LABELS = { signage:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง', before1:'ก่อนติดตั้ง 1', after1:'หลังติดตั้ง 1', before2:'ก่อนติดตั้ง 2', after2:'หลังติดตั้ง 2', before3:'ก่อนติดตั้ง 3', after3:'หลังติดตั้ง 3', before4:'ก่อนติดตั้ง 4', after4:'หลังติดตั้ง 4' };
       const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'เก็บสภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'เก็บผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
       let jobs = [];
@@ -400,13 +399,10 @@
       }
 
       function populateJobs() {
-        const old = localStorage.getItem(LAST_JOB_KEY);
-        const lastIndex = jobs.findIndex(function(job) { return job.jobNo === old; });
         const select = document.getElementById('jobSelect');
-        select.value = lastIndex >= 0 ? String(lastIndex) : '';
-        document.getElementById('jobSearch').value = lastIndex >= 0 ? jobs[lastIndex].jobNo : '';
+        select.value = '';
+        document.getElementById('jobSearch').value = '';
         renderJobOptions();
-        if (lastIndex >= 0) select.value = String(lastIndex);
         handleJobChange();
       }
 
@@ -479,8 +475,7 @@
         document.getElementById('jobStatus').textContent = job ? 'กำลังโหลดรูป...' : 'เลือก Job เพื่อเริ่มเก็บรูป';
         document.getElementById('jobStatus').className = 'job-status';
         renderAll();
-        if (!job) { localStorage.removeItem(LAST_JOB_KEY); return; }
-        localStorage.setItem(LAST_JOB_KEY, job.jobNo);
+        if (!job) return;
         setStatus('กำลังโหลดรูปของ ' + job.jobNo + '...');
         google.script.run.withSuccessHandler(function(progress) { currentProgress = progress || { filledTypes:[] }; previewUrls = (progress && progress.previewUrls) || {}; if (progress && progress.date) { document.getElementById('installDate').value = normalizeDate(progress.date); document.getElementById('installDateText').textContent = 'วันที่ ' + formatDate(document.getElementById('installDate').value); } renderAll(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรูปไม่สำเร็จ: ' + errorMessage(error), true); }).getJobProgress(job.jobNo);
       }
