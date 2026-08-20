@@ -10,6 +10,17 @@ const CONFIG = Object.freeze({
   TEMPLATE_SHEET_NAME: 'Photo_Report',
   ASSET_MASTER_SHEET_NAME: 'Asset_Master',
   PHOTO_FILE_INDEX_SHEET_NAME: 'Photo_File_Index',
+  PDF_INDEX_SHEET_NAME: 'Photo_PDF_Index',
+  PDF_INDEX_HEADERS: Object.freeze([
+    'Job No.',
+    'ชีตรายงานต้นทาง',
+    'URL ชีตรายงาน',
+    'วันที่สร้าง PDF ล่าสุด',
+    'ชื่อไฟล์ PDF ล่าสุด',
+    'URL PDF ล่าสุด',
+    'จำนวนรูป',
+    'สถานะ'
+  ]),
   PHOTO_FILE_INDEX_HEADERS: Object.freeze([
     'วันที่อัปเดต',
     'Job No.',
@@ -372,6 +383,7 @@ function getSheetEditLinks() {
   }
 
   const photoFileIndex = ensurePhotoFileIndexSheet_();
+  const pdfIndex = ensurePdfIndexSheet_();
   if (photoFileIndex.getLastRow() === 1) backfillPhotoFileIndex_();
   const webAppUrl = ScriptApp.getService().getUrl() || '';
   return {
@@ -379,6 +391,7 @@ function getSheetEditLinks() {
     templateUrl: buildSheetEditUrl_(template),
     assetMasterUrl: buildSheetEditUrl_(assetMaster),
     photoFileIndexUrl: buildSheetEditUrl_(photoFileIndex),
+    pdfIndexUrl: buildSheetEditUrl_(pdfIndex),
     reportWebUrl: webAppUrl || '?page=report',
     portalWebUrl: webAppUrl ? webAppUrl + '?page=portal' : '?page=portal',
     assetWebUrl: webAppUrl ? webAppUrl + '?page=asset' : '?page=asset'
@@ -683,12 +696,20 @@ function createJobPdf(jobNo) {
   const filename = buildPdfFilename_(jobNo);
   const pdfBlob = response.getBlob().setName(filename);
   const file = DriveApp.getFolderById(CONFIG.PDF_FOLDER_ID).createFile(pdfBlob);
+  const sourceSheetUrl = buildSheetEditUrl_(sheet);
+  const status = isComplete ? 'ครบทุกช่อง' : 'ยังไม่ครบทุกช่อง';
+  upsertPdfIndex_(jobNo, sheet, file, filledTypes.length, status);
 
   return {
-    message: 'สร้าง PDF A4 สำหรับ ' + jobNo + ' เรียบร้อยแล้ว (' + filledTypes.length + '/' + CONFIG.IMAGE_TYPES.length + ' รูป' + (isComplete ? ', ครบทุกช่อง' : ', งานยังไม่ครบแต่พิมพ์ได้') + ')',
+    message: 'อ่านจากชีต ' + sheet.getName() + ' แล้วสร้าง PDF A4 ใหม่ใน Drive สำหรับ ' + jobNo + ' (' + filledTypes.length + '/' + CONFIG.IMAGE_TYPES.length + ' รูป, ' + status + ')',
     fileId: file.getId(),
     fileUrl: file.getUrl(),
-    filename: filename
+    filename: filename,
+    sourceSheetName: sheet.getName(),
+    sourceSheetUrl: sourceSheetUrl,
+    createdAt: new Date(),
+    filledCount: filledTypes.length,
+    status: status
   };
 }
 
@@ -779,6 +800,101 @@ function checkPhotoReportSetup() {
     photoFolderId: CONFIG.PHOTO_FOLDER_ID,
     pdfFolderName: pdfFolder.getName(),
     pdfFolderId: CONFIG.PDF_FOLDER_ID
+  };
+}
+
+function ensurePdfIndexSheet_() {
+  const spreadsheet = getSpreadsheet_();
+  let sheet = spreadsheet.getSheetByName(CONFIG.PDF_INDEX_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(CONFIG.PDF_INDEX_SHEET_NAME);
+  const headers = CONFIG.PDF_INDEX_HEADERS;
+  const currentHeaders = sheet.getLastColumn() > 0
+    ? sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), headers.length)).getValues()[0]
+    : [];
+  const headerMatches = headers.every(function(header, index) { return currentHeaders[index] === header; });
+  if (!headerMatches) sheet.clearContents();
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold').setBackground('#eadcf8');
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, headers.length);
+  return sheet;
+}
+
+function findPdfIndexRow_(sheet, jobNo) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return 0;
+  const jobs = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  const target = String(jobNo || '');
+  for (let index = 0; index < jobs.length; index += 1) {
+    if (String(jobs[index][0] || '') === target) return index + 2;
+  }
+  return 0;
+}
+
+function upsertPdfIndex_(jobNo, sourceSheet, file, filledCount, status) {
+  const sheet = ensurePdfIndexSheet_();
+  let rowNumber = findPdfIndexRow_(sheet, jobNo);
+  if (!rowNumber) rowNumber = sheet.getLastRow() + 1;
+  sheet.getRange(rowNumber, 1, 1, CONFIG.PDF_INDEX_HEADERS.length).setValues([[
+    String(jobNo || ''),
+    sourceSheet.getName(),
+    buildSheetEditUrl_(sourceSheet),
+    new Date(),
+    file.getName(),
+    file.getUrl(),
+    filledCount,
+    String(status || '')
+  ]]);
+}
+
+function findLatestPdfFile_(jobNo) {
+  const safeJobNo = String(jobNo || '').replace(/[^a-zA-Z0-9ก-๙_-]/g, '_');
+  const prefix = 'Photo_Report_' + safeJobNo + '_';
+  const files = DriveApp.getFolderById(CONFIG.PDF_FOLDER_ID).getFiles();
+  let latest = null;
+  while (files.hasNext()) {
+    const file = files.next();
+    if (file.isTrashed() || file.getName().indexOf(prefix) !== 0) continue;
+    if (!latest || file.getDateCreated().getTime() > latest.getDateCreated().getTime()) latest = file;
+  }
+  return latest;
+}
+
+function getLatestJobPdf(jobNo) {
+  if (!jobNo) throw new Error('กรุณาเลือก Job ก่อนเปิด PDF');
+  const spreadsheet = getSpreadsheet_();
+  const sourceSheet = spreadsheet.getSheetByName(buildJobSheetName_(jobNo));
+  const sourceSheetName = sourceSheet ? sourceSheet.getName() : buildJobSheetName_(jobNo);
+  const sourceSheetUrl = sourceSheet ? buildSheetEditUrl_(sourceSheet) : buildSpreadsheetEditUrl_();
+  const indexSheet = ensurePdfIndexSheet_();
+  const rowNumber = findPdfIndexRow_(indexSheet, jobNo);
+  if (rowNumber) {
+    const row = indexSheet.getRange(rowNumber, 1, 1, CONFIG.PDF_INDEX_HEADERS.length).getDisplayValues()[0];
+    if (row[5]) {
+      return {
+        found: true,
+        jobNo: row[0],
+        sourceSheetName: row[1],
+        sourceSheetUrl: row[2],
+        createdAt: row[3],
+        filename: row[4],
+        fileUrl: row[5],
+        filledCount: row[6],
+        status: row[7]
+      };
+    }
+  }
+  const latestFile = findLatestPdfFile_(jobNo);
+  if (!latestFile) return { found: false, sourceSheetName: sourceSheetName, sourceSheetUrl: sourceSheetUrl };
+  return {
+    found: true,
+    jobNo: String(jobNo),
+    sourceSheetName: sourceSheetName,
+    sourceSheetUrl: sourceSheetUrl,
+    createdAt: latestFile.getDateCreated(),
+    filename: latestFile.getName(),
+    fileUrl: latestFile.getUrl(),
+    filledCount: '',
+    status: 'ไฟล์เดิมจาก Drive'
   };
 }
 

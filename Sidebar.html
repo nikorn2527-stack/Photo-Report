@@ -60,11 +60,13 @@
       .progress-track { height:9px; margin-top:8px; overflow:hidden; border-radius:9px; background:#e1e5ea; }
       .progress-fill { height:100%; width:0; border-radius:9px; background:var(--green); transition:width .2s ease; }
       .summary-bottom { display:flex; align-items:center; justify-content:space-between; gap:9px; margin-top:8px; }
-      .summary-actions { display:flex; align-items:center; gap:8px; flex:none; }
+      .summary-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex:none; flex-wrap:wrap; }
       .missing-line { min-width:0; overflow:hidden; color:#8a4b0f; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
       .missing-line.complete { color:var(--green-dark); }
-      .compact-print { min-height:38px; padding:7px 11px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font-size:12px; font-weight:900; cursor:pointer; }
+      .compact-print { display:inline-flex; min-height:38px; align-items:center; justify-content:center; padding:7px 11px; border:1px solid var(--blue); border-radius:8px; background:#fff; color:var(--blue); font-size:12px; font-weight:900; cursor:pointer; text-decoration:none; }
       .compact-print:disabled { border-color:#c7cbd1; background:#eef0f3; color:#7b8188; cursor:not-allowed; }
+      .latest-pdf-link { border-color:var(--green); color:var(--green-dark); }
+      .pdf-info { margin-top:8px; padding:8px 10px; border:1px solid #d9c6ef; border-radius:8px; background:#fbf7ff; color:#5f3a7d; font-size:11px; line-height:1.35; overflow-wrap:anywhere; }
       .capture-heading { display:flex; align-items:end; justify-content:space-between; gap:8px; margin:20px 2px 9px; }
       .capture-heading h2 { margin:0; font-size:19px; }
       .capture-heading p { margin:0; color:var(--muted); font-size:12px; }
@@ -263,7 +265,8 @@
         <section class="capture-summary">
           <div class="summary-line"><span class="summary-label">รูปที่เก็บแล้ว</span><strong id="progressCount" class="progress-count">0/9</strong></div>
           <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
-          <div class="summary-bottom"><span id="missingLine" class="missing-line">เลือก Job แล้วเริ่มถ่ายรูป — เลือกรูปแล้วกดบันทึก</span><div class="summary-actions"><button id="printJobButton" class="compact-print" type="button" onclick="printJob()" disabled>พิมพ์เอกสาร</button></div></div>
+          <div class="summary-bottom"><span id="missingLine" class="missing-line">เลือก Job แล้วเริ่มถ่ายรูป — เลือกรูปแล้วกดบันทึก</span><div class="summary-actions"><button id="printJobButton" class="compact-print" type="button" onclick="printJob()" disabled>สร้าง PDF A4 ใหม่</button><a id="latestPdfLink" class="compact-print latest-pdf-link" href="#" target="_blank" rel="noopener" hidden>เปิด PDF ล่าสุด</a></div></div>
+          <div id="pdfInfo" class="pdf-info" hidden></div>
         </section>
 
         <div class="capture-heading"><h2>2. เก็บรูป</h2><p>แตะการ์ดเพื่อเพิ่มหลายรูป</p></div>
@@ -290,7 +293,7 @@
           <button id="signageButton" class="signage-button" type="button" onclick="openSingleSlot('signage')" disabled>เพิ่มรูป</button>
         </section>
 
-        <details class="more-tools"><summary>เครื่องมือเพิ่มเติม</summary><div class="links"><a id="assetLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Asset_Master</a><a id="reportLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a><a id="photoIndexLink" class="link-button" href="#" target="_blank" rel="noopener">ประวัติ URL รูปใน Drive</a></div></details>
+        <details class="more-tools"><summary>เครื่องมือเพิ่มเติม</summary><div class="links"><a id="assetLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Asset_Master</a><a id="reportLink" class="link-button" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a><a id="photoIndexLink" class="link-button" href="#" target="_blank" rel="noopener">ประวัติ URL รูปใน Drive</a><a id="pdfIndexLink" class="link-button" href="#" target="_blank" rel="noopener">ประวัติ PDF ต่อ Job</a></div></details>
         <div id="status" class="status" role="status" aria-live="polite"></div>
       </section>
     </main>
@@ -433,8 +436,10 @@
         document.getElementById('jobStatus').textContent = job ? 'กำลังโหลดรูป...' : 'เลือก Job เพื่อเริ่มเก็บรูป';
         document.getElementById('jobStatus').className = 'job-status';
         renderAll();
+        clearLatestPdfState();
         if (!job) { localStorage.removeItem(LAST_JOB_KEY); return; }
         localStorage.setItem(LAST_JOB_KEY, job.jobNo);
+        loadLatestPdf(job.jobNo);
         setStatus('กำลังโหลดรูปของ ' + job.jobNo + '...');
         google.script.run.withSuccessHandler(function(progress) { currentProgress = progress || { filledTypes:[] }; previewUrls = (progress && progress.previewUrls) || {}; if (progress && progress.date) { document.getElementById('installDate').value = normalizeDate(progress.date); document.getElementById('installDateText').textContent = 'วันที่ ' + formatDate(document.getElementById('installDate').value); } renderAll(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรูปไม่สำเร็จ: ' + errorMessage(error), true); }).getJobProgress(job.jobNo);
       }
@@ -606,7 +611,7 @@
         }
       }
 
-      function finishUpload(message) { uploading = false; renderAll(); closeModal(); setStatus(message, false, true); }
+      function finishUpload(message) { uploading = false; renderAll(); closeModal(); markPdfStale(); setStatus(message, false, true); }
       function markFilled(type) { if (!isFilled(type)) currentProgress.filledTypes = (currentProgress.filledTypes || []).concat(type); }
       function readFileAsDataUrl(file) { return new Promise(function(resolve, reject) { const reader = new FileReader(); reader.onload = function(event) { resolve(event.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); }); }
 
@@ -678,12 +683,16 @@
       function printJob() {
         const job = getJob();
         if (!job) { setStatus('กรุณาเลือก Job ก่อน', true); return; }
-        const button = document.getElementById('printJobButton'); button.disabled = true; button.textContent = 'กำลังสร้าง...';
+        const button = document.getElementById('printJobButton'); button.disabled = true; button.textContent = 'กำลังสร้าง PDF...';
         const popup = window.open('about:blank','_blank');
-        google.script.run.withSuccessHandler(function(result) { button.disabled = false; button.textContent = 'พิมพ์เอกสาร'; if (popup) popup.location = result.fileUrl; setStatus(result.message, false, true); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'พิมพ์เอกสาร'; if (popup) popup.close(); setStatus('พิมพ์ไม่สำเร็จ: ' + errorMessage(error), true); }).createJobPdf(job.jobNo);
+        google.script.run.withSuccessHandler(function(result) { button.disabled = false; button.textContent = 'สร้าง PDF A4 ใหม่'; showLatestPdf(result); if (popup) popup.location = result.fileUrl; setStatus(result.message, false, true); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'สร้าง PDF A4 ใหม่'; if (popup) popup.close(); setStatus('สร้าง PDF ไม่สำเร็จ: ' + errorMessage(error), true); }).createJobPdf(job.jobNo);
       }
 
-      function loadSheetLinks() { google.script.run.withSuccessHandler(function(links) { document.getElementById('assetLink').href = links.assetMasterUrl; document.getElementById('reportLink').href = links.templateUrl; document.getElementById('photoIndexLink').href = links.photoFileIndexUrl || links.spreadsheetUrl || '#'; document.getElementById('portalLink').href = links.portalWebUrl || '#'; }).withFailureHandler(function(error) { setStatus('โหลดลิงก์ชีตไม่สำเร็จ: ' + errorMessage(error), true); }).getSheetEditLinks(); }
+      function clearLatestPdfState() { const link = document.getElementById('latestPdfLink'); const info = document.getElementById('pdfInfo'); if (link) { link.hidden = true; link.removeAttribute('href'); } if (info) { info.hidden = true; info.textContent = ''; } }
+      function showLatestPdf(result) { const link = document.getElementById('latestPdfLink'); const info = document.getElementById('pdfInfo'); if (!result || !result.fileUrl) { clearLatestPdfState(); return; } link.href = result.fileUrl; link.hidden = false; info.hidden = false; info.textContent = (result.filename || 'PDF ล่าสุด') + ' · สร้างจากชีต ' + (result.sourceSheetName || 'REPORT_เลขJob') + ' · ' + (result.status || 'ไฟล์ PDF ล่าสุด'); }
+      function loadLatestPdf(jobNo) { if (!jobNo) return; google.script.run.withSuccessHandler(function(result) { if (result && result.found) showLatestPdf(result); else clearLatestPdfState(); }).withFailureHandler(function() { clearLatestPdfState(); }).getLatestJobPdf(jobNo); }
+      function markPdfStale() { const link = document.getElementById('latestPdfLink'); const info = document.getElementById('pdfInfo'); if (!link || link.hidden || !info) return; info.hidden = false; info.textContent = 'PDF เดิมอาจไม่สะท้อนรูปที่เพิ่งแก้ — กด “สร้าง PDF A4 ใหม่” เพื่ออัปเดต'; }
+      function loadSheetLinks() { google.script.run.withSuccessHandler(function(links) { document.getElementById('assetLink').href = links.assetMasterUrl; document.getElementById('reportLink').href = links.templateUrl; document.getElementById('photoIndexLink').href = links.photoFileIndexUrl || links.spreadsheetUrl || '#'; document.getElementById('pdfIndexLink').href = links.pdfIndexUrl || links.spreadsheetUrl || '#'; document.getElementById('portalLink').href = links.portalWebUrl || '#'; }).withFailureHandler(function(error) { setStatus('โหลดลิงก์ชีตไม่สำเร็จ: ' + errorMessage(error), true); }).getSheetEditLinks(); }
       function normalizeDate(value) { if (!value) return todayString(); const parsed = new Date(value); if (isNaN(parsed.getTime())) return todayString(); return parsed.getFullYear() + '-' + String(parsed.getMonth()+1).padStart(2,'0') + '-' + String(parsed.getDate()).padStart(2,'0'); }
       function formatDate(value) { if (!value) return 'วันนี้'; const parts = value.split('-'); return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : value; }
       function openViewer(url, caption) { if (!url) return; document.getElementById('fullscreenImage').src = url; document.getElementById('viewerCaption').textContent = caption || ''; document.getElementById('fullscreenViewer').classList.add('open'); }
