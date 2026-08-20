@@ -1028,8 +1028,9 @@ function insertImageInTemplate_(sheet, blob, targetCell) {
 
   image.setWidth(finalWidth);
   image.setHeight(finalHeight);
-  image.setLeft(getRangePixelLeft_(sheet, imageArea) + Math.max(0, Math.round((areaWidth - finalWidth) / 2)));
-  image.setTop(getRangePixelTop_(sheet, imageArea) + Math.max(0, Math.round((areaHeight - finalHeight) / 2)));
+  // OverGridImage ไม่มี setLeft/setTop; offset ต้องอ้างอิงจากเซลล์ anchor
+  image.setAnchorCellXOffset(Math.max(0, Math.round((areaWidth - finalWidth) / 2)));
+  image.setAnchorCellYOffset(Math.max(0, Math.round((areaHeight - finalHeight) / 2)));
 }
 
 function getRangePixelWidth_(sheet, range) {
