@@ -716,7 +716,7 @@
       function deletePhoto() {
         const job = getJob();
         if (!job || !activeType || uploading) return;
-        if (!window.confirm('ยืนยันลบรูปช่องนี้หรือไม่? ไฟล์ต้นฉบับใน Drive จะยังคงอยู่')) return;
+        if (!window.confirm('ยืนยันลบรูปช่องนี้หรือไม่? รูปจะหายจากชีต ล้าง URL และย้ายไฟล์ต้นฉบับใน Drive ลงถังขยะ')) return;
         const button = document.getElementById('deletePhotoButton'); button.disabled = true; button.textContent = 'กำลังลบ...'; uploading = true; updateButtons();
         google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || (currentProgress.filledTypes || []).filter(function(type) { return type !== activeType; }); delete previews[activeType]; delete previewUrls[activeType]; uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; renderAll(); closeModal(); setStatus(result.message, false, true); }).withFailureHandler(function(error) { uploading = false; button.disabled = false; button.textContent = 'ลบรูปนี้'; updateButtons(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error), true); }).deleteImageFromSheet(job.jobNo, job.location, activeType, document.getElementById('installDate').value);
       }

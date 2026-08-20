@@ -745,7 +745,7 @@ function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFile
 }
 
 /**
- * ลบรูปออกจากช่องของ Job ที่เลือก โดยคงไฟล์ต้นฉบับใน Drive ไว้เป็นประวัติ
+ * ลบรูปออกจากช่องของ Job ที่เลือก และย้ายไฟล์ต้นฉบับของช่องนั้นใน Drive ลงถังขยะ
  */
 function deleteImageFromSheet(jobNo, location, imageType, installDate) {
   const lock = LockService.getScriptLock();
@@ -757,6 +757,8 @@ function deleteImageFromSheet(jobNo, location, imageType, installDate) {
 
     const sheet = getSpreadsheet_().getSheetByName(buildJobSheetName_(jobNo));
     if (!sheet) throw new Error('ยังไม่มีรายงานของ Job นี้');
+    const driveResult = trashPhotoFilesForSlot_(jobNo, imageType);
+    if (driveResult.error) throw new Error('ย้ายไฟล์ต้นฉบับใน Drive ลงถังขยะไม่สำเร็จ: ' + driveResult.error);
     const targetRange = sheet.getRange(targetCell);
     const mergedRanges = targetRange.getMergedRanges();
     const imageArea = mergedRanges.length > 0 ? mergedRanges[0] : targetRange;
@@ -770,9 +772,10 @@ function deleteImageFromSheet(jobNo, location, imageType, installDate) {
 
     const filledTypes = getFilledImageTypes_(sheet);
     return {
-      message: 'ลบรูปช่อง ' + imageType + ' แล้ว สามารถใส่รูปใหม่ได้',
+      message: 'ลบรูปช่อง ' + imageType + ' แล้ว และย้ายไฟล์ต้นฉบับ ' + driveResult.trashedCount + ' ไฟล์ลงถังขยะ สามารถใส่รูปใหม่ได้',
       filledTypes: filledTypes,
-      complete: filledTypes.length === CONFIG.IMAGE_TYPES.length
+      complete: filledTypes.length === CONFIG.IMAGE_TYPES.length,
+      trashedCount: driveResult.trashedCount
     };
   } finally {
     lock.releaseLock();
@@ -934,6 +937,38 @@ function findPhotoFileIndexRow_(sheet, jobNo) {
     if (String(jobs[index][0] || '') === targetJobNo) return index + 2;
   }
   return 0;
+}
+
+function extractDriveFileId_(url) {
+  const text = String(url || '');
+  const patterns = [
+    /\/d\/([a-zA-Z0-9_-]{10,})/,
+    /[?&]id=([a-zA-Z0-9_-]{10,})/
+  ];
+  for (let index = 0; index < patterns.length; index += 1) {
+    const match = text.match(patterns[index]);
+    if (match) return match[1];
+  }
+  return '';
+}
+
+function trashPhotoFilesForSlot_(jobNo, imageType) {
+  const result = { trashedCount: 0, error: '' };
+  try {
+    const safeJobNo = String(jobNo || '').replace(/[^a-zA-Z0-9ก-๙_-]/g, '_');
+    const prefix = safeJobNo + '_' + imageType + '_';
+    const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
+    const files = folder.searchFiles('trashed = false');
+    while (files.hasNext()) {
+      const file = files.next();
+      if (file.getName().indexOf(prefix) !== 0) continue;
+      file.setTrashed(true);
+      result.trashedCount += 1;
+    }
+  } catch (error) {
+    result.error = error && error.message ? error.message : String(error);
+  }
+  return result;
 }
 
 function clearPhotoFileIndexUrl_(jobNo, imageType) {
