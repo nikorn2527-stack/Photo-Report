@@ -140,6 +140,59 @@
         .bento-footer { font-size:10px; }
         .job-meta { font-size:12px; }
       }
+      /* Final mobile pass: ใช้พื้นที่และขนาดการกดแบบมือถือจริง 6.7–6.9 นิ้ว */
+      @media (max-width: 1400px), (pointer: coarse) {
+        html, body { font-size:18px; }
+        .page { padding:18px 16px calc(30px + env(safe-area-inset-bottom)); }
+        .brand { padding:4px 2px 20px; }
+        .eyebrow { font-size:14px; }
+        .title { font-size:32px; }
+        .subtitle { margin-top:7px; font-size:17px; }
+        .job-card { padding:17px; border-radius:17px; }
+        .job-label { margin-bottom:9px; font-size:18px; }
+        .job-row { grid-template-columns:minmax(0,1fr) 62px; gap:10px; }
+        select { min-height:66px; padding:14px 15px; border-radius:12px; font-size:20px; }
+        .refresh { min-height:66px; border-radius:12px; font-size:27px; }
+        .job-meta { margin-top:11px; font-size:15px; }
+        .job-date { font-size:14px; }
+        .job-status { margin-top:11px; padding:11px 12px; border-radius:11px; font-size:16px; }
+        .capture-summary { margin-top:16px; padding:16px 17px; border-radius:16px; }
+        .summary-label { font-size:16px; }
+        .progress-count { font-size:25px; }
+        .progress-track { height:11px; margin-top:10px; }
+        .summary-bottom { margin-top:11px; gap:10px; }
+        .missing-line { font-size:15px; }
+        .compact-print { min-height:48px; padding:9px 13px; border-radius:10px; font-size:15px; }
+        .capture-heading { margin:26px 2px 12px; }
+        .capture-heading h2 { font-size:23px; }
+        .capture-heading p { font-size:15px; }
+        .bento-grid { gap:14px; }
+        .bento-card { min-height:430px; padding:18px; border-radius:20px; }
+        .bento-number { font-size:14px; }
+        .bento-count { padding:6px 9px; font-size:14px; }
+        .bento-title { margin-top:15px; font-size:28px; }
+        .bento-note { min-height:44px; font-size:16px; }
+        .mosaic { gap:12px; min-height:270px; margin:14px 0; }
+        .mosaic-tile { min-height:118px; border-radius:11px; font-size:28px; }
+        .bento-footer { gap:8px; font-size:14px; }
+        .signage-card { gap:13px; margin-top:14px; padding:14px; border-radius:15px; }
+        .signage-icon { width:50px; height:50px; border-radius:12px; font-size:24px; }
+        .signage-title { font-size:17px; }
+        .signage-status { font-size:14px; }
+        .signage-button { min-height:48px; padding:8px 12px; border-radius:10px; font-size:15px; }
+        .more-tools { margin-top:22px; }
+        .more-tools summary { padding:16px 2px; font-size:16px; }
+        .link-button { min-height:50px; padding:10px; font-size:14px; }
+        .status { min-height:26px; margin-top:13px; font-size:15px; }
+        .modal-backdrop { padding:10px; }
+        .modal { max-height:92vh; padding:22px 18px calc(24px + env(safe-area-inset-bottom)); border-radius:20px; }
+        .modal-title { font-size:26px; }
+        .modal-note { font-size:16px; }
+        .slot-picker { grid-template-columns:repeat(2,1fr); gap:9px; }
+        .slot-button { min-height:55px; font-size:15px; }
+        .modal-button { min-height:62px; font-size:18px; }
+        .delete-button, .cancel-button { min-height:56px; font-size:17px; }
+      }
       @media print { .job-card,.capture-summary,.capture-heading,.bento-grid,.signage-card,.more-tools,.status,.modal-backdrop,.fullscreen-viewer { display:none !important; } }
     </style>
   </head>
