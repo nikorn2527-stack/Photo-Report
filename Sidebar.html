@@ -102,9 +102,9 @@
       .viewer-close { position:absolute; top:calc(12px + env(safe-area-inset-top)); right:14px; width:50px; height:50px; border:1px solid rgba(255,255,255,.65); border-radius:50%; background:rgba(0,0,0,.45); color:#fff; font-size:28px; cursor:pointer; }
       /* Responsive เฉพาะมือถือ: คงดีไซน์เดิม แต่จัดใหม่ให้พอดีจอ 6.7–6.9 นิ้ว */
       @media (max-width:720px), (pointer:coarse) {
-        html,body { background:#fff; }
-        .app { width:100%; max-width:none !important; margin:0; }
-        .page { width:100%; padding:12px 10px calc(24px + env(safe-area-inset-bottom)); }
+        html,body { min-height:0; background:#fff; }
+        .app { width:100%; max-width:none !important; min-height:0; margin:0; }
+        .page { width:100%; min-height:0; padding:12px 10px calc(24px + env(safe-area-inset-bottom)); }
         .bento-grid { grid-template-columns:1fr; }
         .bento-card { min-height:216px; padding:14px; }
         .bento-title { font-size:23px; }
