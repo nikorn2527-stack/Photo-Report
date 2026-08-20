@@ -220,7 +220,7 @@
           <label class="check-field"><input id="deliverUpsCord" type="checkbox"> ส่งสายไฟ UPS</label>
           <div class="field"><label>วันเริ่มเช่า</label><input id="startDate" class="input" type="date"></div>
           <div class="field"><label>วันหมดสัญญา</label><input id="endDate" class="input" type="date"></div>
-          <div class="field"><label>สถานะชุด</label><select id="assetStatus" class="select"><option>พร้อมส่ง</option><option>ติดตั้งแล้ว</option><option>รับคืนแล้ว</option><option>ส่งซ่อม</option><option>ตัดจำหน่าย</option></select></div>
+          <div class="field"><label>สถานะชุด</label><select id="assetStatus" class="select"><option>รอส่งมอบ</option><option>ส่งมอบแล้ว</option></select></div>
           <div class="field"><label>สถานะเตรียมเครื่อง</label><select id="prepStatus" class="select"><option>รับเข้าแล้ว</option><option>ลง Windows</option><option>ลงโปรแกรม</option><option>รอ Activate</option><option>พร้อมติดตั้ง</option><option>ติดตั้งเสร็จ</option><option>ติดปัญหา</option></select></div>
         </div></div>
         <div class="modal-actions"><button id="saveAssetButton" type="button" class="button button-primary" onclick="saveAsset()">บันทึกข้อมูล</button><button type="button" class="button button-outline" onclick="closeAssetEditor()">ยกเลิก</button></div>
@@ -370,8 +370,8 @@
         if (!value) return '<span class="status-badge">-</span>';
         const text = String(value);
         let cls = '';
-        if (text === 'พร้อมส่ง') cls = 'status-ready';
-        if (text === 'ติดตั้งแล้ว') cls = 'status-installed';
+        if (text === 'รอส่งมอบ') cls = 'status-ready';
+        if (text === 'ส่งมอบแล้ว') cls = 'status-installed';
         if (text.indexOf('เตือน') !== -1) cls = 'status-warning';
         if (text.indexOf('หมด') !== -1 || text === 'ส่งซ่อม' || text === 'ติดปัญหา') cls = 'status-danger';
         return '<span class="status-badge ' + cls + '">' + escapeHtml(text) + '</span>';

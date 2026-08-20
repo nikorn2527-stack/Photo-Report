@@ -519,7 +519,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
     parsePortalDate_(data.startDate),
     parsePortalDate_(data.endDate)
   ]]);
-  sheet.getRange(targetRow, 26).setValue(data.status || data.assetStatus || 'พร้อมส่ง');
+  sheet.getRange(targetRow, 26).setValue(      data.status || data.assetStatus || 'รอส่งมอบ');
   ensurePreparationStatusColumn_(sheet);
   sheet.getRange(targetRow, CONFIG.PREP_STATUS_COLUMN).setValue(prepStatus);
   sheet.getRange(targetRow, CONFIG.IP_COLUMN).setValue(ipAddress);
@@ -628,7 +628,8 @@ function updateAssetPreparationStatus(rowNumber, prepStatus) {
 }
 
 function buildPortalDashboard_(rows) {
-  const statuses = ['พร้อมส่ง', 'ติดตั้งแล้ว', 'รับคืนแล้ว', 'ส่งซ่อม', 'ตัดจำหน่าย'];
+  // สถานะชุดอุปกรณ์เสริมมีเพียง 2 ค่า ไม่เกี่ยวกับสถานะเตรียมเครื่อง
+  const statuses = ['รอส่งมอบ', 'ส่งมอบแล้ว'];
   const counts = {};
   statuses.forEach(function(status) { counts[status] = 0; });
   const prepCounts = {};
@@ -642,12 +643,8 @@ function buildPortalDashboard_(rows) {
   });
   return {
     total: rows.length,
-    deliveryCompleted: counts['ติดตั้งแล้ว'] || 0,
-    installed: counts['ติดตั้งแล้ว'] || 0,
-    ready: counts['พร้อมส่ง'] || 0,
-    returned: counts['รับคืนแล้ว'] || 0,
-    repair: counts['ส่งซ่อม'] || 0,
-    disposed: counts['ตัดจำหน่าย'] || 0,
+    deliveryCompleted: counts['ส่งมอบแล้ว'] || 0,
+    deliveryPending: counts['รอส่งมอบ'] || 0,
     prepWindows: prepCounts['ลง Windows'] || 0,
     prepReady: prepCounts['พร้อมติดตั้ง'] || 0,
     prepInstalled: prepCounts['ติดตั้งเสร็จ'] || 0,
