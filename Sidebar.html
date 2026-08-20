@@ -281,7 +281,7 @@
     const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'สภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'ผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
     let jobs = [], currentJob = null, currentProgress = { filledTypes:[], missingTypes:[] }, previewUrls = {}, previews = {}, pendingFiles = [], activeType = '', activeGroupKey = '', activeMode = 'group', uploading = false;
 
-    window.addEventListener('load', function() { document.getElementById('galleryFile').addEventListener('change', handleFile); document.getElementById('cameraFile').addEventListener('change', handleFile); document.getElementById('jobSearch').addEventListener('input', renderSearch); loadSheetLinks(); loadJobs(); });
+    window.addEventListener('load', function() { document.getElementById('jobSearch').value = ''; document.getElementById('galleryFile').addEventListener('change', handleFile); document.getElementById('cameraFile').addEventListener('change', handleFile); document.getElementById('jobSearch').addEventListener('input', renderSearch); loadSheetLinks(); loadJobs(); });
     function allTypes() { return Object.keys(PHOTO_LABELS); }
     function isFilled(type) { return (currentProgress.filledTypes || []).indexOf(type) !== -1; }
     function setStatus(text, error, success) { const el = document.getElementById('status'); el.textContent = text || ''; el.className = 'status' + (error ? ' error' : '') + (success ? ' success' : ''); }
