@@ -361,6 +361,7 @@ function getSheetEditLinks() {
     templateUrl: buildSheetEditUrl_(template),
     assetMasterUrl: buildSheetEditUrl_(assetMaster),
     reportWebUrl: webAppUrl || '?page=report',
+    portalWebUrl: webAppUrl ? webAppUrl + '?page=portal' : '?page=portal',
     assetWebUrl: webAppUrl ? webAppUrl + '?page=asset' : '?page=asset'
   };
 }
