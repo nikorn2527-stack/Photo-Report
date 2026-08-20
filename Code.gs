@@ -51,6 +51,7 @@ const CONFIG = Object.freeze({
     'ลงโปรแกรม',
     'รอ Activate',
     'พร้อมติดตั้ง',
+    'ติดตั้งเสร็จ',
     'ติดปัญหา'
   ])
 });
@@ -575,6 +576,7 @@ function buildPortalDashboard_(rows) {
     disposed: counts['ตัดจำหน่าย'] || 0,
     prepWindows: prepCounts['ลง Windows'] || 0,
     prepReady: prepCounts['พร้อมติดตั้ง'] || 0,
+    prepInstalled: prepCounts['ติดตั้งเสร็จ'] || 0,
     prepReturned: rows.filter(function(row) { return !!row.oldComSn; }).length,
     prepInProgress: (prepCounts['ลงโปรแกรม'] || 0) + (prepCounts['รอ Activate'] || 0),
     prepReceived: prepCounts['รับเข้าแล้ว'] || 0,

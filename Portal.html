@@ -34,6 +34,7 @@
       .prep-select.prep-received { border-color:#b8c1cb; color:#5f6368; }
       .prep-select.prep-progress { border-color:#e0b28b; background:#fff8ef; color:#8a4b0f; }
       .prep-select.prep-ready { border-color:#8bb89a; background:#e8f5ec; color:#137333; }
+      .prep-select.prep-installed { border-color:#7aa7d9; background:#e8f0fe; color:#174ea6; }
       .prep-select.prep-returned { border-color:#9bb7df; background:#e7f0fe; color:#174ea6; }
       .prep-select.prep-blocked { border-color:#e5a19d; background:#fce8e6; color:var(--danger); }
       .return-cell { min-width:150px; color:var(--muted); font-size:12px; white-space:nowrap; }
@@ -194,7 +195,7 @@
           <div class="field"><label>วันเริ่มเช่า</label><input id="startDate" class="input" type="date"></div>
           <div class="field"><label>วันหมดสัญญา</label><input id="endDate" class="input" type="date"></div>
           <div class="field"><label>สถานะชุด</label><select id="assetStatus" class="select"><option>พร้อมส่ง</option><option>ติดตั้งแล้ว</option><option>รับคืนแล้ว</option><option>ส่งซ่อม</option><option>ตัดจำหน่าย</option></select></div>
-          <div class="field"><label>สถานะเตรียมเครื่อง</label><select id="prepStatus" class="select"><option>รับเข้าแล้ว</option><option>ลง Windows</option><option>ลงโปรแกรม</option><option>รอ Activate</option><option>พร้อมติดตั้ง</option><option>ติดปัญหา</option></select></div>
+          <div class="field"><label>สถานะเตรียมเครื่อง</label><select id="prepStatus" class="select"><option>รับเข้าแล้ว</option><option>ลง Windows</option><option>ลงโปรแกรม</option><option>รอ Activate</option><option>พร้อมติดตั้ง</option><option>ติดตั้งเสร็จ</option><option>ติดปัญหา</option></select></div>
         </div></div>
         <div class="modal-actions"><button id="saveAssetButton" type="button" class="button button-primary" onclick="saveAsset()">บันทึกข้อมูล</button><button type="button" class="button button-outline" onclick="closeAssetEditor()">ยกเลิก</button></div>
       </section>
@@ -203,7 +204,7 @@
     <script>
       let portalData = { dashboard:{}, assetRows:[], sheetLinks:{} };
       let currentView = 'dashboard';
-      const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดปัญหา'];
+      const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดตั้งเสร็จ','ติดปัญหา'];
       const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','ipAddress','startDate','endDate','assetStatus','prepStatus'];
       const CHECK_IDS = ['deliverAio','deliverUps','deliverHub','deliverKbMouse','deliverAdapter','deliverUpsCord'];
       const DOCS = [
@@ -245,6 +246,7 @@
           ['เครื่องทั้งหมด', d.total || 0, 'green'],
           ['ลง Windows', d.prepWindows || 0, 'blue'],
           ['พร้อมติดตั้ง', d.prepReady || 0, 'green'],
+          ['ติดตั้งเสร็จ', d.prepInstalled || 0, 'blue'],
           ['รับคืนแล้ว', d.prepReturned || 0, 'gray'],
           ['ติดปัญหา', d.prepBlocked || 0, 'red']
         ];
@@ -310,7 +312,7 @@
 
       function prepStatusControl(row) {
         const current = row.prepStatus || PREP_STATUS_OPTIONS[0];
-        const cls = current === 'พร้อมติดตั้ง' ? 'prep-ready' : (current === 'ติดปัญหา' ? 'prep-blocked' : (current === 'รับเข้าแล้ว' ? 'prep-received' : 'prep-progress'));
+        const cls = current === 'ติดตั้งเสร็จ' ? 'prep-installed' : (current === 'พร้อมติดตั้ง' ? 'prep-ready' : (current === 'ติดปัญหา' ? 'prep-blocked' : (current === 'รับเข้าแล้ว' ? 'prep-received' : 'prep-progress')));
         const options = PREP_STATUS_OPTIONS.map(function(status) { return '<option value="' + escapeHtml(status) + '"' + (status === current ? ' selected' : '') + '>' + escapeHtml(status) + '</option>'; }).join('');
         return '<select class="prep-select ' + cls + '" aria-label="สถานะเตรียมเครื่อง ' + escapeHtml(row.jobNo) + '" onchange="updatePrepStatus(' + row.rowNumber + ', this.value)">' + options + '</select>';
       }
