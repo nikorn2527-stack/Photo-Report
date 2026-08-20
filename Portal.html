@@ -50,6 +50,10 @@
       .plan-summary .metric { padding:13px; border:1px solid var(--border); border-radius:10px; background:#fff; }
       .plan-summary .metric-label { color:var(--muted); font-size:12px; }
       .plan-summary .metric-value { margin-top:4px; font-size:24px; font-weight:900; }
+      .plan-progress { grid-column:1/-1; padding:13px; border:1px solid var(--border); border-radius:10px; background:#f8fbff; }
+      .plan-progress-head { display:flex; justify-content:space-between; gap:12px; margin-bottom:8px; color:var(--text); font-size:13px; }
+      .plan-progress-track { height:12px; overflow:hidden; border-radius:10px; background:#e4eaf2; }
+      .plan-progress-track > span { display:block; height:100%; border-radius:10px; background:linear-gradient(90deg,#1967d2,#16834b); }
       .plan-note { margin:0 0 12px; color:var(--muted); font-size:12px; }
       @media (max-width:900px) { .plan-summary{grid-template-columns:repeat(2,1fr)} }
       .panel { padding:14px; border:1px solid var(--border); border-radius:10px; background:#fff; }
@@ -146,7 +150,7 @@
 
         <section id="planView" class="view" hidden>
           <h2 class="view-title">แผนการดำเนินงาน</h2>
-          <p class="view-note">เปรียบเทียบจำนวนตามแผนกับข้อมูลอุปกรณ์ใน Asset_Master โดยแยกพื้นที่ปฏิบัติงาน</p>
+          <p class="view-note">ดูภาพรวมว่าแผนวันนี้วางไว้เท่าไร ทำจริงแล้วเท่าไร เหลือจากแผนเท่าไร และความคืบหน้าอยู่ที่กี่เปอร์เซ็นต์</p>
           <div id="planLocationTabs" class="plan-location-tabs"></div>
           <div id="planSummary" class="plan-summary"></div>
           <section class="panel plan-panel"><h3 id="planTableTitle" class="panel-title">รายการตามแผน</h3><div class="table-wrap"><table class="plan-table"><thead><tr><th>ตึก / ชั้น</th><th>หน่วยงาน</th><th>จำนวนตามแผน</th><th>เริ่ม</th><th>วัน</th><th>เสร็จ</th></tr></thead><tbody id="planTableBody"></tbody></table></div></section>
@@ -286,12 +290,18 @@
           return '<button type="button" class="plan-location-tab ' + (key === currentPlanKey ? 'active' : '') + '" onclick="selectPlanLocation(\'' + key + '\')">' + escapeHtml(item.label) + '</button>';
         }).join('');
         const item = locations[currentPlanKey];
-        const remaining = Math.max(0, (item.planCount || 0) - (item.installedCount || 0));
-        document.getElementById('planSummary').innerHTML = '<div class="metric"><div class="metric-label">ตามแผน</div><div class="metric-value">' + (item.planCount || 0) + '</div></div>' +
-          '<div class="metric"><div class="metric-label">พบใน Asset_Master</div><div class="metric-value">' + (item.actualCount || 0) + '</div></div>' +
-          '<div class="metric"><div class="metric-label">จ่ายออก / ยังไม่คืน</div><div class="metric-value">' + (item.deliveredCount || 0) + '</div></div>' +
-          '<div class="metric"><div class="metric-label">ติดตั้งแล้ว</div><div class="metric-value">' + (item.installedCount || 0) + '</div></div>';
-        document.getElementById('planTableTitle').textContent = 'รายการตามแผน — ' + item.label;
+        const planCount = item.planCount || 0;
+        const actualCount = item.installedCount || 0;
+        const remaining = Math.max(0, planCount - actualCount);
+        const gap = actualCount - planCount;
+        const progress = planCount ? Math.min(100, Math.round(actualCount / planCount * 100)) : 0;
+        const progressLabel = gap > 0 ? 'เกินแผน ' + gap + ' รายการ' : (remaining ? 'เหลือ ' + remaining + ' รายการ' : 'ครบตามแผน');
+        document.getElementById('planSummary').innerHTML = '<div class="metric"><div class="metric-label">แผนที่วางไว้</div><div class="metric-value">' + planCount + '</div></div>' +
+          '<div class="metric"><div class="metric-label">ติดตั้งเสร็จแล้ว</div><div class="metric-value">' + actualCount + '</div></div>' +
+          '<div class="metric"><div class="metric-label">' + (gap > 0 ? 'เกินแผน' : 'เหลือจากแผน') + '</div><div class="metric-value">' + Math.abs(gap || remaining) + '</div></div>' +
+          '<div class="metric"><div class="metric-label">ความคืบหน้า</div><div class="metric-value">' + progress + '%</div></div>' +
+          '<div class="plan-progress"><div class="plan-progress-head"><strong>' + progressLabel + '</strong><span>' + actualCount + '/' + planCount + '</span></div><div class="plan-progress-track"><span style="width:' + progress + '%"></span></div></div>';
+        document.getElementById('planTableTitle').textContent = 'รายละเอียดแผนงาน — ' + item.label;
         const rows = item.planRows || [];
         document.getElementById('planTableBody').innerHTML = rows.length ? rows.map(function(row) {
           return '<tr><td>' + escapeHtml(row.building || '-') + '</td><td>' + escapeHtml(row.department || '-') + '</td><td><strong>' + (row.quantity || 0) + '</strong></td><td>' + escapeHtml(row.start || '-') + '</td><td>' + escapeHtml(row.days || '-') + '</td><td>' + escapeHtml(row.finish || '-') + '</td></tr>';
