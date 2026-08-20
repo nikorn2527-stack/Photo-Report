@@ -41,6 +41,8 @@ const CONFIG = Object.freeze({
   ]),
   PREP_STATUS_COLUMN: 31,
   PREP_STATUS_HEADER: 'สถานะเตรียมเครื่อง',
+  IP_COLUMN: 32,
+  IP_HEADER: 'เลข IP',
   PREP_STATUS_DEFAULT: 'ลง Windows',
   PREP_STATUS_NEW_DEFAULT: 'รับเข้าแล้ว',
   PREP_STATUS_OPTIONS: Object.freeze([
@@ -377,6 +379,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   }
   const existingRow = existing.find(function(item) { return item.rowNumber === targetRow; });
   const prepStatus = normalizePreparationStatus_(data.prepStatus || (existingRow && existingRow.prepStatus) || CONFIG.PREP_STATUS_NEW_DEFAULT);
+  const ipAddress = data.ipAddress !== undefined ? String(data.ipAddress || '').trim() : ((existingRow && existingRow.ipAddress) || '');
 
   const mainValues = [[
     jobNo,
@@ -412,6 +415,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   sheet.getRange(targetRow, 26).setValue(data.status || data.assetStatus || 'พร้อมส่ง');
   ensurePreparationStatusColumn_(sheet);
   sheet.getRange(targetRow, CONFIG.PREP_STATUS_COLUMN).setValue(prepStatus);
+  sheet.getRange(targetRow, CONFIG.IP_COLUMN).setValue(ipAddress);
   sheet.getRange(targetRow, 29, 1, 2).setValues([[
     data.oldComSn || '',
     data.oldUpsSn || ''
@@ -440,7 +444,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
 function getAssetPortalRows_(sheet) {
   const lastRow = Math.max(sheet.getLastRow(), CONFIG.HEADER_ROW - 1);
   if (lastRow < CONFIG.HEADER_ROW) return [];
-  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.PREP_STATUS_COLUMN).getValues();
+  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.IP_COLUMN).getValues();
   return raw.map(function(row, index) {
     return {
       rowNumber: CONFIG.HEADER_ROW + index,
@@ -475,6 +479,7 @@ function getAssetPortalRows_(sheet) {
       oldComSn: toPortalValue_(row[28]),
       oldUpsSn: toPortalValue_(row[29]),
       prepStatus: toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) || CONFIG.PREP_STATUS_DEFAULT,
+      ipAddress: toPortalValue_(row[CONFIG.IP_COLUMN - 1]),
     };
   }).filter(function(row) {
     return row.jobNo || row.setCode || row.building || row.department;
@@ -482,11 +487,13 @@ function getAssetPortalRows_(sheet) {
 }
 
 function ensurePreparationStatusColumn_(sheet) {
-  const requiredColumns = CONFIG.PREP_STATUS_COLUMN;
+  const requiredColumns = Math.max(CONFIG.PREP_STATUS_COLUMN, CONFIG.IP_COLUMN);
   const currentColumns = sheet.getMaxColumns();
   if (currentColumns < requiredColumns) sheet.insertColumnsAfter(currentColumns, requiredColumns - currentColumns);
-  const headerCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.PREP_STATUS_COLUMN);
-  if (!headerCell.getDisplayValue()) headerCell.setValue(CONFIG.PREP_STATUS_HEADER);
+  const prepHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.PREP_STATUS_COLUMN);
+  if (!prepHeaderCell.getDisplayValue()) prepHeaderCell.setValue(CONFIG.PREP_STATUS_HEADER);
+  const ipHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.IP_COLUMN);
+  if (!ipHeaderCell.getDisplayValue()) ipHeaderCell.setValue(CONFIG.IP_HEADER);
 }
 
 function normalizePreparationStatus_(value) {

@@ -38,6 +38,7 @@
       .prep-select.prep-blocked { border-color:#e5a19d; background:#fce8e6; color:var(--danger); }
       .return-cell { min-width:150px; color:var(--muted); font-size:12px; white-space:nowrap; }
       .return-sn { display:block; margin-top:2px; color:var(--text); font-weight:800; }
+      .ip-cell { min-width:125px; white-space:nowrap; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
       .dashboard-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:14px; margin-top:14px; }
       .panel { padding:14px; border:1px solid var(--border); border-radius:10px; background:#fff; }
       .panel-title { margin:0 0 10px; font-size:16px; }
@@ -138,7 +139,7 @@
           <p id="assetMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>สถานะชุด</th><th>เตรียมเครื่อง</th><th>รับคืน / COM S/N เดิม</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
+              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>สถานะชุด</th><th>เตรียมเครื่อง</th><th>รับคืน / COM S/N เดิม</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
               <tbody id="assetTableBody"></tbody>
             </table>
           </div>
@@ -181,6 +182,7 @@
           <div class="field"><label>รุ่น Hub USB</label><input id="hubModel" class="input" type="text"></div>
           <div class="field"><label>COM S/N เดิม</label><input id="oldComSn" class="input" type="text"></div>
           <div class="field"><label>UPS S/N เดิม</label><input id="oldUpsSn" class="input" type="text"></div>
+          <div class="field"><label>เลข IP</label><input id="ipAddress" class="input" type="text" inputmode="decimal" placeholder="เช่น 192.168.1.10"></div>
         </div></div>
         <div class="form-section"><h3 class="form-section-title">รายการที่ส่งและสถานะ</h3><div class="form-grid">
           <label class="check-field"><input id="deliverAio" type="checkbox"> ส่ง AIO</label>
@@ -202,7 +204,7 @@
       let portalData = { dashboard:{}, assetRows:[], sheetLinks:{} };
       let currentView = 'dashboard';
       const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดปัญหา'];
-      const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','startDate','endDate','assetStatus','prepStatus'];
+      const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','ipAddress','startDate','endDate','assetStatus','prepStatus'];
       const CHECK_IDS = ['deliverAio','deliverUps','deliverHub','deliverKbMouse','deliverAdapter','deliverUpsCord'];
       const DOCS = [
         ['Dashboard','ภาพรวมสถานะชุดเช่า'],
@@ -281,16 +283,16 @@
         const status = document.getElementById('statusFilter').value;
         const prepStatus = document.getElementById('prepStatusFilter').value;
         const rows = (portalData.assetRows || []).filter(function(row) {
-          const text = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.upsSn,row.prepStatus].join(' ').toLowerCase();
+          const text = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.upsSn,row.ipAddress,row.prepStatus].join(' ').toLowerCase();
           return (!query || text.indexOf(query) !== -1) && (!status || row.status === status) && (!prepStatus || row.prepStatus === prepStatus);
         });
         document.getElementById('assetMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + (portalData.assetRows || []).length + ' รายการ';
         const body = document.getElementById('assetTableBody');
         body.innerHTML = '';
-          if (!rows.length) { body.innerHTML = '<tr><td colspan="11" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
+          if (!rows.length) { body.innerHTML = '<tr><td colspan="12" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + statusBadge(row.status) + '</td><td>' + prepStatusControl(row) + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + statusBadge(row.status) + '</td><td>' + prepStatusControl(row) + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
           body.appendChild(tr);
         });
       }
