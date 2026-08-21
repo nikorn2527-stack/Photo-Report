@@ -129,7 +129,7 @@
             <p class="brand-note">ระบบติดตามชุดเครื่องเช่า ตึก 69 — Dashboard, Asset Master และเอกสารปฏิบัติงาน</p>
           </div>
           <div class="brand-actions">
-            <a id="photoReportLink" class="photo-report-button" href="#" target="_top" rel="noopener">← กลับ Photo Report</a>
+            <a id="photoReportLink" class="photo-report-button" href="#" target="_top" rel="noopener" onclick="return openPhotoReport(event)">← กลับ Photo Report</a>
             <button id="openWorkbookButton" type="button" class="sheet-button" onclick="openWorkbook()">เปิด Google Sheet ทั้งไฟล์</button>
           </div>
         </header>
@@ -450,6 +450,26 @@
           link.href = '#';
           link.setAttribute('aria-disabled', 'true');
         }
+      }
+
+      function openPhotoReport(event) {
+        if (event) event.preventDefault();
+        const url = portalData.photoReportUrl || '';
+        if (!url) {
+          setStatus('ยังไม่มีลิงก์กลับหน้าเก็บรูปหน้างาน', true);
+          return false;
+        }
+        try {
+          if (window.top === window.self) {
+            window.location.assign(url);
+          } else {
+            window.top.location.href = url;
+          }
+        } catch (error) {
+          const opened = window.open(url, '_blank', 'noopener,noreferrer');
+          if (!opened) setStatus('เบราว์เซอร์บล็อกการกลับหน้า Photo Report กรุณาอนุญาตการเปิดหน้าใหม่', true);
+        }
+        return false;
       }
 
       function openWorkbook() { openUrl(portalData.spreadsheetUrl); }
