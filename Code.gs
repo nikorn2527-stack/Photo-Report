@@ -69,6 +69,8 @@ const CONFIG = Object.freeze({
   PREP_STATUS_HEADER: 'สถานะเตรียมเครื่อง',
   IP_COLUMN: 32,
   IP_HEADER: 'เลข IP',
+  PROBLEM_COLUMN: 33,
+  PROBLEM_HEADER: 'สาเหตุที่ติดปัญหา',
   PREP_STATUS_DEFAULT: 'ลง Windows',
   PREP_STATUS_NEW_DEFAULT: 'รับเข้าแล้ว',
   PREP_STATUS_OPTIONS: Object.freeze([
@@ -517,6 +519,8 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   const existingRow = existing.find(function(item) { return item.rowNumber === targetRow; });
   const prepStatus = normalizePreparationStatus_(data.prepStatus || (existingRow && existingRow.prepStatus) || CONFIG.PREP_STATUS_NEW_DEFAULT);
   const ipAddress = data.ipAddress !== undefined ? String(data.ipAddress || '').trim() : ((existingRow && existingRow.ipAddress) || '');
+  const problemDetail = String(data.problemDetail || '').trim();
+  if (prepStatus === 'ติดปัญหา' && !problemDetail) throw new Error('กรุณาเลือกว่าติดปัญหาเรื่องอะไร');
 
   const mainValues = [[
     jobNo,
@@ -553,6 +557,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   ensurePreparationStatusColumn_(sheet);
   sheet.getRange(targetRow, CONFIG.PREP_STATUS_COLUMN).setValue(prepStatus);
   sheet.getRange(targetRow, CONFIG.IP_COLUMN).setValue(ipAddress);
+  sheet.getRange(targetRow, CONFIG.PROBLEM_COLUMN).setValue(prepStatus === 'ติดปัญหา' ? problemDetail : '');
   sheet.getRange(targetRow, 29, 1, 2).setValues([[
     data.oldComSn || '',
     data.oldUpsSn || ''
@@ -581,7 +586,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
 function getAssetPortalRows_(sheet) {
   const lastRow = Math.max(sheet.getLastRow(), CONFIG.HEADER_ROW - 1);
   if (lastRow < CONFIG.HEADER_ROW) return [];
-  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.IP_COLUMN).getValues();
+  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.PROBLEM_COLUMN).getValues();
   return raw.map(function(row, index) {
     return {
       rowNumber: CONFIG.HEADER_ROW + index,
@@ -617,6 +622,7 @@ function getAssetPortalRows_(sheet) {
       oldUpsSn: toPortalValue_(row[29]),
       prepStatus: toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) || CONFIG.PREP_STATUS_DEFAULT,
       ipAddress: toPortalValue_(row[CONFIG.IP_COLUMN - 1]),
+      problemDetail: toPortalValue_(row[CONFIG.PROBLEM_COLUMN - 1]),
     };
   }).filter(function(row) {
     return row.jobNo || row.setCode || row.building || row.department;
@@ -624,13 +630,15 @@ function getAssetPortalRows_(sheet) {
 }
 
 function ensurePreparationStatusColumn_(sheet) {
-  const requiredColumns = Math.max(CONFIG.PREP_STATUS_COLUMN, CONFIG.IP_COLUMN);
+  const requiredColumns = Math.max(CONFIG.PREP_STATUS_COLUMN, CONFIG.IP_COLUMN, CONFIG.PROBLEM_COLUMN);
   const currentColumns = sheet.getMaxColumns();
   if (currentColumns < requiredColumns) sheet.insertColumnsAfter(currentColumns, requiredColumns - currentColumns);
   const prepHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.PREP_STATUS_COLUMN);
   if (!prepHeaderCell.getDisplayValue()) prepHeaderCell.setValue(CONFIG.PREP_STATUS_HEADER);
   const ipHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.IP_COLUMN);
   if (!ipHeaderCell.getDisplayValue()) ipHeaderCell.setValue(CONFIG.IP_HEADER);
+  const problemHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.PROBLEM_COLUMN);
+  if (!problemHeaderCell.getDisplayValue()) problemHeaderCell.setValue(CONFIG.PROBLEM_HEADER);
 }
 
 function normalizePreparationStatus_(value) {
@@ -638,10 +646,13 @@ function normalizePreparationStatus_(value) {
   return CONFIG.PREP_STATUS_OPTIONS.indexOf(text) !== -1 ? text : CONFIG.PREP_STATUS_NEW_DEFAULT;
 }
 
-function updateAssetPreparationStatus(rowNumber, prepStatus) {
+function updateAssetPreparationStatus(rowNumber, prepStatus, problemDetail) {
   const targetRow = Number(rowNumber);
+  const status = String(prepStatus || '').trim();
+  const reason = String(problemDetail || '').trim();
   if (!targetRow || targetRow < CONFIG.HEADER_ROW) throw new Error('ไม่พบแถว Asset_Master ที่ต้องการแก้ไข');
-  if (CONFIG.PREP_STATUS_OPTIONS.indexOf(String(prepStatus || '').trim()) === -1) throw new Error('สถานะเตรียมเครื่องไม่ถูกต้อง');
+  if (CONFIG.PREP_STATUS_OPTIONS.indexOf(status) === -1) throw new Error('สถานะเตรียมเครื่องไม่ถูกต้อง');
+  if (status === 'ติดปัญหา' && !reason) throw new Error('กรุณาเลือกว่าติดปัญหาเรื่องอะไร');
 
   const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
   if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
@@ -649,9 +660,10 @@ function updateAssetPreparationStatus(rowNumber, prepStatus) {
   lock.waitLock(30000);
   try {
     ensurePreparationStatusColumn_(sheet);
-    sheet.getRange(targetRow, CONFIG.PREP_STATUS_COLUMN).setValue(String(prepStatus).trim());
+    sheet.getRange(targetRow, CONFIG.PREP_STATUS_COLUMN).setValue(status);
+    sheet.getRange(targetRow, CONFIG.PROBLEM_COLUMN).setValue(status === 'ติดปัญหา' ? reason : '');
     SpreadsheetApp.flush();
-    return { message: 'อัปเดตสถานะเตรียมเครื่องแล้ว', rowNumber: targetRow, prepStatus: String(prepStatus).trim() };
+    return { message: 'อัปเดตสถานะเตรียมเครื่องแล้ว', rowNumber: targetRow, prepStatus: status, problemDetail: status === 'ติดปัญหา' ? reason : '' };
   } finally {
     lock.releaseLock();
   }

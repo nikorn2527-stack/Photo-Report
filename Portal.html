@@ -39,6 +39,10 @@
       .prep-select.prep-installed { border-color:#7aa7d9; background:#e8f0fe; color:#174ea6; }
       .prep-select.prep-returned { border-color:#9bb7df; background:#e7f0fe; color:#174ea6; }
       .prep-select.prep-blocked { border-color:#e5a19d; background:#fce8e6; color:var(--danger); }
+      .problem-field { display:none; }
+      .problem-field.open { display:block; }
+      .problem-cell { min-width:190px; max-width:260px; color:var(--danger); font-size:12px; font-weight:700; }
+      .problem-inline { display:block; margin-top:4px; color:var(--danger); font-size:11px; font-weight:700; white-space:normal; }
       .return-cell { min-width:150px; color:var(--muted); font-size:12px; white-space:nowrap; }
       .return-sn { display:block; margin-top:2px; color:var(--text); font-weight:800; }
       .ip-cell { min-width:125px; white-space:nowrap; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
@@ -169,7 +173,7 @@
           <p id="assetMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>สถานะชุด</th><th>เตรียมเครื่อง</th><th>รับคืน / COM S/N เดิม</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
+              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>สถานะชุด</th><th>เตรียมเครื่อง</th><th>สาเหตุที่ติดปัญหา</th><th>รับคืน / COM S/N เดิม</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
               <tbody id="assetTableBody"></tbody>
             </table>
           </div>
@@ -225,7 +229,8 @@
           <div class="field"><label>วันเริ่มเช่า</label><input id="startDate" class="input" type="date"></div>
           <div class="field"><label>วันหมดสัญญา</label><input id="endDate" class="input" type="date"></div>
           <div class="field"><label>สถานะชุด</label><select id="assetStatus" class="select"><option>รอส่งมอบ</option><option>ส่งมอบแล้ว</option></select></div>
-          <div class="field"><label>สถานะเตรียมเครื่อง</label><select id="prepStatus" class="select"><option>รับเข้าแล้ว</option><option>ลง Windows</option><option>ลงโปรแกรม</option><option>รอ Activate</option><option>พร้อมติดตั้ง</option><option>ติดตั้งเสร็จ</option><option>ติดปัญหา</option></select></div>
+          <div class="field"><label>สถานะเตรียมเครื่อง</label><select id="prepStatus" class="select" onchange="syncProblemField()"><option>รับเข้าแล้ว</option><option>ลง Windows</option><option>ลงโปรแกรม</option><option>รอ Activate</option><option>พร้อมติดตั้ง</option><option>ติดตั้งเสร็จ</option><option>ติดปัญหา</option></select></div>
+          <div id="problemDetailField" class="field full problem-field"><label>ติดปัญหาเรื่องอะไร <span aria-hidden="true">*</span></label><select id="problemDetail" class="select"><option value="">-- เลือกสาเหตุที่ติดปัญหา --</option><option>เครื่อง / Hardware</option><option>Windows</option><option>ติดตั้งโปรแกรม</option><option>Activate</option><option>อุปกรณ์ไม่ครบ</option><option>รออะไหล่ / รอเปลี่ยนเครื่อง</option><option>รอข้อมูลจากหน่วยงาน</option><option>อื่นๆ</option></select></div>
         </div></div>
         <div class="modal-actions"><button id="saveAssetButton" type="button" class="button button-primary" onclick="saveAsset()">บันทึกข้อมูล</button><button type="button" class="button button-outline" onclick="closeAssetEditor()">ยกเลิก</button></div>
       </section>
@@ -235,7 +240,8 @@
       let portalData = { dashboard:{}, assetRows:[], sheetLinks:{} };
       let currentView = 'dashboard';
       const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดตั้งเสร็จ','ติดปัญหา'];
-      const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','ipAddress','startDate','endDate','assetStatus','prepStatus'];
+      const PROBLEM_OPTIONS = ['เครื่อง / Hardware','Windows','ติดตั้งโปรแกรม','Activate','อุปกรณ์ไม่ครบ','รออะไหล่ / รอเปลี่ยนเครื่อง','รอข้อมูลจากหน่วยงาน','อื่นๆ'];
+      const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','ipAddress','startDate','endDate','assetStatus','prepStatus','problemDetail'];
       const CHECK_IDS = ['deliverAio','deliverUps','deliverHub','deliverKbMouse','deliverAdapter','deliverUpsCord'];
       const DOCS = [
         ['Dashboard','ภาพรวมสถานะชุดเช่า'],
@@ -372,16 +378,16 @@
         const status = document.getElementById('statusFilter').value;
         const prepStatus = document.getElementById('prepStatusFilter').value;
         const rows = (portalData.assetRows || []).filter(function(row) {
-          const text = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.upsSn,row.ipAddress,row.prepStatus].join(' ').toLowerCase();
+          const text = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.upsSn,row.ipAddress,row.prepStatus,row.problemDetail].join(' ').toLowerCase();
           return (!query || text.indexOf(query) !== -1) && (!status || row.status === status) && (!prepStatus || row.prepStatus === prepStatus);
         });
         document.getElementById('assetMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + (portalData.assetRows || []).length + ' รายการ';
         const body = document.getElementById('assetTableBody');
         body.innerHTML = '';
-          if (!rows.length) { body.innerHTML = '<tr><td colspan="12" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
+          if (!rows.length) { body.innerHTML = '<tr><td colspan="13" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + statusBadge(row.status) + '</td><td>' + prepStatusControl(row) + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + statusBadge(row.status) + '</td><td>' + prepStatusControl(row) + '</td><td class="problem-cell">' + (row.prepStatus === 'ติดปัญหา' ? escapeHtml(row.problemDetail || 'ยังไม่ได้ระบุ') : '-') + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
           body.appendChild(tr);
         });
       }
@@ -401,16 +407,29 @@
         const current = row.prepStatus || PREP_STATUS_OPTIONS[0];
         const cls = current === 'ติดตั้งเสร็จ' ? 'prep-installed' : (current === 'พร้อมติดตั้ง' ? 'prep-ready' : (current === 'ติดปัญหา' ? 'prep-blocked' : (current === 'รับเข้าแล้ว' ? 'prep-received' : 'prep-progress')));
         const options = PREP_STATUS_OPTIONS.map(function(status) { return '<option value="' + escapeHtml(status) + '"' + (status === current ? ' selected' : '') + '>' + escapeHtml(status) + '</option>'; }).join('');
-        return '<select class="prep-select ' + cls + '" aria-label="สถานะเตรียมเครื่อง ' + escapeHtml(row.jobNo) + '" onchange="updatePrepStatus(' + row.rowNumber + ', this.value)">' + options + '</select>';
+        const reason = row.prepStatus === 'ติดปัญหา' && row.problemDetail ? '<span class="problem-inline">' + escapeHtml(row.problemDetail) + '</span>' : '';
+        return '<select class="prep-select ' + cls + '" aria-label="สถานะเตรียมเครื่อง ' + escapeHtml(row.jobNo) + '" onchange="handlePrepStatusChange(' + row.rowNumber + ', this.value)">' + options + '</select>' + reason;
       }
 
       function returnSnCell(row) {
         return row.oldComSn ? '<span class="status-badge status-installed">รับคืนแล้ว</span><span class="return-sn">' + escapeHtml(row.oldComSn) + '</span>' : '<span class="status-badge">ยังไม่คืน</span>';
       }
 
-      function updatePrepStatus(rowNumber, prepStatus) {
+      function handlePrepStatusChange(rowNumber, prepStatus) {
+        if (prepStatus === 'ติดปัญหา') {
+          const item = (portalData.assetRows || []).find(function(row) { return row.rowNumber === rowNumber; });
+          openAssetEditor(item);
+          document.getElementById('prepStatus').value = 'ติดปัญหา';
+          syncProblemField();
+          setStatus('กรุณาเลือกสาเหตุที่ติดปัญหา แล้วกดบันทึกข้อมูล', false);
+          return;
+        }
+        updatePrepStatus(rowNumber, prepStatus, '');
+      }
+
+      function updatePrepStatus(rowNumber, prepStatus, problemDetail) {
         setStatus('กำลังอัปเดตสถานะเตรียมเครื่อง...');
-        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตสถานะไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetPreparationStatus(rowNumber, prepStatus);
+        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตสถานะไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetPreparationStatus(rowNumber, prepStatus, problemDetail || '');
       }
 
       function renderDocuments() {
@@ -445,9 +464,24 @@
         item = item || {};
         document.getElementById('modalTitle').textContent = item.rowNumber ? 'แก้ไขชุดอุปกรณ์' : 'เพิ่มชุดอุปกรณ์';
         document.getElementById('assetRowNumber').value = item.rowNumber || '';
+        ensureProblemOption(item.problemDetail || '');
         FIELD_IDS.forEach(function(id) { const element = document.getElementById(id); if (element) element.value = item[id] || (id === 'prepStatus' ? PREP_STATUS_OPTIONS[0] : ''); });
         CHECK_IDS.forEach(function(id) { document.getElementById(id).checked = !!item[id]; });
+        syncProblemField();
         document.getElementById('assetModal').classList.add('open');
+      }
+      function ensureProblemOption(value) {
+        const select = document.getElementById('problemDetail');
+        if (!select || !value || Array.from(select.options).some(function(option) { return option.value === value; })) return;
+        const option = document.createElement('option'); option.value = value; option.textContent = value; select.appendChild(option);
+      }
+      function syncProblemField() {
+        const status = document.getElementById('prepStatus');
+        const field = document.getElementById('problemDetailField');
+        const detail = document.getElementById('problemDetail');
+        const active = status && status.value === 'ติดปัญหา';
+        if (field) field.classList.toggle('open', active);
+        if (detail) { detail.required = active; if (!active) detail.value = ''; }
       }
       function closeAssetEditor() { document.getElementById('assetModal').classList.remove('open'); }
 
@@ -456,6 +490,7 @@
         FIELD_IDS.forEach(function(id) { const element = document.getElementById(id); data[id] = element ? element.value : ''; });
         CHECK_IDS.forEach(function(id) { data[id] = document.getElementById(id).checked; });
         if (!data.jobNo) { setStatus('กรุณากรอกเลข Job', true); return; }
+        if (data.prepStatus === 'ติดปัญหา' && !data.problemDetail) { setStatus('กรุณาเลือกว่าติดปัญหาเรื่องอะไร', true); syncProblemField(); return; }
         const button = document.getElementById('saveAssetButton');
         button.disabled = true; button.textContent = 'กำลังบันทึก...'; setStatus('กำลังบันทึก Asset_Master...');
         google.script.run.withSuccessHandler(function(result) { button.disabled = false; button.textContent = 'บันทึกข้อมูล'; closeAssetEditor(); setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'บันทึกข้อมูล'; setStatus('บันทึกไม่สำเร็จ: ' + getErrorMessage(error), true); }).saveAssetMasterPortalRow(document.getElementById('assetRowNumber').value, data);
