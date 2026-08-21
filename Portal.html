@@ -254,7 +254,7 @@
           portalData = data || portalData;
           setPhotoReportLink();
           renderDashboard();
-          renderPlan();
+          renderPlanView();
           renderAssetFilters();
           renderAssetTable();
           renderDocuments();
@@ -320,7 +320,7 @@
 
       function selectPlanLocation(key) {
         currentPlanKey = key;
-        renderPlan();
+        renderPlanView();
       }
 
       function renderDashboard() {
