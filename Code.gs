@@ -517,6 +517,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
     throw new Error('มีเลข Job นี้อยู่แล้ว: ' + jobNo);
   }
   const existingRow = existing.find(function(item) { return item.rowNumber === targetRow; });
+  const assetType = String((data.assetType !== undefined && String(data.assetType).trim()) ? data.assetType : ((data.type !== undefined && String(data.type).trim()) ? data.type : ((existingRow && existingRow.type) || ''))).trim();
   const prepStatus = normalizePreparationStatus_(data.prepStatus || (existingRow && existingRow.prepStatus) || CONFIG.PREP_STATUS_NEW_DEFAULT);
   const ipAddress = data.ipAddress !== undefined ? String(data.ipAddress || '').trim() : ((existingRow && existingRow.ipAddress) || '');
   const problemDetail = String(data.problemDetail || '').trim();
@@ -525,7 +526,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   const mainValues = [[
     jobNo,
     data.setCode || '',
-    data.type || data.assetType || '',
+    assetType,
     data.building || '',
     data.floor || '',
     data.department || '',

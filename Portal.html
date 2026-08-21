@@ -482,6 +482,8 @@
       function openAssetEditorByRow(rowNumber) { openAssetEditor((portalData.assetRows || []).find(function(row) { return row.rowNumber === rowNumber; })); }
       function openAssetEditor(item) {
         item = item || {};
+        // ตารางส่งชื่อฟิลด์ประเภทชุดเป็น type แต่ฟอร์มใช้ assetType ต้อง map ก่อนเติมค่า
+        if (item.assetType === undefined || item.assetType === null || item.assetType === '') item.assetType = item.type || '';
         document.getElementById('modalTitle').textContent = item.rowNumber ? 'แก้ไขชุดอุปกรณ์' : 'เพิ่มชุดอุปกรณ์';
         document.getElementById('assetRowNumber').value = item.rowNumber || '';
         ensureProblemOption(item.problemDetail || '');
