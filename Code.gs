@@ -408,12 +408,11 @@ function getJobReportInfo(jobNo) {
   };
 }
 
-/**
- * คืนลิงก์แก้ไข Spreadsheet และชีตหลักสำหรับปุ่มใน Web App
- */
-function prepareDeliveryReturnForms(jobNo) {
+function prepareJobForm(jobNo, formType) {
   const requestedJob = String(jobNo || '').trim();
-  if (!requestedJob) throw new Error('กรุณาเลือก Job ก่อนเปิดเอกสาร Delivery + Return');
+  const type = String(formType || '').trim().toLowerCase();
+  if (!requestedJob) throw new Error('กรุณาเลือก Job ก่อนเปิดเอกสาร');
+  if (['delivery', 'return'].indexOf(type) === -1) throw new Error('ไม่รู้จักประเภทเอกสาร');
 
   const spreadsheet = getSpreadsheet_();
   const assetSheet = spreadsheet.getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
@@ -421,24 +420,22 @@ function prepareDeliveryReturnForms(jobNo) {
   const returnSheet = spreadsheet.getSheetByName('Return_Form');
   if (!assetSheet || !deliverySheet || !returnSheet) throw new Error('ไม่พบชีต Asset_Master, Delivery_Form หรือ Return_Form');
 
-  const lastRow = Math.max(assetSheet.getLastRow(), CONFIG.HEADER_ROW - 1);
-  const assetJobs = lastRow >= CONFIG.HEADER_ROW
-    ? assetSheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, 1).getDisplayValues().flat().map(function(value) { return String(value || '').trim(); })
-    : [];
-  const matchedJob = assetJobs.find(function(value) { return value.toLowerCase() === requestedJob.toLowerCase(); });
-  if (!matchedJob) throw new Error('ไม่พบ Job นี้ใน Asset_Master: ' + requestedJob);
-
+  const rows = getAssetPortalRows_(assetSheet);
+  const asset = rows.find(function(row) { return String(row.jobNo).toLowerCase() === requestedJob.toLowerCase(); });
+  if (!asset) throw new Error('ไม่พบ Job นี้ใน Asset_Master: ' + requestedJob);
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    deliverySheet.getRange('B4').setValue(matchedJob);
-    if (!returnSheet.getRange('B4').getFormula()) returnSheet.getRange('B4').setValue(matchedJob);
+    deliverySheet.getRange('B4').setValue(asset.jobNo);
+    if (!returnSheet.getRange('B4').getFormula()) returnSheet.getRange('B4').setValue(asset.jobNo);
     SpreadsheetApp.flush();
+    const sheet = type === 'delivery' ? deliverySheet : returnSheet;
     return {
-      jobNo: matchedJob,
-      deliveryUrl: buildSheetEditUrl_(deliverySheet),
-      returnUrl: buildSheetEditUrl_(returnSheet),
-      message: 'เตรียม Delivery_Form และ Return_Form สำหรับ ' + matchedJob + ' แล้ว'
+      jobNo: asset.jobNo,
+      formType: type,
+      formName: type === 'delivery' ? 'ใบส่ง' : 'ใบรับ',
+      sheetUrl: buildSheetEditUrl_(sheet),
+      message: 'เตรียม ' + (type === 'delivery' ? 'ใบส่ง' : 'ใบรับ') + ' สำหรับ ' + asset.jobNo + ' แล้ว'
     };
   } finally {
     lock.releaseLock();
@@ -604,7 +601,6 @@ function saveAssetMasterPortalRow(rowNumber, data) {
     parsePortalDate_(data.startDate),
     parsePortalDate_(data.endDate)
   ]]);
-  sheet.getRange(targetRow, 26).setValue(      data.status || data.assetStatus || 'รอส่งมอบ');
   ensurePreparationStatusColumn_(sheet);
   sheet.getRange(targetRow, CONFIG.PREP_STATUS_COLUMN).setValue(prepStatus);
   sheet.getRange(targetRow, CONFIG.IP_COLUMN).setValue(ipAddress);
