@@ -134,7 +134,9 @@
       .table-meta { margin:0 0 8px; color:var(--muted); font-size:13px; }
       .table-wrap { overflow:auto; border:1px solid var(--border); border-radius:9px; }
       table { width:100%; min-width:1210px; border-collapse:collapse; }
-      .asset-table { min-width:1900px; }
+      .asset-table { min-width:1500px; }
+      .asset-table th:last-child, .asset-table td:last-child { position:sticky; right:0; z-index:2; background:#fff; box-shadow:-4px 0 8px rgba(32,33,36,.08); }
+      .asset-table th:last-child { z-index:3; background:#f1f3f4; }
       .work-table { min-width:1450px; }
       th,td { padding:10px; border-bottom:1px solid #e4e7eb; text-align:left; vertical-align:middle; font-size:13px; }
       th { position:sticky; top:0; z-index:1; background:#f1f3f4; color:var(--muted); font-size:12px; white-space:nowrap; }
@@ -156,6 +158,15 @@
       .document-card p { margin:7px 0 14px; color:var(--muted); font-size:13px; }
       .document-actions { display:flex; gap:7px; flex-wrap:wrap; }
       .modal-backdrop { position:fixed; z-index:10; inset:0; display:none; align-items:flex-end; justify-content:center; background:rgba(32,33,36,.55); }
+      .modal.details-modal { max-width:900px; }
+      .details-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+      .detail-card { min-width:0; padding:10px 12px; border:1px solid var(--border); border-radius:9px; background:#fafbfc; }
+      .detail-card-wide { grid-column:1 / -1; }
+      .detail-label { color:var(--muted); font-size:11px; font-weight:800; }
+      .detail-value { margin-top:3px; color:var(--text); font-size:13px; font-weight:700; overflow-wrap:anywhere; }
+      .detail-section-title { grid-column:1 / -1; margin:7px 0 0; padding-top:10px; border-top:1px solid var(--border); color:var(--blue); font-size:14px; font-weight:900; }
+      @media (max-width:640px) { .details-grid{grid-template-columns:1fr 1fr} .detail-card-wide{grid-column:1 / -1} }
+      @media (max-width:380px) { .details-grid{grid-template-columns:1fr} }
       .modal-backdrop.open { display:flex; }
       .modal { width:100%; max-width:760px; max-height:94vh; overflow:auto; padding:10px 16px calc(18px + env(safe-area-inset-bottom)); border-radius:18px 18px 0 0; background:#fff; box-shadow:0 -4px 18px rgba(0,0,0,.2); }
       .handle { width:42px; height:4px; margin:0 auto 12px; border-radius:4px; background:#c6c9ce; }
@@ -237,7 +248,7 @@
 
         <section id="assetView" class="view" hidden>
           <h2 class="view-title">Asset_Master</h2>
-          <p class="view-note">แหล่งข้อมูลหลักสำหรับแก้ไขข้อมูลและสถานะทั้งหมดของชุดอุปกรณ์ รวมถึงการติ๊กส่ง UPS และ USB HUB</p>
+          <p class="view-note">แหล่งข้อมูลหลักสำหรับงานประจำวัน แสดงเฉพาะคอลัมน์ที่ต้องใช้งาน ส่วนข้อมูลเพิ่มเติมเปิดดูได้ที่ “รายละเอียด” หรือ “แก้ไข”</p>
           <div class="toolbar">
             <input id="assetSearch" class="search" type="search" placeholder="ค้นหา Job, รหัสชุด, สถานที่, รุ่น หรือ S/N" oninput="renderAssetTable()">
             <select id="statusFilter" class="filter" onchange="renderAssetTable()"><option value="">สถานะชุดทั้งหมด</option></select>
@@ -248,7 +259,7 @@
           <p id="assetMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
           <div class="table-wrap">
             <table class="asset-table">
-              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>สถานะชุด</th><th>ส่ง AIO</th><th>ส่ง UPS + สายไฟ</th><th>ส่ง USB HUB</th><th>ส่ง KB + Mouse</th><th>ส่ง Adapter</th><th>เตรียมเครื่อง</th><th>สาเหตุที่ติดปัญหา</th><th>สถานะการติดตั้ง</th><th>เหตุผลติดตั้งไม่ได้/ไม่ทัน</th><th>รับคืน / COM S/N เดิม</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
+              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>สถานะชุด</th><th>ส่ง AIO</th><th>ส่ง UPS + สายไฟ</th><th>ส่ง USB HUB</th><th>ส่ง KB + Mouse</th><th>ส่ง Adapter</th><th>เตรียมเครื่อง</th><th>สถานะการติดตั้ง</th><th>การทำงาน</th></tr></thead>
               <tbody id="assetTableBody"></tbody>
             </table>
           </div>
@@ -309,6 +320,16 @@
           <div id="installReasonField" class="field full problem-field"><label>เหตุผลติดตั้งไม่ได้/ไม่ทัน <span aria-hidden="true">*</span></label><input id="installReason" class="input" type="text" placeholder="เช่น รอพื้นที่, รอไฟฟ้า, อุปกรณ์ไม่ครบ, เครื่องมีปัญหา"></div>
         </div></div>
         <div class="modal-actions"><button id="saveAssetButton" type="button" class="button button-primary" onclick="saveAsset()">บันทึกข้อมูล</button><button type="button" class="button button-outline" onclick="closeAssetEditor()">ยกเลิก</button></div>
+      </section>
+    </div>
+
+    <div id="assetDetailsModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="assetDetailsTitle">
+      <section class="modal details-modal">
+        <div class="handle"></div>
+        <h2 id="assetDetailsTitle" class="modal-title">รายละเอียดชุดอุปกรณ์</h2>
+        <p class="modal-note">ข้อมูลอ่านอย่างเดียวจาก Asset_Master หากต้องการเปลี่ยนแปลง ให้กด “แก้ไขข้อมูล”</p>
+        <div id="assetDetailsBody" class="details-grid"></div>
+        <div class="modal-actions"><button type="button" class="button button-primary" onclick="editDetailsAsset()">แก้ไขข้อมูล</button><button type="button" class="button button-outline" onclick="closeAssetDetails()">ปิด</button></div>
       </section>
     </div>
 
@@ -473,10 +494,10 @@
         document.getElementById('assetMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + (portalData.assetRows || []).length + ' รายการ';
         const body = document.getElementById('assetTableBody');
         body.innerHTML = '';
-          if (!rows.length) { body.innerHTML = '<tr><td colspan="20" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
+          if (!rows.length) { body.innerHTML = '<tr><td colspan="16" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td class="problem-cell">' + (row.prepStatus === 'ติดปัญหา' ? escapeHtml(row.problemDetail || 'ยังไม่ได้ระบุ') : '-') + '</td><td>' + installStatusControl(row) + '</td><td class="problem-cell">' + ((row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน') ? escapeHtml(row.installReason || 'ยังไม่ได้ระบุ') : '-') + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">Photo</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">Photo</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
           body.appendChild(tr);
         });
       }
@@ -738,6 +759,20 @@
       }
       function openUrl(url) { if (url && url !== '#') window.open(url, '_blank'); else setStatus('ยังไม่มีลิงก์เอกสาร', true); }
 
+      let currentDetailsItem = null;
+      function openAssetDetailsByRow(rowNumber) { openAssetDetails((portalData.assetRows || []).find(function(row) { return row.rowNumber === rowNumber; })); }
+      function openAssetDetails(item) {
+        item = item || {};
+        currentDetailsItem = item;
+        document.getElementById('assetDetailsTitle').textContent = 'รายละเอียด ' + (item.jobNo || 'ชุดอุปกรณ์');
+        const value = function(v) { return escapeHtml(v === undefined || v === null || v === '' ? '-' : v); };
+        const field = function(label, v, wide) { return '<div class="detail-card' + (wide ? ' detail-card-wide' : '') + '"><div class="detail-label">' + label + '</div><div class="detail-value">' + value(v) + '</div></div>'; };
+        const section = function(label) { return '<div class="detail-section-title">' + label + '</div>'; };
+        document.getElementById('assetDetailsBody').innerHTML = section('ข้อมูล Job และสถานที่') + field('เลข Job', item.jobNo) + field('รหัสชุด', item.setCode) + field('ประเภทชุด', item.type) + field('ตึก', item.building) + field('ชั้น', item.floor) + field('หน่วยงาน', item.department, true) + field('ห้อง / จุดวาง', item.room) + field('ผู้ติดต่อ', item.contact) + field('เลขสัญญา', item.contractNo) + section('ข้อมูลเครื่องและอุปกรณ์') + field('Brand / Model', item.brand, true) + field('สเปกเครื่อง', item.specs, true) + field('S/N AIO', item.aioSn) + field('MAC Address', item.mac) + field('Windows Key', item.windowsKey, true) + field('รุ่น UPS', item.upsModel) + field('S/N UPS', item.upsSn) + field('รุ่น Hub USB', item.hubModel) + section('ข้อมูลสัญญาและรับคืน') + field('วันเริ่มเช่า', item.startDate) + field('วันหมดสัญญา', item.endDate) + field('วันคงเหลือ', item.remaining) + field('แจ้งเตือน', item.alert) + field('COM S/N เดิม', item.oldComSn) + field('UPS S/N เดิม', item.oldUpsSn) + section('สรุปสถานะ') + field('สถานะชุดอุปกรณ์', item.status) + field('สถานะเตรียมเครื่อง', item.prepStatus) + field('สาเหตุที่ติดปัญหา', item.problemDetail, true) + field('สถานะการติดตั้ง', item.installStatus) + field('เหตุผลติดตั้งไม่ได้/ไม่ทัน', item.installReason, true) + field('ส่ง AIO', item.deliverAio ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง UPS + สายไฟ', item.deliverUps ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง USB HUB', item.deliverHub ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง KB + Mouse', item.deliverKbMouse ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง Adapter', item.deliverAdapter ? 'ส่งแล้ว' : 'ยังไม่ส่ง');
+        document.getElementById('assetDetailsModal').classList.add('open');
+      }
+      function closeAssetDetails() { document.getElementById('assetDetailsModal').classList.remove('open'); currentDetailsItem = null; }
+      function editDetailsAsset() { const item = currentDetailsItem; closeAssetDetails(); if (item) openAssetEditor(item); }
       function openAssetEditorByRow(rowNumber) { openAssetEditor((portalData.assetRows || []).find(function(row) { return row.rowNumber === rowNumber; })); }
       function openAssetEditor(item) {
         item = item || {};

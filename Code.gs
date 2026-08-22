@@ -65,15 +65,22 @@ const CONFIG = Object.freeze({
     'before4',
     'after4'
   ]),
-  PREP_STATUS_COLUMN: 31,
+  START_DATE_COLUMN: 23,
+  END_DATE_COLUMN: 24,
+  ASSET_STATUS_COLUMN: 25,
+  REMAINING_COLUMN: 26,
+  ALERT_COLUMN: 27,
+  OLD_COM_SN_COLUMN: 28,
+  OLD_UPS_SN_COLUMN: 29,
+  PREP_STATUS_COLUMN: 30,
   PREP_STATUS_HEADER: 'สถานะเตรียมเครื่อง',
-  IP_COLUMN: 32,
+  IP_COLUMN: 31,
   IP_HEADER: 'เลข IP',
-  PROBLEM_COLUMN: 33,
+  PROBLEM_COLUMN: 32,
   PROBLEM_HEADER: 'สาเหตุที่ติดปัญหา',
-  INSTALL_STATUS_COLUMN: 34,
+  INSTALL_STATUS_COLUMN: 33,
   INSTALL_STATUS_HEADER: 'สถานะการติดตั้ง',
-  INSTALL_REASON_COLUMN: 35,
+  INSTALL_REASON_COLUMN: 34,
   INSTALL_REASON_HEADER: 'เหตุผลติดตั้งไม่ได้/ไม่ทัน',
   INSTALL_STATUS_DEFAULT: 'รอดำเนินการ',
   INSTALL_STATUS_OPTIONS: Object.freeze([
@@ -592,12 +599,12 @@ function saveAssetMasterPortalRow(rowNumber, data) {
     data.hubModel || '',
     toBoolean_(data.deliverHub),
     toBoolean_(data.deliverKbMouse),
-    toBoolean_(data.deliverAdapter),
-    toBoolean_(data.deliverUpsCord)
+    toBoolean_(data.deliverAdapter)
   ]];
 
-  sheet.getRange(targetRow, 1, 1, 23).setValues(mainValues);
-  sheet.getRange(targetRow, 24, 1, 2).setValues([[
+  // Asset_Master ปัจจุบันไม่มีคอลัมน์สายไฟ UPS แยกแล้ว จึงเขียนข้อมูลหลักเพียง A:V
+  sheet.getRange(targetRow, 1, 1, 22).setValues(mainValues);
+  sheet.getRange(targetRow, CONFIG.START_DATE_COLUMN, 1, 2).setValues([[
     parsePortalDate_(data.startDate),
     parsePortalDate_(data.endDate)
   ]]);
@@ -607,20 +614,20 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   sheet.getRange(targetRow, CONFIG.PROBLEM_COLUMN).setValue(prepStatus === 'ติดปัญหา' ? problemDetail : '');
   sheet.getRange(targetRow, CONFIG.INSTALL_STATUS_COLUMN).setValue(installStatus);
   sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue((installStatus === 'ติดตั้งไม่ได้' || installStatus === 'ติดตั้งไม่ทัน') ? installReason : '');
-  sheet.getRange(targetRow, 29, 1, 2).setValues([[
+  sheet.getRange(targetRow, CONFIG.OLD_COM_SN_COLUMN, 1, 2).setValues([[
     data.oldComSn || '',
     data.oldUpsSn || ''
   ]]);
 
   // ถ้าเป็นแถวใหม่ ให้คัดลอกสูตรวันคงเหลือและการแจ้งเตือนจากแถวก่อนหน้า
-  if (!sheet.getRange(targetRow, 27).getFormula()) {
+  if (!sheet.getRange(targetRow, CONFIG.REMAINING_COLUMN).getFormula()) {
     if (targetRow > CONFIG.HEADER_ROW) {
-      const previous = sheet.getRange(targetRow - 1, 27, 1, 2);
-      previous.copyTo(sheet.getRange(targetRow, 27, 1, 2), SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+      const previous = sheet.getRange(targetRow - 1, CONFIG.REMAINING_COLUMN, 1, 2);
+      previous.copyTo(sheet.getRange(targetRow, CONFIG.REMAINING_COLUMN, 1, 2), SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
     }
-    if (!sheet.getRange(targetRow, 27).getFormula()) {
-      sheet.getRange(targetRow, 27).setFormula('=IF(Y' + targetRow + '="","-",Y' + targetRow + '-TODAY())');
-      sheet.getRange(targetRow, 28).setFormula('=IF(Z' + targetRow + '="พร้อมส่ง","พร้อมส่ง",IF(Z' + targetRow + '="รับคืนแล้ว","ปิดงานแล้ว",IF(Y' + targetRow + '="","-",IF(AA' + targetRow + '<0,"หมดสัญญาแล้ว",IF(AA' + targetRow + '<=30,"เตือน: ใกล้หมดสัญญา","ปกติ")))))');
+    if (!sheet.getRange(targetRow, CONFIG.REMAINING_COLUMN).getFormula()) {
+      sheet.getRange(targetRow, CONFIG.REMAINING_COLUMN).setFormula('=IF(X' + targetRow + '="","-",X' + targetRow + '-TODAY())');
+      sheet.getRange(targetRow, CONFIG.ALERT_COLUMN).setFormula('=IF(Y' + targetRow + '="ส่งมอบแล้ว","ส่งมอบแล้ว",IF(Y' + targetRow + '="รอส่งมอบ","รอส่งมอบ",IF(X' + targetRow + '="","-",IF(Z' + targetRow + '<0,"หมดสัญญาแล้ว",IF(Z' + targetRow + '<=30,"เตือน: ใกล้หมดสัญญา","ปกติ")))))');
     }
   }
   SpreadsheetApp.flush();
@@ -661,14 +668,15 @@ function getAssetPortalRows_(sheet) {
       deliverHub: toBoolean_(row[19]),
       deliverKbMouse: toBoolean_(row[20]),
       deliverAdapter: toBoolean_(row[21]),
-      deliverUpsCord: toBoolean_(row[22]),
-      startDate: toPortalDate_(row[23]),
-      endDate: toPortalDate_(row[24]),
-      status: toPortalValue_(row[25]),
-      remaining: toPortalValue_(row[26]),
-      alert: toPortalValue_(row[27]),
-      oldComSn: toPortalValue_(row[28]),
-      oldUpsSn: toPortalValue_(row[29]),
+      // compatibility field for the existing client; UPS + สายไฟ is stored only in R now
+      deliverUpsCord: toBoolean_(row[17]),
+      startDate: toPortalDate_(row[CONFIG.START_DATE_COLUMN - 1]),
+      endDate: toPortalDate_(row[CONFIG.END_DATE_COLUMN - 1]),
+      status: toPortalValue_(row[CONFIG.ASSET_STATUS_COLUMN - 1]),
+      remaining: toPortalValue_(row[CONFIG.REMAINING_COLUMN - 1]),
+      alert: toPortalValue_(row[CONFIG.ALERT_COLUMN - 1]),
+      oldComSn: toPortalValue_(row[CONFIG.OLD_COM_SN_COLUMN - 1]),
+      oldUpsSn: toPortalValue_(row[CONFIG.OLD_UPS_SN_COLUMN - 1]),
       prepStatus: toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) || CONFIG.PREP_STATUS_DEFAULT,
       ipAddress: toPortalValue_(row[CONFIG.IP_COLUMN - 1]),
       problemDetail: toPortalValue_(row[CONFIG.PROBLEM_COLUMN - 1]),
@@ -763,7 +771,7 @@ function updateAssetStatus(rowNumber, assetStatus) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    sheet.getRange(targetRow, 26).setValue(status);
+    sheet.getRange(targetRow, CONFIG.ASSET_STATUS_COLUMN).setValue(status);
     SpreadsheetApp.flush();
     return { message: 'อัปเดตสถานะชุดใน Asset_Master แล้ว', rowNumber: targetRow, status: status };
   } finally {
@@ -781,8 +789,8 @@ function updateAssetAccessoryBundleStatus(rowNumber, value) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
+    // UPS + สายไฟเป็นสถานะรวม เก็บในคอลัมน์ R เท่านั้น
     sheet.getRange(targetRow, 18).setValue(checked);
-    sheet.getRange(targetRow, 23).setValue(checked);
     SpreadsheetApp.flush();
     return { message: (checked ? 'ติ๊กส่ง UPS + สายไฟ ใน Asset_Master แล้ว' : 'ยกเลิกสถานะส่ง UPS + สายไฟ ใน Asset_Master แล้ว'), rowNumber: targetRow, value: checked };
   } finally {
@@ -797,16 +805,14 @@ function updateAssetAccessoryStatus(rowNumber, fieldName, value) {
     deliverUps: 18,
     deliverHub: 20,
     deliverKbMouse: 21,
-    deliverAdapter: 22,
-    deliverUpsCord: 23
+    deliverAdapter: 22
   };
   const labels = {
     deliverAio: 'AIO',
-    deliverUps: 'UPS',
+    deliverUps: 'UPS + สายไฟ',
     deliverHub: 'USB HUB',
     deliverKbMouse: 'KB + Mouse',
-    deliverAdapter: 'Adapter AIO',
-    deliverUpsCord: 'สายไฟ UPS'
+    deliverAdapter: 'Adapter AIO'
   };
   const field = String(fieldName || '').trim();
   const column = columns[field];
@@ -838,7 +844,7 @@ function buildJobWorkRows_(assetRows, spreadsheet) {
     const missingPrimary = primaryTypes.filter(function(type) { return !photo[type]; });
     const accessoryMissing = [];
     if (row.status !== 'ส่งมอบแล้ว') accessoryMissing.push('รอส่งมอบ');
-    const upsBundleComplete = !!row.deliverUps && !!row.deliverUpsCord;
+    const upsBundleComplete = !!row.deliverUps;
     if (!upsBundleComplete) accessoryMissing.push('UPS + สายไฟ');
     if (!row.deliverHub) accessoryMissing.push('USB HUB');
 
@@ -938,7 +944,7 @@ function buildPortalDashboard_(rows, jobWorkRows) {
     prepInProgress: (prepCounts['ลงโปรแกรม'] || 0) + (prepCounts['รอ Activate'] || 0),
     prepReceived: prepCounts['รับเข้าแล้ว'] || 0,
     prepBlocked: prepCounts['ติดปัญหา'] || 0,
-    upsBundle: rows.filter(function(row) { return row.deliverUps && row.deliverUpsCord; }).length,
+    upsBundle: rows.filter(function(row) { return row.deliverUps; }).length,
     expiring: rows.filter(function(row) { return row.alert === 'เตือน: ใกล้หมดสัญญา'; }).length,
     statuses: counts,
     prepStatuses: prepCounts,
