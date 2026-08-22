@@ -753,8 +753,8 @@
         const label = type === 'delivery' ? 'ใบส่ง' : 'ใบรับ';
         setStatus('กำลังเตรียม ' + label + ' สำหรับ ' + jobNo + '...');
         google.script.run.withSuccessHandler(function(result) {
-          openUrl(result.sheetUrl);
-          setStatus('เปิด ' + result.formName + ' สำหรับ ' + result.jobNo + ' แล้ว ใช้ File > Print เพื่อพิมพ์', false, true);
+          openUrl(result.printUrl || result.sheetUrl);
+          setStatus('เปิดหน้าพิมพ์ ' + result.formName + ' สำหรับ ' + result.jobNo + ' แล้ว', false, true);
         }).withFailureHandler(function(error) {
           setStatus('เตรียม ' + label + ' ไม่สำเร็จ: ' + getErrorMessage(error), true);
         }).prepareJobForm(jobNo, type);

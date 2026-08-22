@@ -117,10 +117,17 @@ function doGet(e) {
   const params = e && e.parameter ? e.parameter : {};
   const page = String(params.page || params.mode || params.view || '').toLowerCase();
   const isPortal = page === 'portal' || page === 'asset' || page === 'manage' || page === 'assetmaster' || page === 'dashboard';
-  const fileName = isPortal ? 'Portal' : 'Sidebar';
-  const title = isPortal ? 'IT Rental Portal' : 'อัปโหลดรูปภาพ Photo Report';
+  const isPrintForm = page === 'print-form' || page === 'printform' || page === 'print';
+  const fileName = isPrintForm ? 'PrintForm' : (isPortal ? 'Portal' : 'Sidebar');
+  const title = isPrintForm ? 'หน้าพิมพ์เอกสาร' : (isPortal ? 'IT Rental Portal' : 'อัปโหลดรูปภาพ Photo Report');
 
   try {
+    if (isPrintForm) {
+      const template = HtmlService.createTemplateFromFile(fileName);
+      template.jobNo = String(params.job || '').trim();
+      template.formType = String(params.formType || 'return').trim().toLowerCase() === 'delivery' ? 'delivery' : 'return';
+      return template.evaluate().setTitle(title);
+    }
     return createHtmlOutputFromProjectFile_(fileName, title);
   } catch (error) {
     const message = String(error && error.message ? error.message : error)
@@ -158,7 +165,7 @@ function showSidebar() {
  */
 function checkWebAppFiles() {
   const result = {};
-  ['Sidebar', 'Portal', 'AssetMaster'].forEach(function(fileName) {
+  ['Sidebar', 'Portal', 'AssetMaster', 'PrintForm'].forEach(function(fileName) {
     try {
       const html = createHtmlOutputFromProjectFile_(fileName, fileName);
       result[fileName] = {
@@ -437,16 +444,38 @@ function prepareJobForm(jobNo, formType) {
     if (!returnSheet.getRange('B4').getFormula()) returnSheet.getRange('B4').setValue(asset.jobNo);
     SpreadsheetApp.flush();
     const sheet = type === 'delivery' ? deliverySheet : returnSheet;
+    const webAppUrl = ScriptApp.getService().getUrl() || '';
+    const printUrl = webAppUrl
+      ? webAppUrl + '?page=print-form&job=' + encodeURIComponent(asset.jobNo) + '&formType=' + encodeURIComponent(type)
+      : '';
     return {
       jobNo: asset.jobNo,
       formType: type,
       formName: type === 'delivery' ? 'ใบส่ง' : 'ใบรับ',
       sheetUrl: buildSheetEditUrl_(sheet),
+      printUrl: printUrl,
       message: 'เตรียม ' + (type === 'delivery' ? 'ใบส่ง' : 'ใบรับ') + ' สำหรับ ' + asset.jobNo + ' แล้ว'
     };
   } finally {
     lock.releaseLock();
   }
+}
+
+function getPrintFormData(jobNo, formType) {
+  const prepared = prepareJobForm(jobNo, formType);
+  const spreadsheet = getSpreadsheet_();
+  const type = prepared.formType;
+  const sheet = spreadsheet.getSheetByName(type === 'delivery' ? 'Delivery_Form' : 'Return_Form');
+  if (!sheet) throw new Error('ไม่พบชีตสำหรับเอกสาร ' + type);
+  const columnCount = type === 'delivery' ? 8 : 7;
+  const values = sheet.getRange(1, 1, 28, columnCount).getDisplayValues();
+  return {
+    jobNo: prepared.jobNo,
+    formType: type,
+    formName: prepared.formName,
+    sheetUrl: prepared.sheetUrl,
+    values: values
+  };
 }
 
 function getSheetEditLinks() {

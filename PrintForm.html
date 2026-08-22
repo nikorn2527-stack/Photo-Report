@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>หน้าพิมพ์เอกสาร</title>
+  <style>
+    @page { size: A4 portrait; margin: 8mm; }
+    :root { --ink:#202124; --muted:#5f6368; --line:#59636e; --green:#188038; --blue:#1967d2; --surface:#eef1f5; }
+    * { box-sizing: border-box; }
+    html, body { margin:0; min-height:100%; background:var(--surface); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",Arial,sans-serif; }
+    body { padding:12px; }
+    .toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; max-width:194mm; margin:0 auto 12px; padding:10px 12px; border:1px solid #c8ced6; border-radius:10px; background:#fff; box-shadow:0 2px 8px rgba(60,64,67,.12); }
+    .toolbar-title { font-size:15px; font-weight:800; }
+    .toolbar-note { margin-top:2px; color:var(--muted); font-size:12px; }
+    .toolbar-actions { display:flex; gap:7px; flex-wrap:wrap; justify-content:flex-end; }
+    button, a { min-height:38px; padding:8px 12px; border:1px solid #c5cbd3; border-radius:7px; background:#fff; color:var(--ink); font:inherit; font-size:13px; font-weight:700; text-decoration:none; cursor:pointer; }
+    button.primary { border-color:var(--green); background:#188038; color:#fff; }
+    button.secondary { border-color:var(--blue); color:var(--blue); }
+    .status { max-width:194mm; margin:0 auto 10px; padding:9px 12px; border-radius:8px; background:#fff; color:var(--muted); font-size:13px; }
+    .status.error { color:#b3261e; border:1px solid #f1b7b3; background:#fff7f6; }
+    .print-page { width:194mm; min-height:281mm; margin:0 auto; padding:7mm; background:#fff; box-shadow:0 2px 12px rgba(60,64,67,.18); }
+    .form-header { text-align:center; margin-bottom:4mm; }
+    .form-header .company { font-size:14px; font-weight:800; }
+    .form-header .document-title { margin-top:1.5mm; font-size:17px; font-weight:800; }
+    .form-meta { display:grid; grid-template-columns:1fr 1fr; gap:1.5mm 4mm; margin-bottom:3mm; font-size:10px; }
+    .meta-item { display:grid; grid-template-columns:auto 1fr; gap:1.5mm; min-height:6mm; align-items:end; }
+    .meta-label { font-weight:800; white-space:nowrap; }
+    .meta-value { min-height:5mm; border-bottom:1px dotted #777; white-space:pre-wrap; }
+    .meta-wide { grid-column:1 / -1; }
+    .section-title { margin:3mm 0 1.5mm; padding:1.5mm 2mm; border:1px solid var(--line); background:#edf0f3; font-size:10px; font-weight:800; }
+    table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:8.5px; }
+    th, td { border:1px solid var(--line); padding:1.5mm 1.2mm; vertical-align:middle; line-height:1.25; word-break:break-word; }
+    th { background:#eef1f4; text-align:center; font-weight:800; }
+    td.center { text-align:center; }
+    .delivery-table th:nth-child(1), .delivery-table td:nth-child(1) { width:7%; }
+    .delivery-table th:nth-child(2), .delivery-table td:nth-child(2) { width:23%; }
+    .delivery-table th:nth-child(3), .delivery-table td:nth-child(3) { width:18%; }
+    .delivery-table th:nth-child(4), .delivery-table td:nth-child(4) { width:17%; }
+    .delivery-table th:nth-child(5), .delivery-table td:nth-child(5) { width:9%; }
+    .delivery-table th:nth-child(6), .delivery-table td:nth-child(6) { width:11%; }
+    .delivery-table th:nth-child(7), .delivery-table td:nth-child(7) { width:8%; }
+    .delivery-table th:nth-child(8), .delivery-table td:nth-child(8) { width:7%; }
+    .return-table th:nth-child(1), .return-table td:nth-child(1) { width:7%; }
+    .return-table th:nth-child(2), .return-table td:nth-child(2) { width:26%; }
+    .return-table th:nth-child(3), .return-table td:nth-child(3) { width:20%; }
+    .return-table th:nth-child(4), .return-table td:nth-child(4) { width:19%; }
+    .return-table th:nth-child(5), .return-table td:nth-child(5) { width:13%; }
+    .return-table th:nth-child(6), .return-table td:nth-child(6) { width:15%; }
+    .checklist { border:1px solid var(--line); padding:2mm 2.5mm; font-size:9px; line-height:1.45; }
+    .checklist div { margin:1mm 0; }
+    .summary { border:1px solid var(--line); padding:2mm 2.5mm; font-size:9px; line-height:1.45; }
+    .note-line { min-height:8mm; margin-top:1.5mm; padding-top:1mm; border-bottom:1px dotted #777; }
+    .signatures { display:grid; grid-template-columns:1fr 1fr; gap:12mm; margin-top:8mm; font-size:9px; text-align:center; }
+    .signature-title { font-weight:800; }
+    .signature-line { margin-top:9mm; }
+    .signature-date { margin-top:4mm; }
+    .loading { padding:30mm 10mm; text-align:center; color:var(--muted); }
+    @media (max-width:700px) {
+      body { padding:7px; }
+      .toolbar { align-items:flex-start; flex-direction:column; }
+      .toolbar-actions { width:100%; justify-content:flex-start; }
+      .print-page { width:100%; min-height:auto; padding:5mm; overflow:hidden; }
+      .form-header .company { font-size:12px; }
+      .form-header .document-title { font-size:15px; }
+      .form-meta { font-size:8px; gap:1mm 2mm; }
+      table { font-size:7px; }
+      th, td { padding:1mm .8mm; }
+      .checklist, .summary, .signatures { font-size:8px; }
+    }
+    @media print {
+      html, body { background:#fff; }
+      body { padding:0; }
+      .toolbar, .status { display:none !important; }
+      .print-page { width:auto; min-height:0; margin:0; padding:0; box-shadow:none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div>
+      <div id="toolbarTitle" class="toolbar-title">กำลังเตรียมเอกสาร...</div>
+      <div class="toolbar-note">หน้าพิมพ์โดยตรงจาก Asset_Master — กระดาษ A4</div>
+    </div>
+    <div class="toolbar-actions">
+      <button id="printButton" class="primary" type="button" onclick="printDocument()" disabled>พิมพ์เอกสาร</button>
+      <button id="sheetButton" class="secondary" type="button" onclick="openOriginalSheet()" disabled>เปิดชีตเดิม</button>
+    </div>
+  </div>
+  <div id="status" class="status">กำลังดึงข้อมูลจากฟอร์ม...</div>
+  <main id="printPage" class="print-page"><div class="loading">กำลังเตรียมหน้าพิมพ์...</div></main>
+  <script>
+    const INITIAL_JOB_NO = <?!= JSON.stringify(jobNo || '') ?>;
+    const INITIAL_FORM_TYPE = <?!= JSON.stringify(formType || 'return') ?>;
+    let originalSheetUrl = '';
+    let ready = false;
+
+    window.addEventListener('load', loadPrintData);
+
+    function loadPrintData() {
+      if (!INITIAL_JOB_NO) {
+        showError('ไม่พบเลข Job สำหรับสร้างเอกสาร');
+        return;
+      }
+      const label = INITIAL_FORM_TYPE === 'delivery' ? 'ใบส่ง' : 'ใบรับ';
+      setStatus('กำลังเตรียม ' + label + ' สำหรับ ' + INITIAL_JOB_NO + '...');
+      google.script.run
+        .withSuccessHandler(function(data) {
+          data = data || {};
+          renderForm(data);
+          ready = true;
+          document.getElementById('printButton').disabled = false;
+          document.getElementById('sheetButton').disabled = false;
+          document.getElementById('toolbarTitle').textContent = data.formName + ' — ' + data.jobNo;
+          setStatus('เตรียมเอกสารเรียบร้อยแล้ว กำลังเปิดหน้าสั่งพิมพ์...');
+          window.setTimeout(function() { printDocument(); }, 450);
+        })
+        .withFailureHandler(function(error) {
+          showError('เตรียมเอกสารไม่สำเร็จ: ' + errorMessage(error));
+        })
+        .getPrintFormData(INITIAL_JOB_NO, INITIAL_FORM_TYPE);
+    }
+
+    function renderForm(data) {
+      const v = function(row, col) {
+        const value = data.values && data.values[row - 1] ? data.values[row - 1][col - 1] : '';
+        return text(value);
+      };
+      const page = document.getElementById('printPage');
+      if (data.formType === 'delivery') {
+        page.innerHTML = renderDelivery(v);
+      } else {
+        page.innerHTML = renderReturn(v);
+      }
+      originalSheetUrl = data.sheetUrl || '';
+    }
+
+    function renderDelivery(v) {
+      let rows = '';
+      for (let r = 9; r <= 16; r++) {
+        rows += '<tr><td class="center">' + v(r,1) + '</td><td>' + v(r,2) + '</td><td>' + v(r,3) + '</td><td>' + v(r,4) + '</td><td class="center">' + v(r,5) + '</td><td class="center">' + v(r,6) + '</td><td class="center">' + v(r,7) + '</td><td class="center">' + v(r,8) + '</td></tr>';
+      }
+      return '<section class="form-header"><div class="company">' + v(1,1) + '</div><div class="document-title">' + v(2,1) + '</div></section>' +
+        '<section class="form-meta"><div class="meta-item"><span class="meta-label">' + v(4,1) + '</span><span class="meta-value">' + v(4,2) + '</span></div><div class="meta-item"><span class="meta-label">' + v(4,7) + '</span><span class="meta-value">' + v(4,8) + '</span></div><div class="meta-item"><span class="meta-label">' + v(5,1) + '</span><span class="meta-value">' + v(5,2) + '</span></div><div class="meta-item"><span class="meta-label">' + v(5,7) + '</span><span class="meta-value">' + v(5,8) + '</span></div><div class="meta-item meta-wide"><span class="meta-label">' + v(6,1) + '</span><span class="meta-value">' + v(6,2) + '</span></div><div class="meta-item"><span class="meta-label">' + v(6,7) + '</span><span class="meta-value">' + v(6,8) + '</span></div><div class="meta-item meta-wide"><span class="meta-label">' + v(7,1) + '</span><span class="meta-value">' + v(7,2) + '</span></div></section>' +
+        '<table class="delivery-table"><thead><tr><th>' + v(8,1) + '</th><th>' + v(8,2) + '</th><th>' + v(8,3) + '</th><th>' + v(8,4) + '</th><th>' + v(8,5) + '</th><th>' + v(8,6) + '</th><th>' + v(8,7) + '</th><th>' + v(8,8) + '</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+        '<div class="section-title">' + v(18,1) + '</div><div class="checklist"><div>' + v(19,1) + '</div><div>' + v(20,1) + '</div><div>' + v(21,1) + '</div><div>' + v(22,1) + '</div></div>' +
+        '<div class="signatures"><div><div class="signature-title">' + v(24,1) + '</div><div class="signature-line">' + v(26,1) + '</div><div>' + v(27,1) + '</div><div class="signature-date">' + v(28,1) + '</div></div><div><div class="signature-title">' + v(24,5) + '</div><div class="signature-line">' + v(26,5) + '</div><div>' + v(27,5) + '</div><div class="signature-date">' + v(28,5) + '</div></div></div>';
+    }
+
+    function renderReturn(v) {
+      let rows = '';
+      for (let r = 8; r <= 17; r++) {
+        rows += '<tr><td class="center">' + v(r,1) + '</td><td>' + v(r,2) + '</td><td>' + v(r,3) + '</td><td>' + v(r,4) + '</td><td class="center">' + v(r,5) + '</td><td>' + v(r,6) + '</td><td>' + v(r,7) + '</td></tr>';
+      }
+      return '<section class="form-header"><div class="company">' + v(1,1) + '</div><div class="document-title">' + v(2,1) + '</div></section>' +
+        '<section class="form-meta"><div class="meta-item"><span class="meta-label">' + v(4,1) + '</span><span class="meta-value">' + v(4,2) + '</span></div><div class="meta-item"><span class="meta-label">' + v(4,6) + '</span><span class="meta-value">' + v(4,7) + '</span></div><div class="meta-item meta-wide"><span class="meta-label">' + v(5,1) + '</span><span class="meta-value">' + v(5,2) + '</span></div><div class="meta-item"><span class="meta-label">' + v(5,6) + '</span><span class="meta-value">' + v(5,7) + '</span></div></section>' +
+        '<table class="return-table"><thead><tr><th>' + v(7,1) + '</th><th>' + v(7,2) + '</th><th>' + v(7,3) + '</th><th>' + v(7,4) + '</th><th>' + v(7,5) + '</th><th>' + v(7,6) + '</th><th>' + v(7,7) + '</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+        '<div class="section-title">' + v(19,1) + '</div><div class="summary"><div>' + v(20,1) + '</div><div>' + v(21,1) + '</div><div class="note-line">' + v(22,1) + '</div></div>' +
+        '<div class="signatures"><div><div class="signature-title">' + v(24,1) + '</div><div class="signature-line">' + v(26,1) + '</div><div>' + v(27,1) + '</div><div class="signature-date">' + v(28,1) + '</div></div><div><div class="signature-title">' + v(24,5) + '</div><div class="signature-line">' + v(26,5) + '</div><div>' + v(27,5) + '</div><div class="signature-date">' + v(28,5) + '</div></div></div>';
+    }
+
+    function printDocument() {
+      if (!ready) return;
+      setStatus('เปิดหน้าสั่งพิมพ์แล้ว หากยังไม่ขึ้นให้กด “พิมพ์เอกสาร” อีกครั้ง');
+      window.print();
+    }
+    function openOriginalSheet() { if (originalSheetUrl) window.open(originalSheetUrl, '_blank'); }
+    function setStatus(message) { const el = document.getElementById('status'); el.textContent = message; el.classList.remove('error'); }
+    function showError(message) { const el = document.getElementById('status'); el.textContent = message; el.classList.add('error'); document.getElementById('printPage').innerHTML = '<div class="loading">ไม่สามารถสร้างเอกสารได้</div>'; }
+    function errorMessage(error) { return String(error && error.message ? error.message : error || 'เกิดข้อผิดพลาด'); }
+    function text(value) { const raw = value === undefined || value === null || value === '' ? '-' : String(value); return escapeHtml(raw).replace(/\n/g, '<br>'); }
+    function escapeHtml(value) { return String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+  </script>
+</body>
+</html>
