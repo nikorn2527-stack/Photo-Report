@@ -109,6 +109,9 @@
       .work-print-pair .work-print-image-box { height:38mm; }
       .work-print-pair .work-print-image-box:first-child { border-right:1px solid #b8c0ca; }
       .work-print-footnote { max-width:210mm; margin:8px auto 0; color:#e8edf4; font-size:12px; text-align:center; }
+      .asset-check { display:inline-flex; align-items:center; gap:5px; min-width:88px; color:var(--text); font-size:11px; font-weight:800; white-space:nowrap; }
+      .asset-check input { width:18px; height:18px; accent-color:var(--green); }
+      .asset-status-select { min-width:112px; }
       .install-select { min-height:36px; min-width:142px; padding:5px 8px; border:1px solid #c7cbd1; border-radius:7px; background:#fff; color:var(--text); font:inherit; font-size:12px; font-weight:800; }
       .install-select.complete { border-color:#7aa7d9; background:#e8f0fe; color:#174ea6; }
       .install-select.blocked { border-color:#e5a19d; background:#fce8e6; color:var(--danger); }
@@ -131,6 +134,8 @@
       .table-meta { margin:0 0 8px; color:var(--muted); font-size:13px; }
       .table-wrap { overflow:auto; border:1px solid var(--border); border-radius:9px; }
       table { width:100%; min-width:1210px; border-collapse:collapse; }
+      .asset-table { min-width:1900px; }
+      .work-table { min-width:1450px; }
       th,td { padding:10px; border-bottom:1px solid #e4e7eb; text-align:left; vertical-align:middle; font-size:13px; }
       th { position:sticky; top:0; z-index:1; background:#f1f3f4; color:var(--muted); font-size:12px; white-space:nowrap; }
       tr:last-child td { border-bottom:0; }
@@ -210,7 +215,7 @@
 
         <section id="workView" class="view" hidden>
           <h2 class="view-title">ติดตามงานต่อ Job</h2>
-          <p class="view-note">ดูตั้งแต่รับเครื่อง เตรียมเครื่อง ผลการติดตั้ง อุปกรณ์เสริม และรูปหลัก 3 จุด เพื่อรู้ทันทีว่างานจบหรือยัง</p>
+          <p class="view-note">รายงานอ่านอย่างเดียวสำหรับหน้างาน ดูตั้งแต่รับเครื่อง เตรียมเครื่อง ผลการติดตั้ง อุปกรณ์เสริม และรูปหลัก 3 จุด พร้อมเปิดพรีวิว A4 ต่อ Job</p>
           <div id="workSummaryCards" class="work-summary"></div>
           <div class="work-toolbar">
             <input id="workSearch" class="search work-search" type="search" placeholder="ค้นหา Job, สถานที่ หรือสิ่งที่ยังค้าง" oninput="renderWorkTable()">
@@ -231,7 +236,7 @@
 
         <section id="assetView" class="view" hidden>
           <h2 class="view-title">Asset_Master</h2>
-          <p class="view-note">ตารางหลักสำหรับค้นหา แก้ไข และเพิ่มข้อมูลชุดเช่า โดยสถานะเตรียมเครื่องแก้ได้ทันทีในตาราง</p>
+          <p class="view-note">แหล่งข้อมูลหลักสำหรับแก้ไขข้อมูลและสถานะทั้งหมดของชุดอุปกรณ์ รวมถึงการติ๊กส่ง UPS และ USB HUB</p>
           <div class="toolbar">
             <input id="assetSearch" class="search" type="search" placeholder="ค้นหา Job, รหัสชุด, สถานที่, รุ่น หรือ S/N" oninput="renderAssetTable()">
             <select id="statusFilter" class="filter" onchange="renderAssetTable()"><option value="">สถานะชุดทั้งหมด</option></select>
@@ -241,8 +246,8 @@
           </div>
           <p id="assetMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
           <div class="table-wrap">
-            <table>
-              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>สถานะชุด</th><th>เตรียมเครื่อง</th><th>สาเหตุที่ติดปัญหา</th><th>สถานะการติดตั้ง</th><th>เหตุผลติดตั้งไม่ได้/ไม่ทัน</th><th>รับคืน / COM S/N เดิม</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
+            <table class="asset-table">
+              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>สถานะชุด</th><th>ส่ง AIO</th><th>ส่ง UPS</th><th>ส่ง USB HUB</th><th>ส่ง KB + Mouse</th><th>ส่ง Adapter</th><th>ส่งสายไฟ UPS</th><th>เตรียมเครื่อง</th><th>สาเหตุที่ติดปัญหา</th><th>สถานะการติดตั้ง</th><th>เหตุผลติดตั้งไม่ได้/ไม่ทัน</th><th>รับคืน / COM S/N เดิม</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
               <tbody id="assetTableBody"></tbody>
             </table>
           </div>
@@ -291,7 +296,7 @@
         <div class="form-section"><h3 class="form-section-title">รายการที่ส่งและสถานะ</h3><div class="form-grid">
           <label class="check-field"><input id="deliverAio" type="checkbox"> ส่ง AIO</label>
           <label class="check-field"><input id="deliverUps" type="checkbox"> ส่ง UPS</label>
-          <label class="check-field"><input id="deliverHub" type="checkbox"> ส่ง Hub</label>
+          <label class="check-field"><input id="deliverHub" type="checkbox"> ส่ง USB HUB</label>
           <label class="check-field"><input id="deliverKbMouse" type="checkbox"> ส่ง KB + Mouse</label>
           <label class="check-field"><input id="deliverAdapter" type="checkbox"> ส่ง Adapter AIO</label>
           <label class="check-field"><input id="deliverUpsCord" type="checkbox"> ส่งสายไฟ UPS</label>
@@ -469,10 +474,10 @@
         document.getElementById('assetMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + (portalData.assetRows || []).length + ' รายการ';
         const body = document.getElementById('assetTableBody');
         body.innerHTML = '';
-          if (!rows.length) { body.innerHTML = '<tr><td colspan="15" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
+          if (!rows.length) { body.innerHTML = '<tr><td colspan="21" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + statusBadge(row.status) + '</td><td>' + prepStatusControl(row) + '</td><td class="problem-cell">' + (row.prepStatus === 'ติดปัญหา' ? escapeHtml(row.problemDetail || 'ยังไม่ได้ระบุ') : '-') + '</td><td>' + installStatusControl(row) + '</td><td class="problem-cell">' + ((row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน') ? escapeHtml(row.installReason || 'ยังไม่ได้ระบุ') : '-') + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + accessoryStatusControl(row, 'deliverUps', 'ส่ง UPS') + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + accessoryStatusControl(row, 'deliverUpsCord', 'ส่งสายไฟ UPS') + '</td><td>' + prepStatusControl(row) + '</td><td class="problem-cell">' + (row.prepStatus === 'ติดปัญหา' ? escapeHtml(row.problemDetail || 'ยังไม่ได้ระบุ') : '-') + '</td><td>' + installStatusControl(row) + '</td><td class="problem-cell">' + ((row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน') ? escapeHtml(row.installReason || 'ยังไม่ได้ระบุ') : '-') + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
           body.appendChild(tr);
         });
       }
@@ -486,6 +491,30 @@
         if (text.indexOf('เตือน') !== -1) cls = 'status-warning';
         if (text.indexOf('หมด') !== -1 || text === 'ส่งซ่อม' || text === 'ติดปัญหา') cls = 'status-danger';
         return '<span class="status-badge ' + cls + '">' + escapeHtml(text) + '</span>';
+      }
+
+      function assetStatusControl(row) {
+        const current = row.status || 'รอส่งมอบ';
+        const options = ['รอส่งมอบ', 'ส่งมอบแล้ว'].map(function(status) { return '<option value="' + escapeHtml(status) + '"' + (status === current ? ' selected' : '') + '>' + escapeHtml(status) + '</option>'; }).join('');
+        return '<select class="prep-select asset-status-select" aria-label="สถานะชุด ' + escapeHtml(row.jobNo) + '" onchange="handleAssetStatusChange(' + row.rowNumber + ', this.value)">' + options + '</select>';
+      }
+
+      function accessoryStatusControl(row, fieldName, label) {
+        return '<label class="asset-check" title="' + escapeHtml(label) + '"><input type="checkbox"' + (row[fieldName] ? ' checked' : '') + ' data-field="' + escapeHtml(fieldName) + '" aria-label="' + escapeHtml(label + ' ' + row.jobNo) + '" onchange="handleAssetAccessoryChangeFromInput(' + row.rowNumber + ', this)"><span>' + (row[fieldName] ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + '</span></label>';
+      }
+
+      function handleAssetAccessoryChangeFromInput(rowNumber, input) {
+        handleAssetAccessoryChange(rowNumber, input && input.dataset ? input.dataset.field : '', !!(input && input.checked));
+      }
+
+      function handleAssetStatusChange(rowNumber, assetStatus) {
+        setStatus('กำลังอัปเดตสถานะชุดใน Asset_Master...');
+        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตสถานะชุดไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetStatus(rowNumber, assetStatus);
+      }
+
+      function handleAssetAccessoryChange(rowNumber, fieldName, value) {
+        setStatus('กำลังอัปเดตสถานะอุปกรณ์ใน Asset_Master...');
+        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตสถานะอุปกรณ์ไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetAccessoryStatus(rowNumber, fieldName, value);
       }
 
       function prepStatusControl(row) {
@@ -510,8 +539,14 @@
       }
 
       function workStatusBadge(value) {
-        const cls = value === 'งานจบ' ? 'complete' : (value === 'ติดปัญหา' ? 'blocked' : 'pending');
+        const cls = value === 'งานจบ' || value === 'ติดตั้งเสร็จ' ? 'complete' : (value === 'ติดปัญหา' || value === 'ติดตั้งไม่ได้' || value === 'ติดตั้งไม่ทัน' ? 'blocked' : 'pending');
         return '<span class="work-status ' + cls + '">' + escapeHtml(value || '-') + '</span>';
+      }
+
+      function installStatusDisplay(row) {
+        const value = row.installStatus || '-';
+        const reason = (value === 'ติดตั้งไม่ได้' || value === 'ติดตั้งไม่ทัน') && row.installReason ? '<span class="work-status-detail">เหตุผล: ' + escapeHtml(row.installReason) + '</span>' : '';
+        return workStatusBadge(value) + reason;
       }
 
       function renderWorkTable() {
@@ -536,7 +571,7 @@
           const photoDetail = row.primaryPhotoComplete ? 'ชื่อหน่วยงาน / ก่อน / หลัง ครบ' : 'ขาด: ' + (row.missingPrimary || []).join(', ');
           const accessoryDetail = row.accessoryMissing && row.accessoryMissing.length ? row.accessoryMissing.join(', ') : 'อุปกรณ์ครบ';
           const blockers = row.blockers && row.blockers.length ? row.blockers.join(' · ') : 'ไม่เหลือรายการค้าง';
-          return '<tr><td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml(row.location || '-') + '</td><td>' + statusBadge(row.prepStatus) + '</td><td>' + installStatusControl(row) + '</td><td>' + (row.accessoryMissing && row.accessoryMissing.length ? '<span class="work-status pending">ยังไม่ครบ</span>' : '<span class="work-status complete">ครบ</span>') + '<span class="work-status-detail">' + escapeHtml(accessoryDetail) + '</span></td><td><span class="work-photo ' + photoClass + '">' + row.primaryPhotoCount + '/' + row.primaryPhotoTotal + '</span><span class="work-status-detail">' + escapeHtml(photoDetail) + '</span></td><td>' + workStatusBadge(row.workStatus) + '<span class="work-status-detail">' + escapeHtml(blockers) + '</span></td><td class="work-next">' + escapeHtml(row.nextAction || '-') + '</td><td><button class="work-preview-button" type="button" onclick="openWorkPrintPreview(\'' + escapeJs(row.jobNo) + '\')">ดูพรีวิว A4</button><span class="work-preview-note">ตรวจภาพ ' + row.primaryPhotoCount + '/' + row.primaryPhotoTotal + ' จุดหลัก</span></td></tr>';
+          return '<tr><td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml(row.location || '-') + '</td><td>' + statusBadge(row.prepStatus) + '</td><td>' + installStatusDisplay(row) + '</td><td>' + (row.accessoryMissing && row.accessoryMissing.length ? '<span class="work-status pending">ยังไม่ครบ</span>' : '<span class="work-status complete">ครบ</span>') + '<span class="work-status-detail">' + escapeHtml(accessoryDetail) + '</span></td><td><span class="work-photo ' + photoClass + '">' + row.primaryPhotoCount + '/' + row.primaryPhotoTotal + '</span><span class="work-status-detail">' + escapeHtml(photoDetail) + '</span></td><td>' + workStatusBadge(row.workStatus) + '<span class="work-status-detail">' + escapeHtml(blockers) + '</span></td><td class="work-next">' + escapeHtml(row.nextAction || '-') + '</td><td><button class="work-preview-button" type="button" onclick="openWorkPrintPreview(\'' + escapeJs(row.jobNo) + '\')">ดูพรีวิว A4</button><span class="work-preview-note">ตรวจภาพ ' + row.primaryPhotoCount + '/' + row.primaryPhotoTotal + ' จุดหลัก</span></td></tr>';
         }).join('');
       }
 

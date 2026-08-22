@@ -721,11 +721,68 @@ function updateAssetPreparationStatus(rowNumber, prepStatus, problemDetail) {
   }
 }
 
+function updateAssetStatus(rowNumber, assetStatus) {
+  const targetRow = Number(rowNumber);
+  const status = String(assetStatus || '').trim();
+  const allowed = ['รอส่งมอบ', 'ส่งมอบแล้ว'];
+  if (!targetRow || targetRow < CONFIG.HEADER_ROW) throw new Error('ไม่พบแถว Asset_Master ที่ต้องการแก้ไข');
+  if (allowed.indexOf(status) === -1) throw new Error('สถานะชุดไม่ถูกต้อง');
+
+  const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    sheet.getRange(targetRow, 26).setValue(status);
+    SpreadsheetApp.flush();
+    return { message: 'อัปเดตสถานะชุดใน Asset_Master แล้ว', rowNumber: targetRow, status: status };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function updateAssetAccessoryStatus(rowNumber, fieldName, value) {
+  const targetRow = Number(rowNumber);
+  const columns = {
+    deliverAio: 17,
+    deliverUps: 18,
+    deliverHub: 20,
+    deliverKbMouse: 21,
+    deliverAdapter: 22,
+    deliverUpsCord: 23
+  };
+  const labels = {
+    deliverAio: 'AIO',
+    deliverUps: 'UPS',
+    deliverHub: 'USB HUB',
+    deliverKbMouse: 'KB + Mouse',
+    deliverAdapter: 'Adapter AIO',
+    deliverUpsCord: 'สายไฟ UPS'
+  };
+  const field = String(fieldName || '').trim();
+  const column = columns[field];
+  if (!targetRow || targetRow < CONFIG.HEADER_ROW) throw new Error('ไม่พบแถว Asset_Master ที่ต้องการแก้ไข');
+  if (!column) throw new Error('ไม่พบช่องสถานะอุปกรณ์ที่อนุญาตให้แก้ไข');
+
+  const checked = toBoolean_(value);
+  const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    sheet.getRange(targetRow, column).setValue(checked);
+    SpreadsheetApp.flush();
+    return { message: (checked ? 'ติ๊กส่ง ' : 'ยกเลิกสถานะส่ง ') + labels[field] + ' ใน Asset_Master แล้ว', rowNumber: targetRow, fieldName: field, value: checked };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function buildJobWorkRows_(assetRows, spreadsheet) {
   const photoByJob = getPhotoIndexByJob_(spreadsheet);
   const primaryTypes = ['signage', 'before1', 'after1'];
   const primaryLabels = { signage: 'ชื่อหน่วยงาน', before1: 'ก่อนติดตั้ง', after1: 'หลังติดตั้ง' };
-  return (assetRows || []).map(function(row) {
+  const rows = (assetRows || []).map(function(row) {
     const key = String(row.jobNo || '').trim().toLowerCase();
     const photo = photoByJob[key] || {};
     const filledTypes = CONFIG.IMAGE_TYPES.filter(function(type) { return !!photo[type]; });
@@ -747,6 +804,10 @@ function buildJobWorkRows_(assetRows, spreadsheet) {
     return {
       rowNumber: row.rowNumber,
       jobNo: row.jobNo,
+      building: row.building,
+      floor: row.floor,
+      department: row.department,
+      room: row.room,
       location: [row.building, row.floor, row.department, row.room].filter(Boolean).join(' | '),
       prepStatus: row.prepStatus,
       installStatus: row.installStatus,
@@ -764,6 +825,26 @@ function buildJobWorkRows_(assetRows, spreadsheet) {
       nextAction: blockers.length ? blockers.join(' · ') : 'ไม่เหลือรายการค้าง'
     };
   });
+
+  return rows.sort(function(left, right) {
+    return comparePortalSortText_(left.building, right.building) ||
+      comparePortalSortText_(left.floor, right.floor) ||
+      comparePortalSortText_(left.department, right.department) ||
+      comparePortalSortText_(left.room, right.room) ||
+      comparePortalSortText_(left.jobNo, right.jobNo);
+  });
+}
+
+function comparePortalSortText_(left, right) {
+  const a = String(left || '').trim();
+  const b = String(right || '').trim();
+  if (!a && b) return 1;
+  if (a && !b) return -1;
+  if (!a && !b) return 0;
+  const aNumber = a.match(/\d+(?:\.\d+)?/);
+  const bNumber = b.match(/\d+(?:\.\d+)?/);
+  if (aNumber && bNumber && Number(aNumber[0]) !== Number(bNumber[0])) return Number(aNumber[0]) - Number(bNumber[0]);
+  return a.localeCompare(b, 'th', { numeric: true, sensitivity: 'base' });
 }
 
 function getPhotoIndexByJob_(spreadsheet) {
