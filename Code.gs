@@ -741,6 +741,25 @@ function updateAssetStatus(rowNumber, assetStatus) {
   }
 }
 
+function updateAssetAccessoryBundleStatus(rowNumber, value) {
+  const targetRow = Number(rowNumber);
+  if (!targetRow || targetRow < CONFIG.HEADER_ROW) throw new Error('ไม่พบแถว Asset_Master ที่ต้องการแก้ไข');
+
+  const checked = toBoolean_(value);
+  const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    sheet.getRange(targetRow, 18).setValue(checked);
+    sheet.getRange(targetRow, 23).setValue(checked);
+    SpreadsheetApp.flush();
+    return { message: (checked ? 'ติ๊กส่ง UPS + สายไฟ ใน Asset_Master แล้ว' : 'ยกเลิกสถานะส่ง UPS + สายไฟ ใน Asset_Master แล้ว'), rowNumber: targetRow, value: checked };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function updateAssetAccessoryStatus(rowNumber, fieldName, value) {
   const targetRow = Number(rowNumber);
   const columns = {
@@ -789,7 +808,8 @@ function buildJobWorkRows_(assetRows, spreadsheet) {
     const missingPrimary = primaryTypes.filter(function(type) { return !photo[type]; });
     const accessoryMissing = [];
     if (row.status !== 'ส่งมอบแล้ว') accessoryMissing.push('รอส่งมอบ');
-    if (!row.deliverUps) accessoryMissing.push('UPS');
+    const upsBundleComplete = !!row.deliverUps && !!row.deliverUpsCord;
+    if (!upsBundleComplete) accessoryMissing.push('UPS + สายไฟ');
     if (!row.deliverHub) accessoryMissing.push('USB HUB');
 
     const installBlocked = row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน';
@@ -797,7 +817,7 @@ function buildJobWorkRows_(assetRows, spreadsheet) {
     if (installBlocked) blockers.push(row.installStatus + (row.installReason ? ': ' + row.installReason : ''));
     else if (row.installStatus !== 'ติดตั้งเสร็จ') blockers.push('รอผลการติดตั้ง');
     if (row.status !== 'ส่งมอบแล้ว') blockers.push('อุปกรณ์ยังไม่ส่งมอบ');
-    if (!row.deliverUps) blockers.push('ขาด UPS');
+    if (!upsBundleComplete) blockers.push('ขาด UPS + สายไฟ');
     if (!row.deliverHub) blockers.push('ขาด USB HUB');
     if (missingPrimary.length) blockers.push('ขาดรูป ' + missingPrimary.map(function(type) { return primaryLabels[type]; }).join(', '));
 
@@ -888,8 +908,7 @@ function buildPortalDashboard_(rows, jobWorkRows) {
     prepInProgress: (prepCounts['ลงโปรแกรม'] || 0) + (prepCounts['รอ Activate'] || 0),
     prepReceived: prepCounts['รับเข้าแล้ว'] || 0,
     prepBlocked: prepCounts['ติดปัญหา'] || 0,
-    ups: rows.filter(function(row) { return row.deliverUps; }).length,
-    upsCord: rows.filter(function(row) { return row.deliverUpsCord; }).length,
+    upsBundle: rows.filter(function(row) { return row.deliverUps && row.deliverUpsCord; }).length,
     expiring: rows.filter(function(row) { return row.alert === 'เตือน: ใกล้หมดสัญญา'; }).length,
     statuses: counts,
     prepStatuses: prepCounts,

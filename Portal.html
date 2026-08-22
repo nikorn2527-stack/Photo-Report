@@ -247,7 +247,7 @@
           <p id="assetMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
           <div class="table-wrap">
             <table class="asset-table">
-              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>สถานะชุด</th><th>ส่ง AIO</th><th>ส่ง UPS</th><th>ส่ง USB HUB</th><th>ส่ง KB + Mouse</th><th>ส่ง Adapter</th><th>ส่งสายไฟ UPS</th><th>เตรียมเครื่อง</th><th>สาเหตุที่ติดปัญหา</th><th>สถานะการติดตั้ง</th><th>เหตุผลติดตั้งไม่ได้/ไม่ทัน</th><th>รับคืน / COM S/N เดิม</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
+              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>สถานะชุด</th><th>ส่ง AIO</th><th>ส่ง UPS + สายไฟ</th><th>ส่ง USB HUB</th><th>ส่ง KB + Mouse</th><th>ส่ง Adapter</th><th>เตรียมเครื่อง</th><th>สาเหตุที่ติดปัญหา</th><th>สถานะการติดตั้ง</th><th>เหตุผลติดตั้งไม่ได้/ไม่ทัน</th><th>รับคืน / COM S/N เดิม</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
               <tbody id="assetTableBody"></tbody>
             </table>
           </div>
@@ -295,11 +295,10 @@
         </div></div>
         <div class="form-section"><h3 class="form-section-title">รายการที่ส่งและสถานะ</h3><div class="form-grid">
           <label class="check-field"><input id="deliverAio" type="checkbox"> ส่ง AIO</label>
-          <label class="check-field"><input id="deliverUps" type="checkbox"> ส่ง UPS</label>
+          <label class="check-field"><input id="deliverUpsBundle" type="checkbox"> ส่ง UPS + สายไฟ</label>
           <label class="check-field"><input id="deliverHub" type="checkbox"> ส่ง USB HUB</label>
           <label class="check-field"><input id="deliverKbMouse" type="checkbox"> ส่ง KB + Mouse</label>
           <label class="check-field"><input id="deliverAdapter" type="checkbox"> ส่ง Adapter AIO</label>
-          <label class="check-field"><input id="deliverUpsCord" type="checkbox"> ส่งสายไฟ UPS</label>
           <div class="field"><label>วันเริ่มเช่า</label><input id="startDate" class="input" type="date"></div>
           <div class="field"><label>วันหมดสัญญา</label><input id="endDate" class="input" type="date"></div>
           <div class="field"><label>สถานะชุด</label><select id="assetStatus" class="select"><option>รอส่งมอบ</option><option>ส่งมอบแล้ว</option></select></div>
@@ -330,7 +329,7 @@
       const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดตั้งเสร็จ','ติดปัญหา'];
       const PROBLEM_OPTIONS = ['เครื่อง / Hardware','Windows','ติดตั้งโปรแกรม','Activate','อุปกรณ์ไม่ครบ','รออะไหล่ / รอเปลี่ยนเครื่อง','รอข้อมูลจากหน่วยงาน','อื่นๆ'];
       const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','ipAddress','startDate','endDate','assetStatus','prepStatus','problemDetail','installStatus','installReason'];
-      const CHECK_IDS = ['deliverAio','deliverUps','deliverHub','deliverKbMouse','deliverAdapter','deliverUpsCord'];
+      const CHECK_IDS = ['deliverAio','deliverUpsBundle','deliverHub','deliverKbMouse','deliverAdapter'];
       const DOCS = [
         ['Dashboard','ภาพรวมสถานะชุดเช่า'],
         ['Asset_Master','ทะเบียนชุดอุปกรณ์และข้อมูลสัญญา'],
@@ -444,8 +443,7 @@
           const percent = Math.round(count / total * 100);
           return '<div class="status-line"><span>' + status + '</span><span class="bar"><span style="width:' + percent + '%"></span></span><strong>' + count + '</strong></div>';
         }).join('');
-        document.getElementById('equipmentMetrics').innerHTML = '<div class="status-line"><span>มี UPS</span><span class="bar"><span style="width:' + percent(d.ups, total) + '%"></span></span><strong>' + (d.ups || 0) + '</strong></div>' +
-          '<div class="status-line"><span>มีสายไฟ UPS</span><span class="bar"><span style="width:' + percent(d.upsCord, total) + '%"></span></span><strong>' + (d.upsCord || 0) + '</strong></div>' +
+        document.getElementById('equipmentMetrics').innerHTML =           '<div class="status-line"><span>มี UPS + สายไฟ</span><span class="bar"><span style="width:' + percent(d.upsBundle, total) + '%"></span></span><strong>' + (d.upsBundle || 0) + '</strong></div>' +
           '<div class="status-line"><span>แจ้งเตือนสัญญา</span><span class="bar"><span style="width:' + percent(d.expiring, total) + '%"></span></span><strong>' + (d.expiring || 0) + '</strong></div>';
       }
 
@@ -474,10 +472,10 @@
         document.getElementById('assetMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + (portalData.assetRows || []).length + ' รายการ';
         const body = document.getElementById('assetTableBody');
         body.innerHTML = '';
-          if (!rows.length) { body.innerHTML = '<tr><td colspan="21" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
+          if (!rows.length) { body.innerHTML = '<tr><td colspan="20" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + accessoryStatusControl(row, 'deliverUps', 'ส่ง UPS') + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + accessoryStatusControl(row, 'deliverUpsCord', 'ส่งสายไฟ UPS') + '</td><td>' + prepStatusControl(row) + '</td><td class="problem-cell">' + (row.prepStatus === 'ติดปัญหา' ? escapeHtml(row.problemDetail || 'ยังไม่ได้ระบุ') : '-') + '</td><td>' + installStatusControl(row) + '</td><td class="problem-cell">' + ((row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน') ? escapeHtml(row.installReason || 'ยังไม่ได้ระบุ') : '-') + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td class="problem-cell">' + (row.prepStatus === 'ติดปัญหา' ? escapeHtml(row.problemDetail || 'ยังไม่ได้ระบุ') : '-') + '</td><td>' + installStatusControl(row) + '</td><td class="problem-cell">' + ((row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน') ? escapeHtml(row.installReason || 'ยังไม่ได้ระบุ') : '-') + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
           body.appendChild(tr);
         });
       }
@@ -515,6 +513,16 @@
       function handleAssetAccessoryChange(rowNumber, fieldName, value) {
         setStatus('กำลังอัปเดตสถานะอุปกรณ์ใน Asset_Master...');
         google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตสถานะอุปกรณ์ไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetAccessoryStatus(rowNumber, fieldName, value);
+      }
+
+      function upsBundleStatusControl(row) {
+        const checked = !!row.deliverUps && !!row.deliverUpsCord;
+        return '<label class="asset-check" title="ส่ง UPS + สายไฟ"><input type="checkbox"' + (checked ? ' checked' : '') + ' aria-label="ส่ง UPS + สายไฟ ' + escapeHtml(row.jobNo) + '" onchange="handleAssetAccessoryBundleChange(' + row.rowNumber + ', this)"><span>' + (checked ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + '</span></label>';
+      }
+
+      function handleAssetAccessoryBundleChange(rowNumber, input) {
+        setStatus('กำลังอัปเดตสถานะ UPS + สายไฟ ใน Asset_Master...');
+        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดต UPS + สายไฟ ไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetAccessoryBundleStatus(rowNumber, !!(input && input.checked));
       }
 
       function prepStatusControl(row) {
@@ -727,6 +735,7 @@
         ensureProblemOption(item.problemDetail || '');
         FIELD_IDS.forEach(function(id) { const element = document.getElementById(id); if (element) element.value = item[id] || (id === 'prepStatus' ? PREP_STATUS_OPTIONS[0] : ''); });
         CHECK_IDS.forEach(function(id) { document.getElementById(id).checked = !!item[id]; });
+        document.getElementById('deliverUpsBundle').checked = !!item.deliverUps && !!item.deliverUpsCord;
         syncProblemField();
         syncInstallationField();
         document.getElementById('assetModal').classList.add('open');
@@ -758,6 +767,8 @@
         const data = {};
         FIELD_IDS.forEach(function(id) { const element = document.getElementById(id); data[id] = element ? element.value : ''; });
         CHECK_IDS.forEach(function(id) { data[id] = document.getElementById(id).checked; });
+        data.deliverUps = !!data.deliverUpsBundle;
+        data.deliverUpsCord = !!data.deliverUpsBundle;
         if (!data.jobNo) { setStatus('กรุณากรอกเลข Job', true); return; }
         if (data.prepStatus === 'ติดปัญหา' && !data.problemDetail) { setStatus('กรุณาเลือกว่าติดปัญหาเรื่องอะไร', true); syncProblemField(); return; }
         if ((data.installStatus === 'ติดตั้งไม่ได้' || data.installStatus === 'ติดตั้งไม่ทัน') && !data.installReason) { setStatus('กรุณาระบุเหตุผลที่ติดตั้งไม่ได้หรือไม่ทัน', true); syncInstallationField(); return; }
