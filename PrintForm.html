@@ -6,6 +6,7 @@
   <title>หน้าพิมพ์เอกสาร</title>
   <style>
     @page { size: A4 portrait; margin: 8mm; }
+    @page A5 { size: A5 portrait; margin: 6mm; }
     :root { --ink:#202124; --muted:#5f6368; --line:#59636e; --green:#188038; --blue:#1967d2; --surface:#eef1f5; }
     * { box-sizing: border-box; }
     html, body { margin:0; min-height:100%; background:var(--surface); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",Arial,sans-serif; }
@@ -13,13 +14,29 @@
     .toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; max-width:194mm; margin:0 auto 12px; padding:10px 12px; border:1px solid #c8ced6; border-radius:10px; background:#fff; box-shadow:0 2px 8px rgba(60,64,67,.12); }
     .toolbar-title { font-size:15px; font-weight:800; }
     .toolbar-note { margin-top:2px; color:var(--muted); font-size:12px; }
-    .toolbar-actions { display:flex; gap:7px; flex-wrap:wrap; justify-content:flex-end; }
+    .toolbar-actions { display:flex; gap:7px; flex-wrap:wrap; justify-content:flex-end; align-items:center; }
+    .paper-control { display:flex; align-items:center; gap:6px; min-height:38px; padding:5px 8px; border:1px solid #c5cbd3; border-radius:7px; background:#fff; color:var(--ink); font-size:13px; font-weight:700; }
+    .paper-control select { min-height:28px; border:0; background:transparent; color:var(--ink); font:inherit; font-weight:700; cursor:pointer; }
     button, a { min-height:38px; padding:8px 12px; border:1px solid #c5cbd3; border-radius:7px; background:#fff; color:var(--ink); font:inherit; font-size:13px; font-weight:700; text-decoration:none; cursor:pointer; }
     button.primary { border-color:var(--green); background:#188038; color:#fff; }
     button.secondary { border-color:var(--blue); color:var(--blue); }
     .status { max-width:194mm; margin:0 auto 10px; padding:9px 12px; border-radius:8px; background:#fff; color:var(--muted); font-size:13px; }
     .status.error { color:#b3261e; border:1px solid #f1b7b3; background:#fff7f6; }
     .print-page { width:194mm; min-height:281mm; margin:0 auto; padding:7mm; background:#fff; box-shadow:0 2px 12px rgba(60,64,67,.18); }
+    .print-page.paper-a5 { page:A5; width:136mm; min-height:198mm; padding:5mm; }
+    .print-page.paper-a5 .form-header { margin-bottom:2.5mm; }
+    .print-page.paper-a5 .form-header .company { font-size:10px; }
+    .print-page.paper-a5 .form-header .document-title { font-size:12px; }
+    .print-page.paper-a5 .form-meta { gap:1mm 2mm; margin-bottom:2mm; font-size:7px; }
+    .print-page.paper-a5 .meta-item { min-height:4mm; gap:1mm; }
+    .print-page.paper-a5 .meta-value { min-height:3.5mm; }
+    .print-page.paper-a5 .section-title { margin:2mm 0 1mm; padding:1mm 1.5mm; font-size:7px; }
+    .print-page.paper-a5 table { font-size:6px; }
+    .print-page.paper-a5 th, .print-page.paper-a5 td { padding:.8mm .7mm; line-height:1.15; }
+    .print-page.paper-a5 .checklist, .print-page.paper-a5 .summary { padding:1.2mm 1.5mm; font-size:6.5px; line-height:1.2; }
+    .print-page.paper-a5 .signatures { gap:7mm; margin-top:4mm; font-size:6.5px; }
+    .print-page.paper-a5 .signature-line { margin-top:5mm; }
+    .print-page.paper-a5 .signature-date { margin-top:2mm; }
     .form-header { text-align:center; margin-bottom:4mm; }
     .form-header .company { font-size:14px; font-weight:800; }
     .form-header .document-title { margin-top:1.5mm; font-size:17px; font-weight:800; }
@@ -61,6 +78,7 @@
       .toolbar { align-items:flex-start; flex-direction:column; }
       .toolbar-actions { width:100%; justify-content:flex-start; }
       .print-page { width:100%; min-height:auto; padding:5mm; overflow:hidden; }
+      .print-page.paper-a5 { width:148mm; max-width:100%; min-height:210mm; padding:4mm; }
       .form-header .company { font-size:12px; }
       .form-header .document-title { font-size:15px; }
       .form-meta { font-size:8px; gap:1mm 2mm; }
@@ -73,6 +91,7 @@
       body { padding:0; }
       .toolbar, .status { display:none !important; }
       .print-page { width:auto; min-height:0; margin:0; padding:0; box-shadow:none; }
+      .print-page.paper-a5 { width:136mm; min-height:198mm; padding:0; }
     }
   </style>
 </head>
@@ -80,9 +99,15 @@
   <div class="toolbar">
     <div>
       <div id="toolbarTitle" class="toolbar-title">กำลังเตรียมเอกสาร...</div>
-      <div class="toolbar-note">หน้าพิมพ์โดยตรงจาก Asset_Master — กระดาษ A4</div>
+      <div id="toolbarNote" class="toolbar-note">เลือกขนาดกระดาษก่อนพิมพ์ — ค่าเริ่มต้น A4</div>
     </div>
     <div class="toolbar-actions">
+      <label class="paper-control" for="paperSize">กระดาษ
+        <select id="paperSize" onchange="applyPaperSize(this.value)" disabled>
+          <option value="A4">A4</option>
+          <option value="A5">A5</option>
+        </select>
+      </label>
       <button id="printButton" class="primary" type="button" onclick="printDocument()" disabled>พิมพ์เอกสาร</button>
       <button id="sheetButton" class="secondary" type="button" onclick="openOriginalSheet()" disabled>เปิดชีตเดิม</button>
     </div>
@@ -111,9 +136,10 @@
           ready = true;
           document.getElementById('printButton').disabled = false;
           document.getElementById('sheetButton').disabled = false;
+          document.getElementById('paperSize').disabled = false;
           document.getElementById('toolbarTitle').textContent = data.formName + ' — ' + data.jobNo;
-          setStatus('เตรียมเอกสารเรียบร้อยแล้ว กำลังเปิดหน้าสั่งพิมพ์...');
-          window.setTimeout(function() { printDocument(); }, 450);
+          applyPaperSize(document.getElementById('paperSize').value);
+          setStatus('เตรียมเอกสารเรียบร้อยแล้ว เลือก A4 หรือ A5 แล้วกด “พิมพ์เอกสาร”');
         })
         .withFailureHandler(function(error) {
           showError('เตรียมเอกสารไม่สำเร็จ: ' + errorMessage(error));
@@ -159,9 +185,19 @@
         '<div class="signatures"><div><div class="signature-title">' + v(24,1) + '</div><div class="signature-line">' + v(26,1) + '</div><div>' + v(27,1) + '</div><div class="signature-date">' + v(28,1) + '</div></div><div><div class="signature-title">' + v(24,5) + '</div><div class="signature-line">' + v(26,5) + '</div><div>' + v(27,5) + '</div><div class="signature-date">' + v(28,5) + '</div></div></div>';
     }
 
+    function applyPaperSize(size) {
+      const paper = String(size || 'A4').toUpperCase() === 'A5' ? 'A5' : 'A4';
+      const page = document.getElementById('printPage');
+      const select = document.getElementById('paperSize');
+      const note = document.getElementById('toolbarNote');
+      if (page) page.classList.toggle('paper-a5', paper === 'A5');
+      if (select && select.value !== paper) select.value = paper;
+      if (note) note.textContent = 'หน้าพิมพ์โดยตรงจาก Asset_Master — กระดาษ ' + paper;
+      if (ready) setStatus('เลือกกระดาษ ' + paper + ' แล้ว กด “พิมพ์เอกสาร” เพื่อเปิดหน้าสั่งพิมพ์');
+    }
     function printDocument() {
       if (!ready) return;
-      setStatus('เปิดหน้าสั่งพิมพ์แล้ว หากยังไม่ขึ้นให้กด “พิมพ์เอกสาร” อีกครั้ง');
+      setStatus('กำลังเปิดหน้าสั่งพิมพ์กระดาษ ' + document.getElementById('paperSize').value + '...');
       window.print();
     }
     function openOriginalSheet() { if (originalSheetUrl) window.open(originalSheetUrl, '_blank'); }
