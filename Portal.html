@@ -349,6 +349,7 @@
 
     <script>
       let portalData = { dashboard:{}, assetRows:[], jobWorkRows:[], sheetLinks:{} };
+      const INITIAL_VIEW = <?!= JSON.stringify(initialView || 'dashboard') ?>;
       let currentView = 'dashboard';
       const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดตั้งเสร็จ','ติดปัญหา'];
       const PROBLEM_OPTIONS = ['เครื่อง / Hardware','Windows','ติดตั้งโปรแกรม','Activate','อุปกรณ์ไม่ครบ','รออะไหล่ / รอเปลี่ยนเครื่อง','รอข้อมูลจากหน่วยงาน','อื่นๆ'];
@@ -377,7 +378,7 @@
           renderAssetFilters();
           renderAssetTable();
           renderDocuments();
-          const requestedView = new URLSearchParams(window.location.search).get('view');
+          const requestedView = INITIAL_VIEW;
           showView(['dashboard', 'work', 'asset', 'documents', 'plan'].indexOf(requestedView) !== -1 ? requestedView : 'dashboard');
           setStatus('');
         }).withFailureHandler(function(error) {

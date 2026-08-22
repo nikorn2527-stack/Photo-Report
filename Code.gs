@@ -128,6 +128,12 @@ function doGet(e) {
       template.formType = String(params.formType || 'return').trim().toLowerCase() === 'delivery' ? 'delivery' : 'return';
       return template.evaluate().setTitle(title);
     }
+    if (isPortal) {
+      const template = HtmlService.createTemplateFromFile(fileName);
+      const requestedView = String(params.view || '').trim().toLowerCase();
+      template.initialView = ['dashboard', 'work', 'asset', 'documents', 'plan'].indexOf(requestedView) !== -1 ? requestedView : 'dashboard';
+      return template.evaluate().setTitle(title);
+    }
     return createHtmlOutputFromProjectFile_(fileName, title);
   } catch (error) {
     const message = String(error && error.message ? error.message : error)
