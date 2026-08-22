@@ -377,6 +377,8 @@
           renderAssetFilters();
           renderAssetTable();
           renderDocuments();
+          const requestedView = new URLSearchParams(window.location.search).get('view');
+          showView(['dashboard', 'work', 'asset', 'documents', 'plan'].indexOf(requestedView) !== -1 ? requestedView : 'dashboard');
           setStatus('');
         }).withFailureHandler(function(error) {
           setStatus('โหลดข้อมูลไม่สำเร็จ: ' + getErrorMessage(error), true);
