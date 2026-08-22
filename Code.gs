@@ -411,6 +411,40 @@ function getJobReportInfo(jobNo) {
 /**
  * คืนลิงก์แก้ไข Spreadsheet และชีตหลักสำหรับปุ่มใน Web App
  */
+function prepareDeliveryReturnForms(jobNo) {
+  const requestedJob = String(jobNo || '').trim();
+  if (!requestedJob) throw new Error('กรุณาเลือก Job ก่อนเปิดเอกสาร Delivery + Return');
+
+  const spreadsheet = getSpreadsheet_();
+  const assetSheet = spreadsheet.getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  const deliverySheet = spreadsheet.getSheetByName('Delivery_Form');
+  const returnSheet = spreadsheet.getSheetByName('Return_Form');
+  if (!assetSheet || !deliverySheet || !returnSheet) throw new Error('ไม่พบชีต Asset_Master, Delivery_Form หรือ Return_Form');
+
+  const lastRow = Math.max(assetSheet.getLastRow(), CONFIG.HEADER_ROW - 1);
+  const assetJobs = lastRow >= CONFIG.HEADER_ROW
+    ? assetSheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, 1).getDisplayValues().flat().map(function(value) { return String(value || '').trim(); })
+    : [];
+  const matchedJob = assetJobs.find(function(value) { return value.toLowerCase() === requestedJob.toLowerCase(); });
+  if (!matchedJob) throw new Error('ไม่พบ Job นี้ใน Asset_Master: ' + requestedJob);
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    deliverySheet.getRange('B4').setValue(matchedJob);
+    if (!returnSheet.getRange('B4').getFormula()) returnSheet.getRange('B4').setValue(matchedJob);
+    SpreadsheetApp.flush();
+    return {
+      jobNo: matchedJob,
+      deliveryUrl: buildSheetEditUrl_(deliverySheet),
+      returnUrl: buildSheetEditUrl_(returnSheet),
+      message: 'เตรียม Delivery_Form และ Return_Form สำหรับ ' + matchedJob + ' แล้ว'
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function getSheetEditLinks() {
   const spreadsheet = getSpreadsheet_();
   const template = spreadsheet.getSheetByName(CONFIG.TEMPLATE_SHEET_NAME);

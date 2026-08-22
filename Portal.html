@@ -475,7 +475,7 @@
           if (!rows.length) { body.innerHTML = '<tr><td colspan="20" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td class="problem-cell">' + (row.prepStatus === 'ติดปัญหา' ? escapeHtml(row.problemDetail || 'ยังไม่ได้ระบุ') : '-') + '</td><td>' + installStatusControl(row) + '</td><td class="problem-cell">' + ((row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน') ? escapeHtml(row.installReason || 'ยังไม่ได้ระบุ') : '-') + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td class="problem-cell">' + (row.prepStatus === 'ติดปัญหา' ? escapeHtml(row.problemDetail || 'ยังไม่ได้ระบุ') : '-') + '</td><td>' + installStatusControl(row) + '</td><td class="problem-cell">' + ((row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน') ? escapeHtml(row.installReason || 'ยังไม่ได้ระบุ') : '-') + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">Photo</button><button class="small-button orange" type="button" onclick="openDeliveryReturnForms(\'' + escapeJs(row.jobNo) + '\')">Delivery + Return</button></div></td>';
           body.appendChild(tr);
         });
       }
@@ -722,6 +722,17 @@
       function openJobReport(jobNo) {
         setStatus('กำลังเตรียมเอกสาร ' + jobNo + '...');
         google.script.run.withSuccessHandler(function(result) { openUrl(result.sheetUrl); setStatus('เปิด ' + result.sheetName + ' แล้ว ใช้ File > Print เพื่อพิมพ์', false, true); }).withFailureHandler(function(error) { setStatus('เปิดเอกสารไม่สำเร็จ: ' + getErrorMessage(error), true); }).getJobReportInfo(jobNo);
+      }
+      function openDeliveryReturnForms(jobNo) {
+        if (!jobNo) { setStatus('ไม่พบเลข Job สำหรับเปิด Delivery + Return', true); return; }
+        setStatus('กำลังเตรียม Delivery_Form และ Return_Form สำหรับ ' + jobNo + '...');
+        google.script.run.withSuccessHandler(function(result) {
+          openUrl(result.deliveryUrl);
+          openUrl(result.returnUrl);
+          setStatus('เปิด Delivery_Form และ Return_Form สำหรับ ' + result.jobNo + ' แล้ว ใช้ File > Print เพื่อพิมพ์', false, true);
+        }).withFailureHandler(function(error) {
+          setStatus('เตรียมเอกสาร Delivery + Return ไม่สำเร็จ: ' + getErrorMessage(error), true);
+        }).prepareDeliveryReturnForms(jobNo);
       }
       function openUrl(url) { if (url && url !== '#') window.open(url, '_blank'); else setStatus('ยังไม่มีลิงก์เอกสาร', true); }
 
