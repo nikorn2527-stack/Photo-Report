@@ -59,7 +59,26 @@
       .plan-progress-track { height:12px; overflow:hidden; border-radius:10px; background:#e4eaf2; }
       .plan-progress-track > span { display:block; height:100%; border-radius:10px; background:linear-gradient(90deg,#1967d2,#16834b); }
       .plan-note { margin:0 0 12px; color:var(--muted); font-size:12px; }
-      @media (max-width:900px) { .plan-summary{grid-template-columns:repeat(2,1fr)} }
+      .work-summary { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; margin:14px 0; }
+      .work-summary .metric { min-height:84px; padding:13px; border:1px solid var(--border); border-radius:10px; background:#fff; }
+      .work-summary .metric-label { color:var(--muted); font-size:12px; }
+      .work-summary .metric-value { margin-top:4px; font-size:24px; font-weight:900; }
+      .work-toolbar { display:flex; gap:8px; margin:12px 0; }
+      .work-search { flex:1; min-width:180px; }
+      .work-filter { min-width:150px; }
+      .work-status { display:inline-block; padding:4px 8px; border-radius:12px; background:#eef2f6; font-size:12px; font-weight:800; white-space:nowrap; }
+      .work-status.complete { background:#e5f4ea; color:#137333; }
+      .work-status.pending { background:#fff4e5; color:#8a4b0f; }
+      .work-status.blocked { background:#fce8e6; color:var(--danger); }
+      .work-status-detail { display:block; margin-top:4px; max-width:290px; color:var(--muted); font-size:11px; line-height:1.4; white-space:normal; }
+      .work-photo { display:inline-block; padding:4px 8px; border-radius:12px; background:#fff4e5; color:#8a4b0f; font-size:12px; font-weight:800; white-space:nowrap; }
+      .work-photo.complete { background:#e5f4ea; color:#137333; }
+      .work-next { min-width:230px; max-width:340px; color:var(--muted); font-size:12px; white-space:normal; }
+      .install-select { min-height:36px; min-width:142px; padding:5px 8px; border:1px solid #c7cbd1; border-radius:7px; background:#fff; color:var(--text); font:inherit; font-size:12px; font-weight:800; }
+      .install-select.complete { border-color:#7aa7d9; background:#e8f0fe; color:#174ea6; }
+      .install-select.blocked { border-color:#e5a19d; background:#fce8e6; color:var(--danger); }
+      .install-reason-inline { display:block; margin-top:4px; max-width:230px; color:var(--danger); font-size:11px; font-weight:700; white-space:normal; }
+      @media (max-width:900px) { .plan-summary{grid-template-columns:repeat(2,1fr)} .work-summary{grid-template-columns:repeat(3,1fr)} }
       .panel { padding:14px; border:1px solid var(--border); border-radius:10px; background:#fff; }
       .panel-title { margin:0 0 10px; font-size:16px; }
       .status-line { display:grid; grid-template-columns:140px 1fr 56px; gap:8px; align-items:center; margin:9px 0; font-size:13px; }
@@ -114,7 +133,7 @@
       .brand-credit { margin:18px 0 2px; color:#9aa0a6; font-size:11px; font-weight:800; letter-spacing:.12em; text-align:center; }
       .error-box { padding:14px; border:1px solid #f4b8b4; border-radius:8px; background:#fce8e6; color:var(--danger); }
       @media (max-width:900px) { .cards{grid-template-columns:repeat(3,1fr)} .dashboard-grid{grid-template-columns:1fr} .document-grid{grid-template-columns:repeat(2,1fr)} }
-      @media (max-width:640px) { body{padding:5px} .shell{padding:12px;min-height:calc(100vh - 10px)} .brand{display:block} .brand-actions{display:grid;grid-template-columns:1fr;width:100%;margin-top:10px} .sheet-button,.photo-report-button{width:100%;margin-top:0} .cards{grid-template-columns:repeat(2,1fr)} .card-value{font-size:22px} .toolbar{display:grid;grid-template-columns:1fr 1fr} .search{grid-column:1 / -1;width:100%} .filter{width:100%;min-width:0} .button{width:100%} .document-grid{grid-template-columns:1fr} .form-grid{grid-template-columns:1fr 1fr;gap:8px} .field.full{grid-column:1 / -1} }
+      @media (max-width:640px) { body{padding:5px} .shell{padding:12px;min-height:calc(100vh - 10px)} .brand{display:block} .brand-actions{display:grid;grid-template-columns:1fr;width:100%;margin-top:10px} .sheet-button,.photo-report-button{width:100%;margin-top:0} .cards{grid-template-columns:repeat(2,1fr)} .card-value{font-size:22px} .toolbar{display:grid;grid-template-columns:1fr 1fr} .search{grid-column:1 / -1;width:100%} .filter{width:100%;min-width:0} .button{width:100%} .document-grid{grid-template-columns:1fr} .form-grid{grid-template-columns:1fr 1fr;gap:8px} .field.full{grid-column:1 / -1} .work-summary{grid-template-columns:repeat(2,1fr)} .work-toolbar{display:grid;grid-template-columns:1fr 1fr} .work-search{grid-column:1 / -1;width:100%} .work-filter{width:100%;min-width:0} }
       @media (max-width:380px) { .form-grid{grid-template-columns:1fr} .field.full{grid-column:auto} }
     </style>
   </head>
@@ -135,8 +154,9 @@
         </header>
 
         <nav class="nav" aria-label="เมนู Portal">
-          <button id="dashboardTab" class="active" type="button" onclick="showView('dashboard')">ภาพรวม</button>
-          <button id="assetTab" type="button" onclick="showView('asset')">Asset_Master</button>
+              <button id="dashboardTab" class="active" type="button" onclick="showView('dashboard')">ภาพรวม</button>
+              <button id="workTab" type="button" onclick="showView('work')">ติดตามงาน</button>
+              <button id="assetTab" type="button" onclick="showView('asset')">Asset_Master</button>
           <button id="documentsTab" type="button" onclick="showView('documents')">เอกสารและพิมพ์</button>
           <button id="planTab" type="button" onclick="showView('plan')">แผนการดำเนินงาน</button>
         </nav>
@@ -150,6 +170,19 @@
             <section class="panel"><h3 class="panel-title">สถานะเตรียมเครื่อง</h3><div id="prepStatusChart"></div></section>
             <section class="panel"><h3 class="panel-title">ตัวชี้วัดอุปกรณ์</h3><div id="equipmentMetrics"></div></section>
           </div>
+        </section>
+
+        <section id="workView" class="view" hidden>
+          <h2 class="view-title">ติดตามงานต่อ Job</h2>
+          <p class="view-note">ดูตั้งแต่รับเครื่อง เตรียมเครื่อง ผลการติดตั้ง อุปกรณ์เสริม และรูปหลัก 3 จุด เพื่อรู้ทันทีว่างานจบหรือยัง</p>
+          <div id="workSummaryCards" class="work-summary"></div>
+          <div class="work-toolbar">
+            <input id="workSearch" class="search work-search" type="search" placeholder="ค้นหา Job, สถานที่ หรือสิ่งที่ยังค้าง" oninput="renderWorkTable()">
+            <select id="workStatusFilter" class="filter work-filter" onchange="renderWorkTable()"><option value="">สถานะงานทั้งหมด</option><option>งานจบ</option><option>ยังไม่จบ</option><option>ติดปัญหา</option></select>
+            <button type="button" class="button button-secondary" onclick="loadPortal()">รีเฟรช</button>
+          </div>
+          <p id="workTableMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
+          <div class="table-wrap"><table><thead><tr><th>เลข Job</th><th>สถานที่</th><th>เตรียมเครื่อง</th><th>ผลการติดตั้ง</th><th>อุปกรณ์เสริม</th><th>รูปหลัก</th><th>สรุปงาน</th><th>ต้องทำต่อ</th></tr></thead><tbody id="workTableBody"></tbody></table></div>
         </section>
 
         <section id="planView" class="view" hidden>
@@ -173,7 +206,7 @@
           <p id="assetMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>สถานะชุด</th><th>เตรียมเครื่อง</th><th>สาเหตุที่ติดปัญหา</th><th>รับคืน / COM S/N เดิม</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
+              <thead><tr><th>เลข Job</th><th>รหัสชุด</th><th>ประเภท</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>สถานะชุด</th><th>เตรียมเครื่อง</th><th>สาเหตุที่ติดปัญหา</th><th>สถานะการติดตั้ง</th><th>เหตุผลติดตั้งไม่ได้/ไม่ทัน</th><th>รับคืน / COM S/N เดิม</th><th>แจ้งเตือน</th><th>การทำงาน</th></tr></thead>
               <tbody id="assetTableBody"></tbody>
             </table>
           </div>
@@ -230,18 +263,20 @@
           <div class="field"><label>วันหมดสัญญา</label><input id="endDate" class="input" type="date"></div>
           <div class="field"><label>สถานะชุด</label><select id="assetStatus" class="select"><option>รอส่งมอบ</option><option>ส่งมอบแล้ว</option></select></div>
           <div class="field"><label>สถานะเตรียมเครื่อง</label><select id="prepStatus" class="select" onchange="syncProblemField()"><option>รับเข้าแล้ว</option><option>ลง Windows</option><option>ลงโปรแกรม</option><option>รอ Activate</option><option>พร้อมติดตั้ง</option><option>ติดตั้งเสร็จ</option><option>ติดปัญหา</option></select></div>
+          <div class="field"><label>สถานะการติดตั้ง</label><select id="installStatus" class="select" onchange="syncInstallationField()"><option>รอดำเนินการ</option><option>ติดตั้งเสร็จ</option><option>ติดตั้งไม่ได้</option><option>ติดตั้งไม่ทัน</option></select></div>
           <div id="problemDetailField" class="field full problem-field"><label>ติดปัญหาเรื่องอะไร <span aria-hidden="true">*</span></label><select id="problemDetail" class="select"><option value="">-- เลือกสาเหตุที่ติดปัญหา --</option><option>เครื่อง / Hardware</option><option>Windows</option><option>ติดตั้งโปรแกรม</option><option>Activate</option><option>อุปกรณ์ไม่ครบ</option><option>รออะไหล่ / รอเปลี่ยนเครื่อง</option><option>รอข้อมูลจากหน่วยงาน</option><option>อื่นๆ</option></select></div>
+          <div id="installReasonField" class="field full problem-field"><label>เหตุผลติดตั้งไม่ได้/ไม่ทัน <span aria-hidden="true">*</span></label><input id="installReason" class="input" type="text" placeholder="เช่น รอพื้นที่, รอไฟฟ้า, อุปกรณ์ไม่ครบ, เครื่องมีปัญหา"></div>
         </div></div>
         <div class="modal-actions"><button id="saveAssetButton" type="button" class="button button-primary" onclick="saveAsset()">บันทึกข้อมูล</button><button type="button" class="button button-outline" onclick="closeAssetEditor()">ยกเลิก</button></div>
       </section>
     </div>
 
     <script>
-      let portalData = { dashboard:{}, assetRows:[], sheetLinks:{} };
+      let portalData = { dashboard:{}, assetRows:[], jobWorkRows:[], sheetLinks:{} };
       let currentView = 'dashboard';
       const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดตั้งเสร็จ','ติดปัญหา'];
       const PROBLEM_OPTIONS = ['เครื่อง / Hardware','Windows','ติดตั้งโปรแกรม','Activate','อุปกรณ์ไม่ครบ','รออะไหล่ / รอเปลี่ยนเครื่อง','รอข้อมูลจากหน่วยงาน','อื่นๆ'];
-      const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','ipAddress','startDate','endDate','assetStatus','prepStatus','problemDetail'];
+      const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','ipAddress','startDate','endDate','assetStatus','prepStatus','problemDetail','installStatus','installReason'];
       const CHECK_IDS = ['deliverAio','deliverUps','deliverHub','deliverKbMouse','deliverAdapter','deliverUpsCord'];
       const DOCS = [
         ['Dashboard','ภาพรวมสถานะชุดเช่า'],
@@ -258,8 +293,10 @@
         setStatus('กำลังโหลดข้อมูลจาก IT_Rental.xlsx / Google Sheet...');
         google.script.run.withSuccessHandler(function(data) {
           portalData = data || portalData;
+          portalData.jobWorkRows = portalData.jobWorkRows || [];
           setPhotoReportLink();
           renderDashboard();
+          renderWorkTable();
           renderPlanView();
           renderAssetFilters();
           renderAssetTable();
@@ -272,7 +309,7 @@
 
       function showView(view) {
         currentView = view;
-        ['dashboard','asset','documents','plan'].forEach(function(name) {
+        ['dashboard','work','asset','documents','plan'].forEach(function(name) {
           document.getElementById(name + 'View').hidden = name !== view;
           document.getElementById(name + 'Tab').classList.toggle('active', name === view);
         });
@@ -378,16 +415,16 @@
         const status = document.getElementById('statusFilter').value;
         const prepStatus = document.getElementById('prepStatusFilter').value;
         const rows = (portalData.assetRows || []).filter(function(row) {
-          const text = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.upsSn,row.ipAddress,row.prepStatus,row.problemDetail].join(' ').toLowerCase();
+          const text = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.upsSn,row.ipAddress,row.prepStatus,row.problemDetail,row.installStatus,row.installReason].join(' ').toLowerCase();
           return (!query || text.indexOf(query) !== -1) && (!status || row.status === status) && (!prepStatus || row.prepStatus === prepStatus);
         });
         document.getElementById('assetMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + (portalData.assetRows || []).length + ' รายการ';
         const body = document.getElementById('assetTableBody');
         body.innerHTML = '';
-          if (!rows.length) { body.innerHTML = '<tr><td colspan="13" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
+          if (!rows.length) { body.innerHTML = '<tr><td colspan="15" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + statusBadge(row.status) + '</td><td>' + prepStatusControl(row) + '</td><td class="problem-cell">' + (row.prepStatus === 'ติดปัญหา' ? escapeHtml(row.problemDetail || 'ยังไม่ได้ระบุ') : '-') + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml(row.setCode) + '</td><td>' + escapeHtml(row.type) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + statusBadge(row.status) + '</td><td>' + prepStatusControl(row) + '</td><td class="problem-cell">' + (row.prepStatus === 'ติดปัญหา' ? escapeHtml(row.problemDetail || 'ยังไม่ได้ระบุ') : '-') + '</td><td>' + installStatusControl(row) + '</td><td class="problem-cell">' + ((row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน') ? escapeHtml(row.installReason || 'ยังไม่ได้ระบุ') : '-') + '</td><td class="return-cell">' + returnSnCell(row) + '</td><td>' + statusBadge(row.alert) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">เอกสาร</button></div></td>';
           body.appendChild(tr);
         });
       }
@@ -415,6 +452,46 @@
         return row.oldComSn ? '<span class="status-badge status-installed">รับคืนแล้ว</span><span class="return-sn">' + escapeHtml(row.oldComSn) + '</span>' : '<span class="status-badge">ยังไม่คืน</span>';
       }
 
+      const INSTALL_STATUS_OPTIONS = ['รอดำเนินการ','ติดตั้งเสร็จ','ติดตั้งไม่ได้','ติดตั้งไม่ทัน'];
+      function installStatusControl(row) {
+        const current = row.installStatus || INSTALL_STATUS_OPTIONS[0];
+        const cls = current === 'ติดตั้งเสร็จ' ? 'complete' : ((current === 'ติดตั้งไม่ได้' || current === 'ติดตั้งไม่ทัน') ? 'blocked' : '');
+        const options = INSTALL_STATUS_OPTIONS.map(function(status) { return '<option value="' + escapeHtml(status) + '"' + (status === current ? ' selected' : '') + '>' + escapeHtml(status) + '</option>'; }).join('');
+        const reason = (current === 'ติดตั้งไม่ได้' || current === 'ติดตั้งไม่ทัน') && row.installReason ? '<span class="install-reason-inline">' + escapeHtml(row.installReason) + '</span>' : '';
+        return '<select class="install-select ' + cls + '" aria-label="ผลการติดตั้ง ' + escapeHtml(row.jobNo) + '" onchange="handleInstallStatusChange(' + row.rowNumber + ', this.value)">' + options + '</select>' + reason;
+      }
+
+      function workStatusBadge(value) {
+        const cls = value === 'งานจบ' ? 'complete' : (value === 'ติดปัญหา' ? 'blocked' : 'pending');
+        return '<span class="work-status ' + cls + '">' + escapeHtml(value || '-') + '</span>';
+      }
+
+      function renderWorkTable() {
+        const query = (document.getElementById('workSearch') || {}).value ? document.getElementById('workSearch').value.trim().toLowerCase() : '';
+        const filter = (document.getElementById('workStatusFilter') || {}).value || '';
+        const allRows = portalData.jobWorkRows || [];
+        const rows = allRows.filter(function(row) {
+          const text = [row.jobNo, row.location, row.prepStatus, row.installStatus, row.installReason, row.accessoryStatus, row.nextAction, (row.missingPrimary || []).join(' ')].join(' ').toLowerCase();
+          return (!query || text.indexOf(query) !== -1) && (!filter || row.workStatus === filter);
+        });
+        const completed = allRows.filter(function(row) { return row.workStatus === 'งานจบ'; }).length;
+        const pending = allRows.filter(function(row) { return row.workStatus === 'ยังไม่จบ'; }).length;
+        const blocked = allRows.filter(function(row) { return row.workStatus === 'ติดปัญหา'; }).length;
+        const accessoryIncomplete = allRows.filter(function(row) { return (row.accessoryMissing || []).length > 0; }).length;
+        const photoIncomplete = allRows.filter(function(row) { return !row.primaryPhotoComplete; }).length;
+        document.getElementById('workSummaryCards').innerHTML = [['งานจบ',completed,'complete'],['ยังไม่จบ',pending,'pending'],['ติดปัญหา',blocked,'blocked'],['ขาดอุปกรณ์',accessoryIncomplete,'pending'],['ขาดรูปหลัก',photoIncomplete,'pending']].map(function(item) { return '<div class="metric"><div class="metric-label">' + item[0] + '</div><div class="metric-value">' + item[1] + '</div></div>'; }).join('');
+        document.getElementById('workTableMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + allRows.length + ' Job';
+        const body = document.getElementById('workTableBody');
+        if (!rows.length) { body.innerHTML = '<tr><td colspan="8" class="empty">ไม่พบ Job ที่ตรงกับเงื่อนไข</td></tr>'; return; }
+        body.innerHTML = rows.map(function(row) {
+          const photoClass = row.primaryPhotoComplete ? 'complete' : '';
+          const photoDetail = row.primaryPhotoComplete ? 'ชื่อหน่วยงาน / ก่อน / หลัง ครบ' : 'ขาด: ' + (row.missingPrimary || []).join(', ');
+          const accessoryDetail = row.accessoryMissing && row.accessoryMissing.length ? row.accessoryMissing.join(', ') : 'อุปกรณ์ครบ';
+          const blockers = row.blockers && row.blockers.length ? row.blockers.join(' · ') : 'ไม่เหลือรายการค้าง';
+          return '<tr><td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml(row.location || '-') + '</td><td>' + statusBadge(row.prepStatus) + '</td><td>' + installStatusControl(row) + '</td><td>' + (row.accessoryMissing && row.accessoryMissing.length ? '<span class="work-status pending">ยังไม่ครบ</span>' : '<span class="work-status complete">ครบ</span>') + '<span class="work-status-detail">' + escapeHtml(accessoryDetail) + '</span></td><td><span class="work-photo ' + photoClass + '">' + row.primaryPhotoCount + '/' + row.primaryPhotoTotal + '</span><span class="work-status-detail">' + escapeHtml(photoDetail) + '</span></td><td>' + workStatusBadge(row.workStatus) + '<span class="work-status-detail">' + escapeHtml(blockers) + '</span></td><td class="work-next">' + escapeHtml(row.nextAction || '-') + '</td></tr>';
+        }).join('');
+      }
+
       function handlePrepStatusChange(rowNumber, prepStatus) {
         if (prepStatus === 'ติดปัญหา') {
           const item = (portalData.assetRows || []).find(function(row) { return row.rowNumber === rowNumber; });
@@ -430,6 +507,23 @@
       function updatePrepStatus(rowNumber, prepStatus, problemDetail) {
         setStatus('กำลังอัปเดตสถานะเตรียมเครื่อง...');
         google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตสถานะไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetPreparationStatus(rowNumber, prepStatus, problemDetail || '');
+      }
+
+      function handleInstallStatusChange(rowNumber, installStatus) {
+        if (installStatus === 'ติดตั้งไม่ได้' || installStatus === 'ติดตั้งไม่ทัน') {
+          const item = (portalData.assetRows || []).find(function(row) { return row.rowNumber === rowNumber; });
+          openAssetEditor(item);
+          document.getElementById('installStatus').value = installStatus;
+          syncInstallationField();
+          setStatus('กรุณาระบุเหตุผลการติดตั้ง แล้วกดบันทึกข้อมูล', false);
+          return;
+        }
+        updateInstallStatus(rowNumber, installStatus, '');
+      }
+
+      function updateInstallStatus(rowNumber, installStatus, installReason) {
+        setStatus('กำลังอัปเดตผลการติดตั้ง...');
+        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตผลการติดตั้งไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetInstallationStatus(rowNumber, installStatus, installReason || '');
       }
 
       function renderDocuments() {
@@ -490,6 +584,7 @@
         FIELD_IDS.forEach(function(id) { const element = document.getElementById(id); if (element) element.value = item[id] || (id === 'prepStatus' ? PREP_STATUS_OPTIONS[0] : ''); });
         CHECK_IDS.forEach(function(id) { document.getElementById(id).checked = !!item[id]; });
         syncProblemField();
+        syncInstallationField();
         document.getElementById('assetModal').classList.add('open');
       }
       function ensureProblemOption(value) {
@@ -505,6 +600,14 @@
         if (field) field.classList.toggle('open', active);
         if (detail) { detail.required = active; if (!active) detail.value = ''; }
       }
+      function syncInstallationField() {
+        const status = document.getElementById('installStatus');
+        const field = document.getElementById('installReasonField');
+        const reason = document.getElementById('installReason');
+        const active = status && (status.value === 'ติดตั้งไม่ได้' || status.value === 'ติดตั้งไม่ทัน');
+        if (field) field.classList.toggle('open', active);
+        if (reason) { reason.required = active; if (!active) reason.value = ''; }
+      }
       function closeAssetEditor() { document.getElementById('assetModal').classList.remove('open'); }
 
       function saveAsset() {
@@ -513,6 +616,7 @@
         CHECK_IDS.forEach(function(id) { data[id] = document.getElementById(id).checked; });
         if (!data.jobNo) { setStatus('กรุณากรอกเลข Job', true); return; }
         if (data.prepStatus === 'ติดปัญหา' && !data.problemDetail) { setStatus('กรุณาเลือกว่าติดปัญหาเรื่องอะไร', true); syncProblemField(); return; }
+        if ((data.installStatus === 'ติดตั้งไม่ได้' || data.installStatus === 'ติดตั้งไม่ทัน') && !data.installReason) { setStatus('กรุณาระบุเหตุผลที่ติดตั้งไม่ได้หรือไม่ทัน', true); syncInstallationField(); return; }
         const button = document.getElementById('saveAssetButton');
         button.disabled = true; button.textContent = 'กำลังบันทึก...'; setStatus('กำลังบันทึก Asset_Master...');
         google.script.run.withSuccessHandler(function(result) { button.disabled = false; button.textContent = 'บันทึกข้อมูล'; closeAssetEditor(); setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'บันทึกข้อมูล'; setStatus('บันทึกไม่สำเร็จ: ' + getErrorMessage(error), true); }).saveAssetMasterPortalRow(document.getElementById('assetRowNumber').value, data);

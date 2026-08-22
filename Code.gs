@@ -71,6 +71,17 @@ const CONFIG = Object.freeze({
   IP_HEADER: 'เลข IP',
   PROBLEM_COLUMN: 33,
   PROBLEM_HEADER: 'สาเหตุที่ติดปัญหา',
+  INSTALL_STATUS_COLUMN: 34,
+  INSTALL_STATUS_HEADER: 'สถานะการติดตั้ง',
+  INSTALL_REASON_COLUMN: 35,
+  INSTALL_REASON_HEADER: 'เหตุผลติดตั้งไม่ได้/ไม่ทัน',
+  INSTALL_STATUS_DEFAULT: 'รอดำเนินการ',
+  INSTALL_STATUS_OPTIONS: Object.freeze([
+    'รอดำเนินการ',
+    'ติดตั้งเสร็จ',
+    'ติดตั้งไม่ได้',
+    'ติดตั้งไม่ทัน'
+  ]),
   PREP_STATUS_DEFAULT: 'ลง Windows',
   PREP_STATUS_NEW_DEFAULT: 'รับเข้าแล้ว',
   PREP_STATUS_OPTIONS: Object.freeze([
@@ -453,7 +464,7 @@ function getPlanOverviewData_(spreadsheet, assetRows) {
       const text = [row.building, row.department, row.room].join(' ').toLowerCase();
       return definition.aliases.some(function(alias) { return text.indexOf(String(alias).toLowerCase()) !== -1; });
     });
-    const installed = actualRows.filter(function(row) { return row.status === 'ติดตั้งแล้ว'; }).length;
+    const installed = actualRows.filter(function(row) { return row.installStatus === 'ติดตั้งเสร็จ'; }).length;
     const delivered = actualRows.filter(function(row) { return row.status !== 'รับคืนแล้ว' && row.status !== 'ส่งซ่อม' && row.status !== 'ตัดจำหน่าย'; }).length;
     locations[definition.sheetName] = {
       key: definition.sheetName,
@@ -475,6 +486,7 @@ function getWorkbookPortalData() {
   ensurePreparationStatusColumn_(assetSheet);
 
   const rows = getAssetPortalRows_(assetSheet);
+  const jobWorkRows = buildJobWorkRows_(rows, spreadsheet);
   const sheetNames = ['Dashboard', 'Asset_Master', 'Delivery_Form', 'Return_Form', 'Movement_Log', 'Photo_Report'];
   const sheetLinks = {};
   sheetNames.forEach(function(name) {
@@ -483,9 +495,10 @@ function getWorkbookPortalData() {
   });
 
   return {
-    dashboard: buildPortalDashboard_(rows),
+    dashboard: buildPortalDashboard_(rows, jobWorkRows),
     planOverview: getPlanOverviewData_(spreadsheet, rows),
     assetRows: rows,
+    jobWorkRows: jobWorkRows,
     sheetLinks: sheetLinks,
     spreadsheetUrl: buildSpreadsheetEditUrl_(),
     photoReportUrl: ScriptApp.getService().getUrl() || ''
@@ -521,7 +534,10 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   const prepStatus = normalizePreparationStatus_(data.prepStatus || (existingRow && existingRow.prepStatus) || CONFIG.PREP_STATUS_NEW_DEFAULT);
   const ipAddress = data.ipAddress !== undefined ? String(data.ipAddress || '').trim() : ((existingRow && existingRow.ipAddress) || '');
   const problemDetail = String(data.problemDetail || '').trim();
+  const installStatus = normalizeInstallationStatus_(data.installStatus || (existingRow && existingRow.installStatus) || '');
+  const installReason = String(data.installReason !== undefined ? data.installReason : ((existingRow && existingRow.installReason) || '')).trim();
   if (prepStatus === 'ติดปัญหา' && !problemDetail) throw new Error('กรุณาเลือกว่าติดปัญหาเรื่องอะไร');
+  if ((installStatus === 'ติดตั้งไม่ได้' || installStatus === 'ติดตั้งไม่ทัน') && !installReason) throw new Error('กรุณาระบุเหตุผลที่ติดตั้งไม่ได้หรือไม่ทัน');
 
   const mainValues = [[
     jobNo,
@@ -559,6 +575,8 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   sheet.getRange(targetRow, CONFIG.PREP_STATUS_COLUMN).setValue(prepStatus);
   sheet.getRange(targetRow, CONFIG.IP_COLUMN).setValue(ipAddress);
   sheet.getRange(targetRow, CONFIG.PROBLEM_COLUMN).setValue(prepStatus === 'ติดปัญหา' ? problemDetail : '');
+  sheet.getRange(targetRow, CONFIG.INSTALL_STATUS_COLUMN).setValue(installStatus);
+  sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue((installStatus === 'ติดตั้งไม่ได้' || installStatus === 'ติดตั้งไม่ทัน') ? installReason : '');
   sheet.getRange(targetRow, 29, 1, 2).setValues([[
     data.oldComSn || '',
     data.oldUpsSn || ''
@@ -587,7 +605,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
 function getAssetPortalRows_(sheet) {
   const lastRow = Math.max(sheet.getLastRow(), CONFIG.HEADER_ROW - 1);
   if (lastRow < CONFIG.HEADER_ROW) return [];
-  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.PROBLEM_COLUMN).getValues();
+  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.INSTALL_REASON_COLUMN).getValues();
   return raw.map(function(row, index) {
     return {
       rowNumber: CONFIG.HEADER_ROW + index,
@@ -624,6 +642,8 @@ function getAssetPortalRows_(sheet) {
       prepStatus: toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) || CONFIG.PREP_STATUS_DEFAULT,
       ipAddress: toPortalValue_(row[CONFIG.IP_COLUMN - 1]),
       problemDetail: toPortalValue_(row[CONFIG.PROBLEM_COLUMN - 1]),
+      installStatus: normalizeInstallationStatus_(toPortalValue_(row[CONFIG.INSTALL_STATUS_COLUMN - 1]) || (toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) === 'ติดตั้งเสร็จ' ? 'ติดตั้งเสร็จ' : CONFIG.INSTALL_STATUS_DEFAULT)),
+      installReason: toPortalValue_(row[CONFIG.INSTALL_REASON_COLUMN - 1]),
     };
   }).filter(function(row) {
     return row.jobNo || row.setCode || row.building || row.department;
@@ -631,7 +651,7 @@ function getAssetPortalRows_(sheet) {
 }
 
 function ensurePreparationStatusColumn_(sheet) {
-  const requiredColumns = Math.max(CONFIG.PREP_STATUS_COLUMN, CONFIG.IP_COLUMN, CONFIG.PROBLEM_COLUMN);
+  const requiredColumns = Math.max(CONFIG.PREP_STATUS_COLUMN, CONFIG.IP_COLUMN, CONFIG.PROBLEM_COLUMN, CONFIG.INSTALL_STATUS_COLUMN, CONFIG.INSTALL_REASON_COLUMN);
   const currentColumns = sheet.getMaxColumns();
   if (currentColumns < requiredColumns) sheet.insertColumnsAfter(currentColumns, requiredColumns - currentColumns);
   const prepHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.PREP_STATUS_COLUMN);
@@ -640,11 +660,42 @@ function ensurePreparationStatusColumn_(sheet) {
   if (!ipHeaderCell.getDisplayValue()) ipHeaderCell.setValue(CONFIG.IP_HEADER);
   const problemHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.PROBLEM_COLUMN);
   if (!problemHeaderCell.getDisplayValue()) problemHeaderCell.setValue(CONFIG.PROBLEM_HEADER);
+  const installStatusHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.INSTALL_STATUS_COLUMN);
+  if (!installStatusHeaderCell.getDisplayValue()) installStatusHeaderCell.setValue(CONFIG.INSTALL_STATUS_HEADER);
+  const installReasonHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.INSTALL_REASON_COLUMN);
+  if (!installReasonHeaderCell.getDisplayValue()) installReasonHeaderCell.setValue(CONFIG.INSTALL_REASON_HEADER);
 }
 
 function normalizePreparationStatus_(value) {
   const text = String(value || '').trim();
   return CONFIG.PREP_STATUS_OPTIONS.indexOf(text) !== -1 ? text : CONFIG.PREP_STATUS_NEW_DEFAULT;
+}
+
+function normalizeInstallationStatus_(value) {
+  const text = String(value || '').trim();
+  return CONFIG.INSTALL_STATUS_OPTIONS.indexOf(text) !== -1 ? text : CONFIG.INSTALL_STATUS_DEFAULT;
+}
+
+function updateAssetInstallationStatus(rowNumber, installStatus, installReason) {
+  const targetRow = Number(rowNumber);
+  const status = normalizeInstallationStatus_(installStatus);
+  const reason = String(installReason || '').trim();
+  if (!targetRow || targetRow < CONFIG.HEADER_ROW) throw new Error('ไม่พบแถว Asset_Master ที่ต้องการแก้ไข');
+  if ((status === 'ติดตั้งไม่ได้' || status === 'ติดตั้งไม่ทัน') && !reason) throw new Error('กรุณาระบุเหตุผลที่ติดตั้งไม่ได้หรือไม่ทัน');
+
+  const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    ensurePreparationStatusColumn_(sheet);
+    sheet.getRange(targetRow, CONFIG.INSTALL_STATUS_COLUMN).setValue(status);
+    sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue((status === 'ติดตั้งไม่ได้' || status === 'ติดตั้งไม่ทัน') ? reason : '');
+    SpreadsheetApp.flush();
+    return { message: 'อัปเดตผลการติดตั้งแล้ว', rowNumber: targetRow, installStatus: status, installReason: reason };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function updateAssetPreparationStatus(rowNumber, prepStatus, problemDetail) {
@@ -670,7 +721,69 @@ function updateAssetPreparationStatus(rowNumber, prepStatus, problemDetail) {
   }
 }
 
-function buildPortalDashboard_(rows) {
+function buildJobWorkRows_(assetRows, spreadsheet) {
+  const photoByJob = getPhotoIndexByJob_(spreadsheet);
+  const primaryTypes = ['signage', 'before1', 'after1'];
+  const primaryLabels = { signage: 'ชื่อหน่วยงาน', before1: 'ก่อนติดตั้ง', after1: 'หลังติดตั้ง' };
+  return (assetRows || []).map(function(row) {
+    const key = String(row.jobNo || '').trim().toLowerCase();
+    const photo = photoByJob[key] || {};
+    const filledTypes = CONFIG.IMAGE_TYPES.filter(function(type) { return !!photo[type]; });
+    const missingPrimary = primaryTypes.filter(function(type) { return !photo[type]; });
+    const accessoryMissing = [];
+    if (row.status !== 'ส่งมอบแล้ว') accessoryMissing.push('รอส่งมอบ');
+    if (!row.deliverUps) accessoryMissing.push('UPS');
+    if (!row.deliverHub) accessoryMissing.push('USB HUB');
+
+    const installBlocked = row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน';
+    const blockers = [];
+    if (installBlocked) blockers.push(row.installStatus + (row.installReason ? ': ' + row.installReason : ''));
+    else if (row.installStatus !== 'ติดตั้งเสร็จ') blockers.push('รอผลการติดตั้ง');
+    if (row.status !== 'ส่งมอบแล้ว') blockers.push('อุปกรณ์ยังไม่ส่งมอบ');
+    if (!row.deliverUps) blockers.push('ขาด UPS');
+    if (!row.deliverHub) blockers.push('ขาด USB HUB');
+    if (missingPrimary.length) blockers.push('ขาดรูป ' + missingPrimary.map(function(type) { return primaryLabels[type]; }).join(', '));
+
+    return {
+      rowNumber: row.rowNumber,
+      jobNo: row.jobNo,
+      location: [row.building, row.floor, row.department, row.room].filter(Boolean).join(' | '),
+      prepStatus: row.prepStatus,
+      installStatus: row.installStatus,
+      installReason: row.installReason,
+      accessoryStatus: accessoryMissing.length ? accessoryMissing.join(', ') : 'อุปกรณ์ครบ',
+      accessoryMissing: accessoryMissing,
+      primaryPhotoCount: primaryTypes.length - missingPrimary.length,
+      primaryPhotoTotal: primaryTypes.length,
+      primaryPhotoComplete: missingPrimary.length === 0,
+      totalPhotoCount: filledTypes.length,
+      totalPhotoTotal: CONFIG.IMAGE_TYPES.length,
+      missingPrimary: missingPrimary.map(function(type) { return primaryLabels[type]; }),
+      workStatus: blockers.length ? (installBlocked ? 'ติดปัญหา' : 'ยังไม่จบ') : 'งานจบ',
+      blockers: blockers,
+      nextAction: blockers.length ? blockers.join(' · ') : 'ไม่เหลือรายการค้าง'
+    };
+  });
+}
+
+function getPhotoIndexByJob_(spreadsheet) {
+  const sheet = spreadsheet.getSheetByName(CONFIG.PHOTO_FILE_INDEX_SHEET_NAME);
+  const result = {};
+  if (!sheet || sheet.getLastRow() < 2) return result;
+  const values = sheet.getDataRange().getDisplayValues();
+  for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
+    const jobKey = String(values[rowIndex][1] || '').trim().toLowerCase();
+    if (!jobKey) continue;
+    const record = {};
+    CONFIG.IMAGE_TYPES.forEach(function(type, typeIndex) {
+      record[type] = values[rowIndex][3 + typeIndex] || '';
+    });
+    result[jobKey] = record;
+  }
+  return result;
+}
+
+function buildPortalDashboard_(rows, jobWorkRows) {
   // สถานะชุดอุปกรณ์เสริมมีเพียง 2 ค่า ไม่เกี่ยวกับสถานะเตรียมเครื่อง
   const statuses = ['รอส่งมอบ', 'ส่งมอบแล้ว'];
   const counts = {};
@@ -698,7 +811,13 @@ function buildPortalDashboard_(rows) {
     upsCord: rows.filter(function(row) { return row.deliverUpsCord; }).length,
     expiring: rows.filter(function(row) { return row.alert === 'เตือน: ใกล้หมดสัญญา'; }).length,
     statuses: counts,
-    prepStatuses: prepCounts
+    prepStatuses: prepCounts,
+    workTotal: (jobWorkRows || []).length,
+    workCompleted: (jobWorkRows || []).filter(function(row) { return row.workStatus === 'งานจบ'; }).length,
+    workPending: (jobWorkRows || []).filter(function(row) { return row.workStatus === 'ยังไม่จบ'; }).length,
+    workBlocked: (jobWorkRows || []).filter(function(row) { return row.workStatus === 'ติดปัญหา'; }).length,
+    workAccessoryIncomplete: (jobWorkRows || []).filter(function(row) { return row.accessoryMissing.length > 0; }).length,
+    workPhotoIncomplete: (jobWorkRows || []).filter(function(row) { return !row.primaryPhotoComplete; }).length
   };
 }
 
