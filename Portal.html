@@ -709,7 +709,7 @@
         const links = portalData.sheetLinks || {};
         document.getElementById('documentGrid').innerHTML = DOCS.map(function(doc) {
           const url = links[doc[0]] || '#';
-          return '<article class="document-card"><div><h3>' + doc[0] + '</h3><p>' + doc[1] + '</p></div><div class="document-actions"><button class="small-button green" type="button" onclick="openUrl(\'' + escapeJs(url) + '\')">เปิดชีตเพื่อแก้ไข/พิมพ์</button></div></article>';
+          return '<article class="document-card"><div><h3>' + doc[0] + '</h3><p>' + doc[1] + '</p></div><div class="document-actions"><button class="small-button green" type="button" onclick="openUrlWithCode(\'' + escapeJs(url) + '\')">เปิดชีตเพื่อแก้ไข/พิมพ์</button></div></article>';
         }).join('');
       }
 
@@ -745,7 +745,7 @@
         return false;
       }
 
-      function openWorkbook() { openUrl(portalData.spreadsheetUrl); }
+      function openWorkbook() { openUrlWithCode(portalData.spreadsheetUrl); }
       function openJobReport(jobNo) {
         setStatus('กำลังเตรียมเอกสาร ' + jobNo + '...');
         google.script.run.withSuccessHandler(function(result) { openUrl(result.sheetUrl); setStatus('เปิด ' + result.sheetName + ' แล้ว ใช้ File > Print เพื่อพิมพ์', false, true); }).withFailureHandler(function(error) { setStatus('เปิดเอกสารไม่สำเร็จ: ' + getErrorMessage(error), true); }).getJobReportInfo(jobNo);
@@ -763,6 +763,13 @@
         }).prepareJobForm(jobNo, type);
       }
       function openUrl(url) { if (url && url !== '#') window.open(url, '_blank'); else setStatus('ยังไม่มีลิงก์เอกสาร', true); }
+      function openUrlWithCode(url) {
+        if (!url || url === '#') { setStatus('ยังไม่มีลิงก์เอกสาร', true); return; }
+        var รหัสที่ถูกต้อง = 'PNG2569';
+        var รหัสที่กรอก = prompt('กรุณากรอกรหัสเพื่อเปิดชีทต้นฉบับ:');
+        if (รหัสที่กรอก === null) return;
+        if (รหัสที่กรอก === รหัสที่ถูกต้อง) { openUrl(url); } else { setStatus('รหัสไม่ถูกต้อง', true); }
+      }
 
       let currentDetailsItem = null;
       function openAssetDetailsByRow(rowNumber) { openAssetDetails((portalData.assetRows || []).find(function(row) { return row.rowNumber === rowNumber; })); }

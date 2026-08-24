@@ -169,7 +169,18 @@
       const baseUrl = window.location.href.split('?')[0];
       window.location.href = baseUrl + '?page=portal&view=asset&from=print';
     }
-    function openOriginalSheet() { if (originalSheetUrl) window.open(originalSheetUrl, '_blank'); }
+    function openOriginalSheet() {
+      if (!originalSheetUrl) return;
+      var รหัสที่ถูกต้อง = 'PNG2569';
+      var รหัสที่กรอก = prompt('กรุณากรอกรหัสเพื่อเปิดชีทต้นฉบับ:');
+      if (รหัสที่กรอก === null) return;
+      if (รหัสที่กรอก === รหัสที่ถูกต้อง) {
+        window.open(originalSheetUrl, '_blank');
+      } else {
+        setStatus('รหัสไม่ถูกต้อง');
+        document.getElementById('status').classList.add('error');
+      }
+    }
     function setStatus(message) { const el = document.getElementById('status'); el.textContent = message; el.classList.remove('error'); }
     function showError(message) { const el = document.getElementById('status'); el.textContent = message; el.classList.add('error'); document.getElementById('printPage').innerHTML = '<div class="loading">ไม่สามารถสร้างเอกสารได้</div>'; }
     function errorMessage(error) { return String(error && error.message ? error.message : error || 'เกิดข้อผิดพลาด'); }

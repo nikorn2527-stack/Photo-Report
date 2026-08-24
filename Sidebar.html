@@ -285,7 +285,7 @@
       <div id="workspace" class="workspace">
         <section class="ios-job-strip"><div><strong id="mobileJobNo"></strong><span id="mobileJobLocation"></span></div><span class="ios-saved"><i>✓</i> บันทึกอัตโนมัติ</span><b id="mobileJobCount">0/9</b></section>
         <section class="ios-capture-area"><div class="ios-capture-heading"><h2>รูปงาน</h2><span>แตะช่องเพื่อเพิ่มรูป</span></div><div id="mobilePhotoGrid" class="mobile-photo-grid"></div><p class="ios-hint-bottom">รูปจะถูกบันทึกอัตโนมัติทันที</p></section>
-        <div class="bottom-actions"><button class="bottom-action" type="button" onclick="openPrintTemplate()">▤ ดูใบงาน A4</button><button class="bottom-action primary" type="button" onclick="startCameraNextEmpty()">▣ ถ่ายรูป</button></div><details class="ios-more"><summary>เครื่องมือเพิ่มเติม</summary><div class="mobile-more-grid"><a id="portalLink" href="#" target="_top" rel="noopener">IT Rental Portal</a><a id="photoIndexLink" href="#" target="_blank">ประวัติ URL รูป</a><a id="assetLink" href="#" target="_blank">Asset_Master</a><a id="reportLink" href="#" target="_blank">Template ในชีต</a><a id="printLink" href="#" onclick="openPrintTemplate();return false">ดูใบงาน A4 / พิมพ์</a></div></details>
+        <div class="bottom-actions"><button class="bottom-action" type="button" onclick="openPrintTemplate()">▤ ดูใบงาน A4</button><button class="bottom-action primary" type="button" onclick="startCameraNextEmpty()">▣ ถ่ายรูป</button></div><details class="ios-more"><summary>เครื่องมือเพิ่มเติม</summary><div class="mobile-more-grid"><a id="portalLink" href="#" target="_top" rel="noopener">IT Rental Portal</a><a id="photoIndexLink" href="#" onclick="return openSheetLinkWithCode('photoIndexLink', event)">ประวัติ URL รูป</a><a id="assetLink" href="#" onclick="return openSheetLinkWithCode('assetLink', event)">Asset_Master</a><a id="reportLink" href="#" onclick="return openSheetLinkWithCode('reportLink', event)">Template ในชีต</a><a id="printLink" href="#" onclick="openPrintTemplate();return false">ดูใบงาน A4 / พิมพ์</a></div></details>
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <div class="brand-credit">POWER BY PNG TEAM</div>
@@ -365,7 +365,18 @@
     function pair(before,after,index) { return '<div class="print-pair-head"><div class="print-before-head">ก่อนติดตั้ง ' + index + '</div><div class="print-after-head">หลังติดตั้ง ' + index + '</div></div><div class="print-pair">' + printImage(before,'ก่อนติดตั้ง ' + index) + printImage(after,'หลังติดตั้ง ' + index) + '</div>'; }
     function portalUrlFromCurrentPage() { const url = new URL(window.location.href); url.search = ''; url.hash = ''; url.searchParams.set('page','portal'); return url.toString(); }
     function openPortal() { const link = document.getElementById('portalLink'); const url = link && link.href; if (!url || url === '#' || url === window.location.href) return; try { if (window.top === window.self) { window.location.assign(url); } else { window.top.location.href = url; } } catch (error) { window.open(url, '_blank', 'noopener,noreferrer'); } }
-    function loadSheetLinks() { const fallbackPortal = portalUrlFromCurrentPage(); document.getElementById('portalLink').href = fallbackPortal; google.script.run.withSuccessHandler(function(links) { document.getElementById('portalLink').href=links.portalWebUrl || fallbackPortal; document.getElementById('photoIndexLink').href=links.photoFileIndexUrl || '#'; document.getElementById('assetLink').href=links.assetMasterUrl || '#'; document.getElementById('reportLink').href=links.templateUrl || '#'; }).withFailureHandler(function(error) { document.getElementById('portalLink').href = fallbackPortal; setStatus('โหลดลิงก์เพิ่มเติมไม่สำเร็จ: ' + errorMessage(error),true); }).getSheetEditLinks(); }
+    let sheetUrls = {};
+    function loadSheetLinks() { const fallbackPortal = portalUrlFromCurrentPage(); document.getElementById('portalLink').href = fallbackPortal; google.script.run.withSuccessHandler(function(links) { document.getElementById('portalLink').href=links.portalWebUrl || fallbackPortal; sheetUrls = { photoIndexLink: links.photoFileIndexUrl || '', assetLink: links.assetMasterUrl || '', reportLink: links.templateUrl || '' }; }).withFailureHandler(function(error) { document.getElementById('portalLink').href = fallbackPortal; setStatus('โหลดลิงก์เพิ่มเติมไม่สำเร็จ: ' + errorMessage(error),true); }).getSheetEditLinks(); }
+    function openSheetLinkWithCode(id, event) {
+      if (event) event.preventDefault();
+      const url = sheetUrls[id];
+      if (!url) { setStatus('ยังไม่มีลิงก์เอกสาร', true); return false; }
+      var รหัสที่ถูกต้อง = 'PNG2569';
+      var รหัสที่กรอก = prompt('กรุณากรอกรหัสเพื่อเปิดชีทต้นฉบับ:');
+      if (รหัสที่กรอก === null) return false;
+      if (รหัสที่กรอก === รหัสที่ถูกต้อง) { window.open(url, '_blank'); } else { setStatus('รหัสไม่ถูกต้อง', true); }
+      return false;
+    }
     function escapeHtml(value) { return String(value || '').replace(/[&<>'"]/g,function(ch) { return {'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[ch]; }); }
     document.getElementById('photoModal').addEventListener('click',function(e) { if(e.target===this && !uploading) closeModal(); });
     document.addEventListener('keydown',function(e) { if(e.key==='Escape') { closePrintPreview(); if(!uploading) closeModal(); } });

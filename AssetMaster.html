@@ -129,8 +129,8 @@
         <section class="sheet-access" aria-label="ลิงก์แก้ไข Google Sheet">
           <p class="sheet-access-title">แก้ไขข้อมูลใน Google Sheet โดยตรง</p>
           <div class="sheet-access-actions">
-            <a id="assetSheetLink" class="sheet-access-link primary is-disabled" href="#" target="_blank" rel="noopener">เปิด Asset_Master</a>
-            <a id="reportSheetLink" class="sheet-access-link is-disabled" href="#" target="_blank" rel="noopener">เปิด Photo_Report</a>
+            <a id="assetSheetLink" class="sheet-access-link primary is-disabled" href="#" rel="noopener" onclick="return openSheetLinkWithCode('assetSheetLink', event)">เปิด Asset_Master</a>
+            <a id="reportSheetLink" class="sheet-access-link is-disabled" href="#" rel="noopener" onclick="return openSheetLinkWithCode('reportSheetLink', event)">เปิด Photo_Report</a>
           </div>
           <p class="sheet-access-note">ต้องลงชื่อเข้าใช้ Google ด้วยบัญชีที่มีสิทธิ์แก้ไขไฟล์นี้</p>
         </section>
@@ -158,7 +158,7 @@
           </table>
         </div>
         <div id="status" class="status" role="status" aria-live="polite"></div>
-        <a id="sheetLink" class="sheet-link" href="#" target="_blank" rel="noopener">เปิดชีต Report อีกครั้ง</a>
+        <a id="sheetLink" class="sheet-link" href="#" rel="noopener" onclick="return openSheetLinkWithCode('sheetLink', event)">เปิดชีต Report อีกครั้ง</a>
       </section>
     </main>
 
@@ -205,17 +205,30 @@
         loadSheetEditLinks();
       });
 
+      let sheetUrls = {};
       function loadSheetEditLinks() {
         google.script.run
           .withSuccessHandler(function(links) {
-            setLink('assetSheetLink', links.assetMasterUrl);
-            setLink('reportSheetLink', links.templateUrl);
+            sheetUrls.assetSheetLink = links.assetMasterUrl || '';
+            sheetUrls.reportSheetLink = links.templateUrl || '';
+            document.getElementById('assetSheetLink').classList.remove('is-disabled');
+            document.getElementById('reportSheetLink').classList.remove('is-disabled');
             setLink('reportPageLink', links.reportWebUrl);
           })
           .withFailureHandler(function(error) {
             setStatus('ยังเปิดลิงก์แก้ไขชีตไม่ได้: ' + getErrorMessage(error), true);
           })
           .getSheetEditLinks();
+      }
+      function openSheetLinkWithCode(id, event) {
+        if (event) event.preventDefault();
+        const url = sheetUrls[id];
+        if (!url) { setStatus('ยังไม่มีลิงก์เอกสาร', true); return false; }
+        var รหัสที่ถูกต้อง = 'PNG2569';
+        var รหัสที่กรอก = prompt('กรุณากรอกรหัสเพื่อเปิดชีทต้นฉบับ:');
+        if (รหัสที่กรอก === null) return false;
+        if (รหัสที่กรอก === รหัสที่ถูกต้อง) { window.open(url, '_blank'); } else { setStatus('รหัสไม่ถูกต้อง', true); }
+        return false;
       }
 
       function setLink(id, url) {
@@ -357,6 +370,10 @@
       }
 
       function openReport(jobNo) {
+        var รหัสที่ถูกต้อง = 'PNG2569';
+        var รหัสที่กรอก = prompt('กรุณากรอกรหัสเพื่อเปิดชีทต้นฉบับ:');
+        if (รหัสที่กรอก === null) return;
+        if (รหัสที่กรอก !== รหัสที่ถูกต้อง) { setStatus('รหัสไม่ถูกต้อง', true); return; }
         setStatus('กำลังเตรียมชีต Report ของ ' + jobNo + '...');
         const popup = window.open('about:blank', '_blank');
         google.script.run
@@ -373,14 +390,14 @@
       }
 
       function showSheetLink(url) {
+        sheetUrls.sheetLink = url;
         const link = document.getElementById('sheetLink');
-        link.href = url;
         link.classList.add('is-visible');
       }
 
       function hideSheetLink() {
+        sheetUrls.sheetLink = '';
         const link = document.getElementById('sheetLink');
-        link.href = '#';
         link.classList.remove('is-visible');
       }
 
