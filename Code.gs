@@ -85,6 +85,7 @@ const CONFIG = Object.freeze({
   INSTALL_STATUS_DEFAULT: 'รอดำเนินการ',
   INSTALL_STATUS_OPTIONS: Object.freeze([
     'รอดำเนินการ',
+    'ติดตั้งแล้วแต่ไม่เสร็จ',
     'ติดตั้งเสร็จ',
     'ติดตั้งไม่ได้',
     'ติดตั้งไม่ทัน'
@@ -610,7 +611,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   const installStatus = normalizeInstallationStatus_(data.installStatus || (existingRow && existingRow.installStatus) || '');
   const installReason = String(data.installReason !== undefined ? data.installReason : ((existingRow && existingRow.installReason) || '')).trim();
   if (prepStatus === 'ติดปัญหา' && !problemDetail) throw new Error('กรุณาเลือกว่าติดปัญหาเรื่องอะไร');
-  if ((installStatus === 'ติดตั้งไม่ได้' || installStatus === 'ติดตั้งไม่ทัน') && !installReason) throw new Error('กรุณาระบุเหตุผลที่ติดตั้งไม่ได้หรือไม่ทัน');
+  if (installationNeedsReason_(installStatus) && !installReason) throw new Error('กรุณาระบุปัญหาของงานติดตั้งที่ยังไม่เสร็จ');
 
   const mainValues = [[
     jobNo,
@@ -648,7 +649,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   sheet.getRange(targetRow, CONFIG.IP_COLUMN).setValue(ipAddress);
   sheet.getRange(targetRow, CONFIG.PROBLEM_COLUMN).setValue(prepStatus === 'ติดปัญหา' ? problemDetail : '');
   sheet.getRange(targetRow, CONFIG.INSTALL_STATUS_COLUMN).setValue(installStatus);
-  sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue((installStatus === 'ติดตั้งไม่ได้' || installStatus === 'ติดตั้งไม่ทัน') ? installReason : '');
+  sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue(installationNeedsReason_(installStatus) ? installReason : '');
   sheet.getRange(targetRow, CONFIG.OLD_COM_SN_COLUMN, 1, 2).setValues([[
     data.oldComSn || '',
     data.oldUpsSn || ''
@@ -749,12 +750,16 @@ function normalizeInstallationStatus_(value) {
   return CONFIG.INSTALL_STATUS_OPTIONS.indexOf(text) !== -1 ? text : CONFIG.INSTALL_STATUS_DEFAULT;
 }
 
+function installationNeedsReason_(status) {
+  return status === 'ติดตั้งแล้วแต่ไม่เสร็จ' || status === 'ติดตั้งไม่ได้' || status === 'ติดตั้งไม่ทัน';
+}
+
 function updateAssetInstallationStatus(rowNumber, installStatus, installReason) {
   const targetRow = Number(rowNumber);
   const status = normalizeInstallationStatus_(installStatus);
   const reason = String(installReason || '').trim();
   if (!targetRow || targetRow < CONFIG.HEADER_ROW) throw new Error('ไม่พบแถว Asset_Master ที่ต้องการแก้ไข');
-  if ((status === 'ติดตั้งไม่ได้' || status === 'ติดตั้งไม่ทัน') && !reason) throw new Error('กรุณาระบุเหตุผลที่ติดตั้งไม่ได้หรือไม่ทัน');
+  if (installationNeedsReason_(status) && !reason) throw new Error('กรุณาระบุปัญหาของงานติดตั้งที่ยังไม่เสร็จ');
 
   const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
   if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
@@ -763,7 +768,7 @@ function updateAssetInstallationStatus(rowNumber, installStatus, installReason) 
   try {
     ensurePreparationStatusColumn_(sheet);
     sheet.getRange(targetRow, CONFIG.INSTALL_STATUS_COLUMN).setValue(status);
-    sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue((status === 'ติดตั้งไม่ได้' || status === 'ติดตั้งไม่ทัน') ? reason : '');
+    sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue(installationNeedsReason_(status) ? reason : '');
     SpreadsheetApp.flush();
     return { message: 'อัปเดตผลการติดตั้งแล้ว', rowNumber: targetRow, installStatus: status, installReason: reason };
   } finally {
@@ -883,7 +888,7 @@ function buildJobWorkRows_(assetRows, spreadsheet) {
     if (!upsBundleComplete) accessoryMissing.push('UPS + สายไฟ');
     if (!row.deliverHub) accessoryMissing.push('USB HUB');
 
-    const installBlocked = row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน';
+    const installBlocked = installationNeedsReason_(row.installStatus);
     const blockers = [];
     if (installBlocked) blockers.push(row.installStatus + (row.installReason ? ': ' + row.installReason : ''));
     else if (row.installStatus !== 'ติดตั้งเสร็จ') blockers.push('รอผลการติดตั้ง');
