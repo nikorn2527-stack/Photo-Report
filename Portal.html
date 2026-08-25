@@ -351,6 +351,7 @@
       let portalData = { dashboard:{}, assetRows:[], jobWorkRows:[], sheetLinks:{} };
       const INITIAL_VIEW = <?!= JSON.stringify(initialView || 'dashboard') ?>;
       let currentView = 'dashboard';
+      let portalLoaded = false;
       const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดตั้งเสร็จ','ติดปัญหา'];
       const PROBLEM_OPTIONS = ['เครื่อง / Hardware','Windows','ติดตั้งโปรแกรม','Activate','อุปกรณ์ไม่ครบ','รออะไหล่ / รอเปลี่ยนเครื่อง','รอข้อมูลจากหน่วยงาน','อื่นๆ'];
       const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','oldComSn','oldUpsSn','ipAddress','startDate','endDate','assetStatus','prepStatus','problemDetail','installStatus','installReason'];
@@ -367,6 +368,9 @@
       window.addEventListener('load', loadPortal);
 
       function loadPortal() {
+        // Use the URL view only for the first load. Subsequent refreshes must keep
+        // the tab that the user is working in (especially after saving an asset).
+        const requestedView = portalLoaded ? currentView : INITIAL_VIEW;
         setStatus('กำลังโหลดข้อมูลจาก IT_Rental.xlsx / Google Sheet...');
         google.script.run.withSuccessHandler(function(data) {
           portalData = data || portalData;
@@ -378,8 +382,8 @@
           renderAssetFilters();
           renderAssetTable();
           renderDocuments();
-          const requestedView = INITIAL_VIEW;
           showView(['dashboard', 'work', 'asset', 'documents', 'plan'].indexOf(requestedView) !== -1 ? requestedView : 'dashboard');
+          portalLoaded = true;
           setStatus('');
         }).withFailureHandler(function(error) {
           setStatus('โหลดข้อมูลไม่สำเร็จ: ' + getErrorMessage(error), true);
