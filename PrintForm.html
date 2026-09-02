@@ -72,6 +72,7 @@
     .note-line { min-height:8mm; margin-top:1.5mm; padding-top:1mm; border-bottom:1px dotted #777; }
     .signatures { display:grid; grid-template-columns:1fr 1fr; gap:12mm; margin-top:8mm; font-size:9px; text-align:center; }
     .return-signatures { grid-template-columns:repeat(3,minmax(0,1fr)); gap:6mm; }
+    .return-signatures > div { display:grid; grid-template-rows:3em auto auto auto; align-content:start; }
     .signature-title { font-weight:800; }
     .signature-line { margin-top:9mm; }
     .signature-date { margin-top:4mm; }
@@ -186,7 +187,7 @@
         '<section class="form-meta"><div class="meta-item"><span class="meta-label">' + v(4,1) + '</span><span class="meta-value">' + v(4,2) + '</span></div><div class="meta-item"><span class="meta-label">' + v(4,6) + '</span><span class="meta-value">' + v(4,7) + '</span></div><div class="meta-item meta-wide"><span class="meta-label">' + v(5,1) + '</span><span class="meta-value">' + v(5,2) + '</span></div><div class="meta-item"><span class="meta-label">' + v(5,6) + '</span><span class="meta-value">' + v(5,7) + '</span></div></section>' +
         '<table class="return-table"><thead><tr><th>' + v(7,1) + '</th><th>' + v(7,2) + '</th><th>' + v(7,3) + '</th><th>' + v(7,4) + '</th><th>' + v(7,5) + '</th><th>' + v(7,6) + '</th><th>' + v(7,7) + '</th></tr></thead><tbody>' + rows + '</tbody></table>' +
         '<div class="section-title">' + v(19,1) + '</div><div class="summary"><div>' + v(20,1) + '</div><div>' + v(21,1) + '</div><div class="note-line">' + v(22,1) + '</div></div>' +
-        '<div class="signatures return-signatures"><div><div class="signature-title">' + v(24,1) + '</div><div class="signature-line">' + v(26,1) + '</div><div>' + v(27,1) + '</div><div class="signature-date">' + v(28,1) + '</div></div><div><div class="signature-title">' + v(24,5) + '</div><div class="signature-line">' + v(26,5) + '</div><div>' + v(27,5) + '</div><div class="signature-date">' + v(28,5) + '</div></div><div><div class="signature-title">เจ้าหน้าที่ศูนย์คอมพิวเตอร์<br>ผู้รับเครื่องคืน</div><div class="signature-line">(ลงชื่อ) ....................................</div><div>(....................................)</div><div class="signature-date">วันที่ ........../........../..........</div></div></div>';
+        '<div class="signatures return-signatures"><div><div class="signature-title">' + v(24,1) + '</div><div class="signature-line">' + v(26,1) + '</div><div>' + v(27,1) + '</div><div class="signature-date">' + v(28,1) + '</div></div><div><div class="signature-title">' + v(24,5) + '</div><div class="signature-line">' + v(26,5) + '</div><div>' + v(27,5) + '</div><div class="signature-date">' + v(28,5) + '</div></div><div><div class="signature-title">เจ้าหน้าที่ศูนย์คอมพิวเตอร์<br>ผู้รับเครื่องคืน</div><div class="signature-line">ลงชื่อ: ....................................</div><div>(....................................)</div><div class="signature-date">วันที่ ......../......../........ เวลา ................. น.</div></div></div>';
     }
 
     function applyPaperSize(value) {
