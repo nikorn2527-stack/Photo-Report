@@ -71,7 +71,9 @@ const CONFIG = Object.freeze({
   REMAINING_COLUMN: 26,
   ALERT_COLUMN: 27,
   OLD_COM_SN_COLUMN: 28,
+  OLD_COM_SN_HEADER: 'เลขครุภัณฑ์คอมพิวเตอร์',
   OLD_UPS_SN_COLUMN: 29,
+  OLD_UPS_SN_HEADER: 'เลขครุภัณฑ์เครื่องสำรองไฟ',
   PREP_STATUS_COLUMN: 30,
   PREP_STATUS_HEADER: 'สถานะเตรียมเครื่อง',
   IP_COLUMN: 31,
@@ -85,7 +87,7 @@ const CONFIG = Object.freeze({
   HUB_SN_COLUMN: 35,
   HUB_SN_HEADER: 'S/N Hub USB',
   OLD_MONITOR_SN_COLUMN: 36,
-  OLD_MONITOR_SN_HEADER: 'S/N จอเดิม',
+  OLD_MONITOR_SN_HEADER: 'เลขครุภัณฑ์จอมอนิเตอร์',
   NO_OLD_MACHINE_COLUMN: 37,
   NO_OLD_MACHINE_HEADER: 'ไม่มีเครื่องเดิมให้นำกลับ',
   INSTALL_STATUS_DEFAULT: 'รอดำเนินการ',
@@ -745,8 +747,9 @@ function ensurePreparationStatusColumn_(sheet) {
   if (currentColumns < requiredColumns) sheet.insertColumnsAfter(currentColumns, requiredColumns - currentColumns);
   const extraHeaders = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.HUB_SN_COLUMN, 1, 3).getDisplayValues()[0];
   const expectedExtraHeaders = [CONFIG.HUB_SN_HEADER, CONFIG.OLD_MONITOR_SN_HEADER, CONFIG.NO_OLD_MACHINE_HEADER];
+  const legacyExtraHeaders = [CONFIG.HUB_SN_HEADER, 'S/N จอเดิม', CONFIG.NO_OLD_MACHINE_HEADER];
   const hasConflictingExtraColumns = extraHeaders.some(function(header, index) {
-    return header && header !== expectedExtraHeaders[index];
+    return header && header !== expectedExtraHeaders[index] && header !== legacyExtraHeaders[index];
   });
   // Do not overwrite future/custom columns that may already follow the old schema.
   // Reserve three extension columns immediately after the current managed data.
@@ -761,10 +764,14 @@ function ensurePreparationStatusColumn_(sheet) {
   if (!installStatusHeaderCell.getDisplayValue()) installStatusHeaderCell.setValue(CONFIG.INSTALL_STATUS_HEADER);
   const installReasonHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.INSTALL_REASON_COLUMN);
   if (!installReasonHeaderCell.getDisplayValue()) installReasonHeaderCell.setValue(CONFIG.INSTALL_REASON_HEADER);
+  const oldComHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.OLD_COM_SN_COLUMN);
+  if (!oldComHeaderCell.getDisplayValue() || oldComHeaderCell.getDisplayValue() === 'COM S/N เดิม') oldComHeaderCell.setValue(CONFIG.OLD_COM_SN_HEADER);
+  const oldUpsHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.OLD_UPS_SN_COLUMN);
+  if (!oldUpsHeaderCell.getDisplayValue() || oldUpsHeaderCell.getDisplayValue() === 'UPS S/N เดิม') oldUpsHeaderCell.setValue(CONFIG.OLD_UPS_SN_HEADER);
   const hubSnHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.HUB_SN_COLUMN);
   if (!hubSnHeaderCell.getDisplayValue()) hubSnHeaderCell.setValue(CONFIG.HUB_SN_HEADER);
   const oldMonitorSnHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.OLD_MONITOR_SN_COLUMN);
-  if (!oldMonitorSnHeaderCell.getDisplayValue()) oldMonitorSnHeaderCell.setValue(CONFIG.OLD_MONITOR_SN_HEADER);
+  if (!oldMonitorSnHeaderCell.getDisplayValue() || oldMonitorSnHeaderCell.getDisplayValue() === 'S/N จอเดิม') oldMonitorSnHeaderCell.setValue(CONFIG.OLD_MONITOR_SN_HEADER);
   const noOldMachineHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.NO_OLD_MACHINE_COLUMN);
   if (!noOldMachineHeaderCell.getDisplayValue()) noOldMachineHeaderCell.setValue(CONFIG.NO_OLD_MACHINE_HEADER);
 }
