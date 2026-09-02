@@ -1137,20 +1137,39 @@ function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFile
     sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
     sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
     sheet.getRange(CONFIG.DATE_CELL).setValue(parsePortalDate_(installDate) || new Date());
-    // รับเฉพาะรูปที่หน้าเว็บย่อแล้ว เพื่อให้ payload และ Blob ต่ำกว่า 2 MB
-    // รูปเดียวกันนี้ใช้ทั้งในชีตและ Drive จึงไม่ส่ง base64 ต้นฉบับซ้ำอีกชุด
+    // สำเนานี้ใช้วางใน Google Sheet ซึ่งจำกัด Blob ต่ำกว่า 2 MB เท่านั้น
+    // ไฟล์ต้นฉบับจะถูกส่งแยกผ่าน saveOriginalPhotoFile เพื่อรักษาความคมชัด
     insertImageInTemplate_(sheet, imageBlob, targetCell);
-    const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
-    const savedFile = folder.createFile(imageBlob);
-    savedFile.setName(buildPhotoFilename_(jobNo, imageType, originalFilename));
-    const replacedDriveResult = trashPhotoFilesForSlot_(jobNo, imageType, savedFile.getId());
-    if (replacedDriveResult.error) throw new Error('ย้ายไฟล์รูปเดิมใน Drive ลงถังขยะไม่สำเร็จ: ' + replacedDriveResult.error);
-    appendPhotoFileIndex_(jobNo, imageType, originalFilename, savedFile, sheet.getName());
     SpreadsheetApp.flush();
-    return 'บันทึกรูปภาพเรียบร้อยแล้ว: ' + imageType;
+    return { message: 'บันทึกสำเนารูปลงชีตแล้ว: ' + imageType, sheetName: sheet.getName() };
   } catch (error) {
     console.error(error);
     throw new Error(error.message || 'ไม่สามารถบันทึกรูปภาพได้');
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * เก็บไฟล์ต้นฉบับลง Drive โดยไม่แปลงขนาด แยกจากคำสั่งวางรูปในชีต
+ * เพื่อลด payload ต่อคำขอและให้พรีวิว/งานพิมพ์อ่านภาพความละเอียดเต็ม
+ */
+function saveOriginalPhotoFile(jobNo, imageType, originalBase64Data, originalFilename) {
+  if (!jobNo || !originalBase64Data) throw new Error('ไม่พบไฟล์รูปต้นฉบับ');
+  if (CONFIG.IMAGE_TYPES.indexOf(imageType) === -1) throw new Error('ประเภทรูปไม่ถูกต้อง: ' + imageType);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const originalBlob = dataUrlToImageBlob_(originalBase64Data, originalFilename);
+    const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
+    const savedFile = folder.createFile(originalBlob).setName(buildPhotoFilename_(jobNo, imageType, originalFilename));
+    const replacedDriveResult = trashPhotoFilesForSlot_(jobNo, imageType, savedFile.getId());
+    if (replacedDriveResult.error) {
+      savedFile.setTrashed(true);
+      throw new Error('ย้ายไฟล์รูปเดิมใน Drive ลงถังขยะไม่สำเร็จ: ' + replacedDriveResult.error);
+    }
+    appendPhotoFileIndex_(jobNo, imageType, originalFilename, savedFile, buildJobSheetName_(jobNo));
+    return { message: 'เก็บไฟล์ต้นฉบับความละเอียดเต็มแล้ว', fileId: savedFile.getId() };
   } finally {
     lock.releaseLock();
   }
