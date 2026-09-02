@@ -71,7 +71,9 @@ const CONFIG = Object.freeze({
   REMAINING_COLUMN: 26,
   ALERT_COLUMN: 27,
   OLD_COM_SN_COLUMN: 28,
+  OLD_COM_SN_HEADER: 'เลขครุภัณฑ์คอมพิวเตอร์',
   OLD_UPS_SN_COLUMN: 29,
+  OLD_UPS_SN_HEADER: 'เลขครุภัณฑ์เครื่องสำรองไฟ',
   PREP_STATUS_COLUMN: 30,
   PREP_STATUS_HEADER: 'สถานะเตรียมเครื่อง',
   IP_COLUMN: 31,
@@ -82,9 +84,16 @@ const CONFIG = Object.freeze({
   INSTALL_STATUS_HEADER: 'สถานะการติดตั้ง',
   INSTALL_REASON_COLUMN: 34,
   INSTALL_REASON_HEADER: 'เหตุผลติดตั้งไม่ได้/ไม่ทัน',
+  HUB_SN_COLUMN: 35,
+  HUB_SN_HEADER: 'S/N Hub USB',
+  OLD_MONITOR_SN_COLUMN: 36,
+  OLD_MONITOR_SN_HEADER: 'เลขครุภัณฑ์จอมอนิเตอร์',
+  NO_OLD_MACHINE_COLUMN: 37,
+  NO_OLD_MACHINE_HEADER: 'ไม่มีเครื่องเดิมให้นำกลับ',
   INSTALL_STATUS_DEFAULT: 'รอดำเนินการ',
   INSTALL_STATUS_OPTIONS: Object.freeze([
     'รอดำเนินการ',
+    'ติดตั้งแล้วแต่ไม่เสร็จ',
     'ติดตั้งเสร็จ',
     'ติดตั้งไม่ได้',
     'ติดตั้งไม่ทัน'
@@ -382,7 +391,9 @@ function getPhotoPreviewUrls_(jobNo, activeTypes) {
   }
 
   Object.keys(latestByType).forEach(function(imageType) {
-    previewUrls[imageType] = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(latestByType[imageType].id) + '&sz=w1200';
+    // Use the original Drive file with a large thumbnail so printed previews
+    // retain small labels and equipment details instead of the old 1200px copy.
+    previewUrls[imageType] = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(latestByType[imageType].id) + '&sz=w2400';
   });
   return previewUrls;
 }
@@ -610,7 +621,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   const installStatus = normalizeInstallationStatus_(data.installStatus || (existingRow && existingRow.installStatus) || '');
   const installReason = String(data.installReason !== undefined ? data.installReason : ((existingRow && existingRow.installReason) || '')).trim();
   if (prepStatus === 'ติดปัญหา' && !problemDetail) throw new Error('กรุณาเลือกว่าติดปัญหาเรื่องอะไร');
-  if ((installStatus === 'ติดตั้งไม่ได้' || installStatus === 'ติดตั้งไม่ทัน') && !installReason) throw new Error('กรุณาระบุเหตุผลที่ติดตั้งไม่ได้หรือไม่ทัน');
+  if (installationNeedsReason_(installStatus) && !installReason) throw new Error('กรุณาระบุปัญหาของงานติดตั้งที่ยังไม่เสร็จ');
 
   const mainValues = [[
     jobNo,
@@ -648,10 +659,14 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   sheet.getRange(targetRow, CONFIG.IP_COLUMN).setValue(ipAddress);
   sheet.getRange(targetRow, CONFIG.PROBLEM_COLUMN).setValue(prepStatus === 'ติดปัญหา' ? problemDetail : '');
   sheet.getRange(targetRow, CONFIG.INSTALL_STATUS_COLUMN).setValue(installStatus);
-  sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue((installStatus === 'ติดตั้งไม่ได้' || installStatus === 'ติดตั้งไม่ทัน') ? installReason : '');
+  sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue(installationNeedsReason_(installStatus) ? installReason : '');
+  const noOldMachine = toBoolean_(data.noOldMachine);
+  sheet.getRange(targetRow, CONFIG.HUB_SN_COLUMN).setValue(data.hubSn || '');
+  sheet.getRange(targetRow, CONFIG.OLD_MONITOR_SN_COLUMN).setValue(noOldMachine ? '' : (data.oldMonitorSn || ''));
+  sheet.getRange(targetRow, CONFIG.NO_OLD_MACHINE_COLUMN).setValue(noOldMachine);
   sheet.getRange(targetRow, CONFIG.OLD_COM_SN_COLUMN, 1, 2).setValues([[
-    data.oldComSn || '',
-    data.oldUpsSn || ''
+    noOldMachine ? '' : (data.oldComSn || ''),
+    noOldMachine ? '' : (data.oldUpsSn || '')
   ]]);
 
   // ถ้าเป็นแถวใหม่ ให้คัดลอกสูตรวันคงเหลือและการแจ้งเตือนจากแถวก่อนหน้า
@@ -677,7 +692,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
 function getAssetPortalRows_(sheet) {
   const lastRow = Math.max(sheet.getLastRow(), CONFIG.HEADER_ROW - 1);
   if (lastRow < CONFIG.HEADER_ROW) return [];
-  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.INSTALL_REASON_COLUMN).getValues();
+  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.NO_OLD_MACHINE_COLUMN).getValues();
   return raw.map(function(row, index) {
     return {
       rowNumber: CONFIG.HEADER_ROW + index,
@@ -717,6 +732,9 @@ function getAssetPortalRows_(sheet) {
       problemDetail: toPortalValue_(row[CONFIG.PROBLEM_COLUMN - 1]),
       installStatus: normalizeInstallationStatus_(toPortalValue_(row[CONFIG.INSTALL_STATUS_COLUMN - 1]) || (toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) === 'ติดตั้งเสร็จ' ? 'ติดตั้งเสร็จ' : CONFIG.INSTALL_STATUS_DEFAULT)),
       installReason: toPortalValue_(row[CONFIG.INSTALL_REASON_COLUMN - 1]),
+      hubSn: toPortalValue_(row[CONFIG.HUB_SN_COLUMN - 1]),
+      oldMonitorSn: toPortalValue_(row[CONFIG.OLD_MONITOR_SN_COLUMN - 1]),
+      noOldMachine: toBoolean_(row[CONFIG.NO_OLD_MACHINE_COLUMN - 1]),
     };
   }).filter(function(row) {
     return row.jobNo || row.setCode || row.building || row.department;
@@ -724,9 +742,18 @@ function getAssetPortalRows_(sheet) {
 }
 
 function ensurePreparationStatusColumn_(sheet) {
-  const requiredColumns = Math.max(CONFIG.PREP_STATUS_COLUMN, CONFIG.IP_COLUMN, CONFIG.PROBLEM_COLUMN, CONFIG.INSTALL_STATUS_COLUMN, CONFIG.INSTALL_REASON_COLUMN);
+  const requiredColumns = Math.max(CONFIG.PREP_STATUS_COLUMN, CONFIG.IP_COLUMN, CONFIG.PROBLEM_COLUMN, CONFIG.INSTALL_STATUS_COLUMN, CONFIG.INSTALL_REASON_COLUMN, CONFIG.HUB_SN_COLUMN, CONFIG.OLD_MONITOR_SN_COLUMN, CONFIG.NO_OLD_MACHINE_COLUMN);
   const currentColumns = sheet.getMaxColumns();
   if (currentColumns < requiredColumns) sheet.insertColumnsAfter(currentColumns, requiredColumns - currentColumns);
+  const extraHeaders = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.HUB_SN_COLUMN, 1, 3).getDisplayValues()[0];
+  const expectedExtraHeaders = [CONFIG.HUB_SN_HEADER, CONFIG.OLD_MONITOR_SN_HEADER, CONFIG.NO_OLD_MACHINE_HEADER];
+  const legacyExtraHeaders = [CONFIG.HUB_SN_HEADER, 'S/N จอเดิม', CONFIG.NO_OLD_MACHINE_HEADER];
+  const hasConflictingExtraColumns = extraHeaders.some(function(header, index) {
+    return header && header !== expectedExtraHeaders[index] && header !== legacyExtraHeaders[index];
+  });
+  // Do not overwrite future/custom columns that may already follow the old schema.
+  // Reserve three extension columns immediately after the current managed data.
+  if (hasConflictingExtraColumns) sheet.insertColumnsAfter(CONFIG.INSTALL_REASON_COLUMN, 3);
   const prepHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.PREP_STATUS_COLUMN);
   if (!prepHeaderCell.getDisplayValue()) prepHeaderCell.setValue(CONFIG.PREP_STATUS_HEADER);
   const ipHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.IP_COLUMN);
@@ -737,6 +764,16 @@ function ensurePreparationStatusColumn_(sheet) {
   if (!installStatusHeaderCell.getDisplayValue()) installStatusHeaderCell.setValue(CONFIG.INSTALL_STATUS_HEADER);
   const installReasonHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.INSTALL_REASON_COLUMN);
   if (!installReasonHeaderCell.getDisplayValue()) installReasonHeaderCell.setValue(CONFIG.INSTALL_REASON_HEADER);
+  const oldComHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.OLD_COM_SN_COLUMN);
+  if (!oldComHeaderCell.getDisplayValue() || oldComHeaderCell.getDisplayValue() === 'COM S/N เดิม') oldComHeaderCell.setValue(CONFIG.OLD_COM_SN_HEADER);
+  const oldUpsHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.OLD_UPS_SN_COLUMN);
+  if (!oldUpsHeaderCell.getDisplayValue() || oldUpsHeaderCell.getDisplayValue() === 'UPS S/N เดิม') oldUpsHeaderCell.setValue(CONFIG.OLD_UPS_SN_HEADER);
+  const hubSnHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.HUB_SN_COLUMN);
+  if (!hubSnHeaderCell.getDisplayValue()) hubSnHeaderCell.setValue(CONFIG.HUB_SN_HEADER);
+  const oldMonitorSnHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.OLD_MONITOR_SN_COLUMN);
+  if (!oldMonitorSnHeaderCell.getDisplayValue() || oldMonitorSnHeaderCell.getDisplayValue() === 'S/N จอเดิม') oldMonitorSnHeaderCell.setValue(CONFIG.OLD_MONITOR_SN_HEADER);
+  const noOldMachineHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.NO_OLD_MACHINE_COLUMN);
+  if (!noOldMachineHeaderCell.getDisplayValue()) noOldMachineHeaderCell.setValue(CONFIG.NO_OLD_MACHINE_HEADER);
 }
 
 function normalizePreparationStatus_(value) {
@@ -749,12 +786,16 @@ function normalizeInstallationStatus_(value) {
   return CONFIG.INSTALL_STATUS_OPTIONS.indexOf(text) !== -1 ? text : CONFIG.INSTALL_STATUS_DEFAULT;
 }
 
+function installationNeedsReason_(status) {
+  return status === 'ติดตั้งแล้วแต่ไม่เสร็จ' || status === 'ติดตั้งไม่ได้' || status === 'ติดตั้งไม่ทัน';
+}
+
 function updateAssetInstallationStatus(rowNumber, installStatus, installReason) {
   const targetRow = Number(rowNumber);
   const status = normalizeInstallationStatus_(installStatus);
   const reason = String(installReason || '').trim();
   if (!targetRow || targetRow < CONFIG.HEADER_ROW) throw new Error('ไม่พบแถว Asset_Master ที่ต้องการแก้ไข');
-  if ((status === 'ติดตั้งไม่ได้' || status === 'ติดตั้งไม่ทัน') && !reason) throw new Error('กรุณาระบุเหตุผลที่ติดตั้งไม่ได้หรือไม่ทัน');
+  if (installationNeedsReason_(status) && !reason) throw new Error('กรุณาระบุปัญหาของงานติดตั้งที่ยังไม่เสร็จ');
 
   const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
   if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
@@ -763,7 +804,7 @@ function updateAssetInstallationStatus(rowNumber, installStatus, installReason) 
   try {
     ensurePreparationStatusColumn_(sheet);
     sheet.getRange(targetRow, CONFIG.INSTALL_STATUS_COLUMN).setValue(status);
-    sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue((status === 'ติดตั้งไม่ได้' || status === 'ติดตั้งไม่ทัน') ? reason : '');
+    sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue(installationNeedsReason_(status) ? reason : '');
     SpreadsheetApp.flush();
     return { message: 'อัปเดตผลการติดตั้งแล้ว', rowNumber: targetRow, installStatus: status, installReason: reason };
   } finally {
@@ -883,7 +924,7 @@ function buildJobWorkRows_(assetRows, spreadsheet) {
     if (!upsBundleComplete) accessoryMissing.push('UPS + สายไฟ');
     if (!row.deliverHub) accessoryMissing.push('USB HUB');
 
-    const installBlocked = row.installStatus === 'ติดตั้งไม่ได้' || row.installStatus === 'ติดตั้งไม่ทัน';
+    const installBlocked = installationNeedsReason_(row.installStatus);
     const blockers = [];
     if (installBlocked) blockers.push(row.installStatus + (row.installReason ? ': ' + row.installReason : ''));
     else if (row.installStatus !== 'ติดตั้งเสร็จ') blockers.push('รอผลการติดตั้ง');
