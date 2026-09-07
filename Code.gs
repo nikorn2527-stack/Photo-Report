@@ -1121,8 +1121,8 @@ function createJobPdf(jobNo) {
 }
 
 /**
- * เก็บไฟล์ต้นฉบับลง Drive โดยไม่แปลงขนาด แล้วสร้างภาพสำหรับวางในชีต
- * ทางฝั่งเซิร์ฟเวอร์ โดยไม่จำกัดไฟล์ที่ผู้ใช้เลือกไว้ที่ 2 MB
+ * เก็บไฟล์ต้นฉบับลง Drive โดยไม่แปลงขนาดหรือคุณภาพ
+ * ภาพประกอบสำหรับชีตรายงานจะถูกส่งตามมาเป็นคำขอแยกต่างหาก
  */
 function saveOriginalPhotoFile(jobNo, location, imageType, originalBase64Data, originalFilename, installDate) {
   if (!jobNo || !originalBase64Data) throw new Error('ไม่พบไฟล์รูปต้นฉบับ');
@@ -1133,37 +1133,32 @@ function saveOriginalPhotoFile(jobNo, location, imageType, originalBase64Data, o
     const originalBlob = dataUrlToImageBlob_(originalBase64Data, originalFilename);
     const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
     const savedFile = folder.createFile(originalBlob).setName(buildPhotoFilename_(jobNo, imageType, originalFilename));
-    const sheet = ensureJobSheet_(jobNo);
-    sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
-    sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
-    sheet.getRange(CONFIG.DATE_CELL).setValue(parsePortalDate_(installDate) || new Date());
-    insertDrivePreviewInTemplate_(sheet, savedFile, CONFIG.IMAGE_CELL_MAP[imageType]);
+    const sheetName = buildJobSheetName_(jobNo);
     const replacedDriveResult = trashPhotoFilesForSlot_(jobNo, imageType, savedFile.getId());
     if (replacedDriveResult.error) {
       savedFile.setTrashed(true);
       throw new Error('ย้ายไฟล์รูปเดิมใน Drive ลงถังขยะไม่สำเร็จ: ' + replacedDriveResult.error);
     }
-    appendPhotoFileIndex_(jobNo, imageType, originalFilename, savedFile, sheet.getName());
+    appendPhotoFileIndex_(jobNo, imageType, originalFilename, savedFile, sheetName);
     return { message: 'เก็บไฟล์ต้นฉบับความละเอียดเต็มแล้ว', fileId: savedFile.getId() };
   } finally {
     lock.releaseLock();
   }
 }
 
-function insertDrivePreviewInTemplate_(sheet, file, targetCell) {
-  const sizes = [2400, 2000, 1600, 1200];
-  let previewBlob = null;
-  for (let index = 0; index < sizes.length; index += 1) {
-    const response = UrlFetchApp.fetch('https://drive.google.com/thumbnail?id=' + encodeURIComponent(file.getId()) + '&sz=w' + sizes[index], {
-      headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
-      muteHttpExceptions: true
-    });
-    if (response.getResponseCode() !== 200) continue;
-    const candidate = response.getBlob().setName(file.getName());
-    if (candidate.getBytes().length < 1.9 * 1024 * 1024) { previewBlob = candidate; break; }
-  }
-  if (!previewBlob) throw new Error('ไม่สามารถสร้างภาพสำหรับวางใน Google Sheet ได้');
-  insertImageInTemplate_(sheet, previewBlob, targetCell);
+function saveSheetPhotoPreview(jobNo, location, imageType, previewBase64Data, filename, installDate) {
+  if (!jobNo || !previewBase64Data) throw new Error('ไม่พบภาพประกอบสำหรับชีตรายงาน');
+  if (CONFIG.IMAGE_TYPES.indexOf(imageType) === -1) throw new Error('ประเภทรูปไม่ถูกต้อง: ' + imageType);
+  const lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    const sheet = ensureJobSheet_(jobNo);
+    sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
+    sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
+    sheet.getRange(CONFIG.DATE_CELL).setValue(parsePortalDate_(installDate) || new Date());
+    insertImageInTemplate_(sheet, dataUrlToImageBlob_(previewBase64Data, filename), CONFIG.IMAGE_CELL_MAP[imageType]);
+    SpreadsheetApp.flush();
+    return { message: 'บันทึกภาพประกอบลงชีตรายงานแล้ว' };
+  } finally { lock.releaseLock(); }
 }
 
 /**
