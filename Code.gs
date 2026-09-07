@@ -391,9 +391,7 @@ function getPhotoPreviewUrls_(jobNo, activeTypes) {
   }
 
   Object.keys(latestByType).forEach(function(imageType) {
-    // Use the original Drive file with a large thumbnail so printed previews
-    // retain small labels and equipment details instead of the old 1200px copy.
-    previewUrls[imageType] = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(latestByType[imageType].id) + '&sz=w2400';
+    previewUrls[imageType] = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(latestByType[imageType].id) + '&sz=w1200';
   });
   return previewUrls;
 }
@@ -1121,44 +1119,41 @@ function createJobPdf(jobNo) {
 }
 
 /**
- * เก็บไฟล์ต้นฉบับลง Drive โดยไม่แปลงขนาดหรือคุณภาพ
- * ภาพประกอบสำหรับชีตรายงานจะถูกส่งตามมาเป็นคำขอแยกต่างหาก
+ * รับรูปจาก Sidebar บันทึกลงโฟลเดอร์ Drive และแทรกรูปลงเทมเพลต Photo_Report
+ * รูปจะถูกแทรกเป็น Over-grid image จึงไม่จำเป็นต้องเปิดไฟล์เป็นสาธารณะ
  */
-function saveOriginalPhotoFile(jobNo, location, imageType, originalBase64Data, originalFilename, installDate) {
-  if (!jobNo || !originalBase64Data) throw new Error('ไม่พบไฟล์รูปต้นฉบับ');
-  if (CONFIG.IMAGE_TYPES.indexOf(imageType) === -1) throw new Error('ประเภทรูปไม่ถูกต้อง: ' + imageType);
+function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFilename, installDate, originalBase64Data) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    const originalBlob = dataUrlToImageBlob_(originalBase64Data, originalFilename);
-    const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
-    const savedFile = folder.createFile(originalBlob).setName(buildPhotoFilename_(jobNo, imageType, originalFilename));
-    const sheetName = buildJobSheetName_(jobNo);
-    const replacedDriveResult = trashPhotoFilesForSlot_(jobNo, imageType, savedFile.getId());
-    if (replacedDriveResult.error) {
-      savedFile.setTrashed(true);
-      throw new Error('ย้ายไฟล์รูปเดิมใน Drive ลงถังขยะไม่สำเร็จ: ' + replacedDriveResult.error);
-    }
-    appendPhotoFileIndex_(jobNo, imageType, originalFilename, savedFile, sheetName);
-    return { message: 'เก็บไฟล์ต้นฉบับความละเอียดเต็มแล้ว', fileId: savedFile.getId() };
-  } finally {
-    lock.releaseLock();
-  }
-}
+    const targetCell = CONFIG.IMAGE_CELL_MAP[imageType];
+    if (!targetCell) throw new Error('ไม่พบตำแหน่งสำหรับประเภทรูป: ' + imageType);
+    if (!jobNo || !base64Data) throw new Error('กรุณาเลือก Job และไฟล์รูปภาพ');
 
-function saveSheetPhotoPreview(jobNo, location, imageType, previewBase64Data, filename, installDate) {
-  if (!jobNo || !previewBase64Data) throw new Error('ไม่พบภาพประกอบสำหรับชีตรายงาน');
-  if (CONFIG.IMAGE_TYPES.indexOf(imageType) === -1) throw new Error('ประเภทรูปไม่ถูกต้อง: ' + imageType);
-  const lock = LockService.getScriptLock(); lock.waitLock(30000);
-  try {
     const sheet = ensureJobSheet_(jobNo);
+    const imageBlob = dataUrlToImageBlob_(base64Data, originalFilename);
+    const originalBlob = originalBase64Data
+      ? dataUrlToImageBlob_(originalBase64Data, originalFilename)
+      : imageBlob;
     sheet.getRange(CONFIG.JOB_CELL).setValue(jobNo);
     sheet.getRange(CONFIG.LOCATION_CELL).setValue(location || '');
     sheet.getRange(CONFIG.DATE_CELL).setValue(parsePortalDate_(installDate) || new Date());
-    insertImageInTemplate_(sheet, dataUrlToImageBlob_(previewBase64Data, filename), CONFIG.IMAGE_CELL_MAP[imageType]);
+    // รูปที่ผ่านการย่อจะถูกแทรกลงชีตเพื่อพิมพ์ A4 ก่อน จากนั้นจึงเก็บไฟล์และ URL ลงดัชนีประวัติ
+    insertImageInTemplate_(sheet, imageBlob, targetCell);
+    const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
+    const savedFile = folder.createFile(originalBlob);
+    savedFile.setName(buildPhotoFilename_(jobNo, imageType, originalFilename));
+    const replacedDriveResult = trashPhotoFilesForSlot_(jobNo, imageType, savedFile.getId());
+    if (replacedDriveResult.error) throw new Error('ย้ายไฟล์รูปเดิมใน Drive ลงถังขยะไม่สำเร็จ: ' + replacedDriveResult.error);
+    appendPhotoFileIndex_(jobNo, imageType, originalFilename, savedFile, sheet.getName());
     SpreadsheetApp.flush();
-    return { message: 'บันทึกภาพประกอบลงชีตรายงานแล้ว' };
-  } finally { lock.releaseLock(); }
+    return 'บันทึกรูปภาพเรียบร้อยแล้ว: ' + imageType;
+  } catch (error) {
+    console.error(error);
+    throw new Error(error.message || 'ไม่สามารถบันทึกรูปภาพได้');
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /**
