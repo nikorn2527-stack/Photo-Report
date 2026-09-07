@@ -391,7 +391,8 @@ function getPhotoPreviewUrls_(jobNo, activeTypes) {
   }
 
   Object.keys(latestByType).forEach(function(imageType) {
-    previewUrls[imageType] = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(latestByType[imageType].id) + '&sz=w1200';
+    // ขอภาพ 2400px สำหรับพรีวิวงานพิมพ์โดยไม่เปลี่ยนขั้นตอนอัปโหลดที่ใช้งานอยู่
+    previewUrls[imageType] = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(latestByType[imageType].id) + '&sz=w2400';
   });
   return previewUrls;
 }

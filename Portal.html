@@ -707,8 +707,26 @@
         popup.document.open();
         popup.document.write('<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + escapeHtml(title) + '</title><style>' + styles + '\n@page{size:A4 portrait;margin:0}html,body{width:210mm!important;height:297mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}.work-print-page{display:block!important;width:210mm!important;height:285mm!important;min-height:0!important;margin:0!important;padding:4mm 7mm!important;overflow:hidden!important;box-shadow:none!important;page-break-after:avoid!important;break-after:avoid-page!important}</style></head><body><article class="work-print-page">' + source.innerHTML + '</article></body></html>');
         popup.document.close();
-        popup.onload = function() { window.setTimeout(function() { popup.focus(); popup.print(); }, 250); };
+        popup.onload = function() { printPopupWhenImagesReady(popup); };
         popup.onafterprint = function() { window.setTimeout(function() { popup.close(); }, 100); };
+      }
+
+      function printPopupWhenImagesReady(popup) {
+        const images = Array.from(popup.document.images || []);
+        const waits = images.map(function(img) {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise(function(resolve) {
+            const done = function() { resolve(); };
+            img.addEventListener('load', done, { once:true });
+            img.addEventListener('error', done, { once:true });
+          });
+        });
+        Promise.race([
+          Promise.all(waits),
+          new Promise(function(resolve) { window.setTimeout(resolve, 10000); })
+        ]).then(function() {
+          window.setTimeout(function() { popup.focus(); popup.print(); }, 300);
+        });
       }
 
       function workPrintImage(type, label, urls) {
