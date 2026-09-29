@@ -532,11 +532,14 @@ function getPlanOverviewData_(spreadsheet, assetRows) {
   definitions.forEach(function(definition) {
     const sheet = spreadsheet.getSheetByName(definition.sheetName);
     const planRows = [];
+    let lastPlanBuilding = '';
     if (sheet && sheet.getLastRow() > 0) {
       const values = sheet.getDataRange().getDisplayValues();
       values.forEach(function(row, index) {
         const offset = definition.hasExtra ? 1 : 0;
-        const building = String(row[0] || '').trim();
+        const buildingCell = String(row[0] || '').trim();
+        if (buildingCell && index >= 4) lastPlanBuilding = buildingCell;
+        const building = index >= 4 ? (buildingCell || lastPlanBuilding) : buildingCell;
         const department = String(row[1] || '').trim();
         const quantityText = String(row[2] || '').replace(/,/g, '').trim();
         const quantity = Number(quantityText) || 0;
@@ -553,6 +556,24 @@ function getPlanOverviewData_(spreadsheet, assetRows) {
     });
     const installed = actualRows.filter(function(row) { return row.installStatus === 'ติดตั้งเสร็จ'; }).length;
     const delivered = actualRows.filter(function(row) { return row.status !== 'รับคืนแล้ว' && row.status !== 'ส่งซ่อม' && row.status !== 'ตัดจำหน่าย'; }).length;
+    const floorPlans = {};
+    planRows.forEach(function(row) {
+      const label = String(row.building || '').trim() || 'ไม่ระบุตึก / ชั้น';
+      floorPlans[label] = (floorPlans[label] || 0) + row.quantity;
+    });
+    const floorProgress = Object.keys(floorPlans).map(function(label) {
+      const planKey = normalizePlanLocationKey_(label);
+      const matchingRows = actualRows.filter(function(row) {
+        const actualKey = normalizePlanLocationKey_([row.building, row.floor].join(' '));
+        return planKey && actualKey && (actualKey === planKey || actualKey.indexOf(planKey) !== -1 || planKey.indexOf(actualKey) !== -1);
+      });
+      return {
+        label: label,
+        total: floorPlans[label],
+        actualCount: matchingRows.length,
+        installedCount: matchingRows.filter(function(row) { return row.installStatus === 'ติดตั้งเสร็จ'; }).length
+      };
+    }).sort(function(left, right) { return comparePortalSortText_(left.label, right.label); });
     locations[definition.sheetName] = {
       key: definition.sheetName,
       label: definition.label,
@@ -560,10 +581,17 @@ function getPlanOverviewData_(spreadsheet, assetRows) {
       planRows: planRows,
       actualCount: actualRows.length,
       deliveredCount: delivered,
-      installedCount: installed
+      installedCount: installed,
+      floorProgress: floorProgress
     };
   });
   return { locations: locations };
+}
+
+function normalizePlanLocationKey_(value) {
+  return String(value || '').toLowerCase()
+    .replace(/อาคาร|ตึก|ชั้น|ปี/g, '')
+    .replace(/[^a-z0-9ก-๙]/g, '');
 }
 
 function getWorkbookPortalData() {

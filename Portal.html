@@ -47,6 +47,15 @@
       .return-sn { display:block; margin-top:2px; color:var(--text); font-weight:800; }
       .ip-cell { min-width:125px; white-space:nowrap; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
       .dashboard-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:14px; }
+      .site-progress-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:14px; }
+      .site-progress-summary { display:flex; justify-content:space-between; gap:12px; margin-bottom:10px; color:var(--muted); font-size:12px; }
+      .site-progress-summary strong { color:var(--text); font-size:18px; }
+      .site-floor-row { display:grid; grid-template-columns:minmax(90px,1.1fr) minmax(120px,2fr) auto; align-items:center; gap:9px; margin-top:9px; }
+      .site-floor-label { overflow:hidden; font-size:12px; font-weight:800; text-overflow:ellipsis; white-space:nowrap; }
+      .site-floor-track { height:11px; overflow:hidden; border-radius:9px; background:#e4eaf2; }
+      .site-floor-track > span { display:block; height:100%; border-radius:9px; background:linear-gradient(90deg,#1967d2,#188038); }
+      .site-floor-value { min-width:70px; font-size:12px; font-weight:900; text-align:right; }
+      .site-floor-note { display:block; color:var(--muted); font-size:10px; font-weight:500; }
       .issue-dashboard { margin-top:14px; }
       .issue-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
       .issue-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; margin:12px 0; }
@@ -197,6 +206,7 @@
       .brand-credit { margin:18px 0 2px; color:#9aa0a6; font-size:11px; font-weight:800; letter-spacing:.12em; text-align:center; }
       .error-box { padding:14px; border:1px solid #f4b8b4; border-radius:8px; background:#fce8e6; color:var(--danger); }
       @media (max-width:900px) { .cards{grid-template-columns:repeat(3,1fr)} .dashboard-grid,.issue-layout{grid-template-columns:1fr} .issue-kpis{grid-template-columns:repeat(2,1fr)} .document-grid{grid-template-columns:repeat(2,1fr)} }
+      @media (max-width:640px) { .site-progress-grid{grid-template-columns:1fr} }
       @media (max-width:640px) { body{padding:5px} .shell{padding:12px;min-height:calc(100vh - 10px)} .asset-table th:last-child, .asset-table td:last-child { width:252px; min-width:252px; } .asset-table td:last-child .action-row { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; } .brand{display:block} .brand-actions{display:grid;grid-template-columns:1fr;width:100%;margin-top:10px} .sheet-button,.photo-report-button{width:100%;margin-top:0} .cards{grid-template-columns:repeat(2,1fr)} .card-value{font-size:22px} .toolbar{display:grid;grid-template-columns:1fr 1fr} .search{grid-column:1 / -1;width:100%} .filter{width:100%;min-width:0} .button{width:100%} .document-grid{grid-template-columns:1fr} .form-grid{grid-template-columns:1fr 1fr;gap:8px} .field.full{grid-column:1 / -1} .work-summary{grid-template-columns:repeat(2,1fr)} .work-toolbar{display:grid;grid-template-columns:1fr 1fr} .work-search{grid-column:1 / -1;width:100%} .work-filter{width:100%;min-width:0} .work-print-backdrop{padding:6px} .work-print-shell{min-width:0} .work-print-toolbar{width:100%;max-width:none;align-items:stretch;flex-direction:column} .work-print-toolbar-actions{display:grid;grid-template-columns:1fr 1fr} .work-print-action{width:100%} .work-print-status{width:100%;max-width:none} }
       @media (max-width:380px) { .form-grid{grid-template-columns:1fr} .field.full{grid-column:auto} }
     </style>
@@ -234,6 +244,7 @@
             <section class="panel"><h3 class="panel-title">สถานะเตรียมเครื่อง</h3><div id="prepStatusChart"></div></section>
             <section class="panel"><h3 class="panel-title">ตัวชี้วัดอุปกรณ์</h3><div id="equipmentMetrics"></div></section>
           </div>
+          <div id="siteProgressGrid" class="site-progress-grid"></div>
           <section class="panel issue-dashboard">
             <div class="issue-head"><div><h3 class="panel-title">ปัญหาหน้างานที่ทำให้ติดตั้งยังไม่เสร็จ</h3><p class="view-note">สรุปความคืบหน้า สาเหตุ และรายการที่ทีมบริการต้องช่วยประสาน</p></div><button type="button" class="button button-outline" onclick="printIssueReport()">พิมพ์รายงานสรุป</button></div>
             <div id="issueKpis" class="issue-kpis"></div>
@@ -502,7 +513,25 @@
         document.getElementById('equipmentMetrics').innerHTML =           '<div class="status-line"><span>มี UPS + สายไฟ</span><span class="bar"><span style="width:' + percent(d.upsBundle, total) + '%"></span></span><strong>' + (d.upsBundle || 0) + '</strong></div>' +
           '<div class="status-line"><span>ลง WatchGuard แล้ว</span><span class="bar"><span style="width:' + percent(d.watchGuardInstalled, total) + '%"></span></span><strong>' + (d.watchGuardInstalled || 0) + '</strong></div>' +
           '<div class="status-line"><span>แจ้งเตือนสัญญา</span><span class="bar"><span style="width:' + percent(d.expiring, total) + '%"></span></span><strong>' + (d.expiring || 0) + '</strong></div>';
+        renderSiteProgress();
         renderIssueDashboard();
+      }
+
+      function renderSiteProgress() {
+        const locations = (portalData.planOverview && portalData.planOverview.locations) || {};
+        const keys = ['B69', 'BMT'];
+        document.getElementById('siteProgressGrid').innerHTML = keys.map(function(key) {
+          const site = locations[key] || { label:key, planCount:0, installedCount:0, actualCount:0, floorProgress:[] };
+          const rows = site.floorProgress || [];
+          const rowHtml = rows.length ? rows.map(function(row) {
+            const total = Number(row.total || 0);
+            const installed = Number(row.installedCount || 0);
+            const progress = total ? Math.min(100, Math.round(installed / total * 100)) : 0;
+            return '<div class="site-floor-row"><span class="site-floor-label" title="' + escapeHtml(row.label) + '">' + escapeHtml(row.label) + '</span><span class="site-floor-track"><span style="width:' + progress + '%"></span></span><span class="site-floor-value">' + installed + '/' + total + '<small class="site-floor-note">ข้อมูลจริง ' + Number(row.actualCount || 0) + ' เครื่อง</small></span></div>';
+          }).join('') : '<div class="issue-empty">ยังไม่มีข้อมูลตึก / ชั้นในชีท ' + escapeHtml(key) + '</div>';
+          const overallPercent = site.planCount ? Math.min(100, Math.round((site.installedCount || 0) / site.planCount * 100)) : 0;
+          return '<section class="panel"><h3 class="panel-title">' + escapeHtml(site.label || key) + ' (' + key + ')</h3><div class="site-progress-summary"><span>ติดตั้งเสร็จ <strong>' + Number(site.installedCount || 0) + '/' + Number(site.planCount || 0) + '</strong> เครื่อง</span><span>' + overallPercent + '%<br>ข้อมูลจริง ' + Number(site.actualCount || 0) + '</span></div>' + rowHtml + '</section>';
+        }).join('');
       }
 
       function installationNeedsReason(status) { return INSTALL_BLOCKED_STATUSES.indexOf(status) !== -1; }
