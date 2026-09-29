@@ -434,8 +434,8 @@ function saveJobProgress(jobNo, location, installDate) {
  */
 function getJobReportInfo(jobNo) {
   if (!jobNo) throw new Error('กรุณาระบุ Job');
-  const sheet = ensureJobSheet_(jobNo);
-  SpreadsheetApp.flush();
+  const sheet = getSpreadsheet_().getSheetByName(buildJobSheetName_(jobNo));
+  if (!sheet) throw new Error('Job นี้ยังไม่มีชีทรายงาน ระบบจะสร้างชีทเมื่อบันทึกรูปครั้งแรกเท่านั้น');
   return {
     sheetName: sheet.getName(),
     sheetUrl: buildSheetEditUrl_(sheet)
@@ -1180,8 +1180,9 @@ function createJobPdf(jobNo) {
     throw new Error('กรุณาเลือก Job ก่อนสั่งพิมพ์');
   }
 
-    const spreadsheet = getSpreadsheet_();
-  const sheet = ensureJobSheet_(jobNo);
+  const spreadsheet = getSpreadsheet_();
+  const sheet = spreadsheet.getSheetByName(buildJobSheetName_(jobNo));
+  if (!sheet) throw new Error('ยังไม่มีชีทรายงานของ Job นี้ กรุณาบันทึกรูปอย่างน้อย 1 รูปก่อนสร้าง PDF');
   const filledTypes = getFilledImageTypes_(sheet);
   if (!filledTypes.length) throw new Error('งานนี้ยังไม่มีรูป กรุณาใส่รูปอย่างน้อย 1 ช่องก่อนสั่งพิมพ์');
   const isComplete = filledTypes.length === CONFIG.IMAGE_TYPES.length;

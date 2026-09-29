@@ -358,7 +358,7 @@
       <div class="work-print-shell">
         <div class="work-print-toolbar">
           <strong id="workPrintTitle" class="work-print-toolbar-title">พรีวิวใบงาน A4</strong>
-          <div class="work-print-toolbar-actions"><button class="work-print-action secondary" type="button" onclick="closeWorkPrintPreview()">กลับ</button><button class="work-print-action" type="button" onclick="printWorkPreview()">สั่งพิมพ์</button></div>
+          <div class="work-print-toolbar-actions"><button class="work-print-action secondary" type="button" onclick="closeWorkPrintPreview()">กลับ</button><button class="work-print-action secondary" type="button" onclick="createSheetPdf()">PDF คมชัดจากชีต</button><button class="work-print-action" type="button" onclick="printWorkPreview()">พิมพ์จากพรีวิว</button></div>
         </div>
         <div id="workPrintStatus" class="work-print-status">กำลังเตรียมพรีวิว...</div>
         <article id="workPrintPage" class="work-print-page"></article>
@@ -372,6 +372,7 @@
       let currentView = 'dashboard';
       let portalLoaded = false;
       let portalLoadRequest = 0;
+      let currentWorkPrintJobNo = '';
       const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดตั้งเสร็จ','ติดปัญหา'];
       const PROBLEM_OPTIONS = ['เครื่อง / Hardware','Windows','ติดตั้งโปรแกรม','Activate','อุปกรณ์ไม่ครบ','รออะไหล่ / รอเปลี่ยนเครื่อง','รอข้อมูลจากหน่วยงาน','อื่นๆ'];
       const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','officeKey','upsModel','upsSn','hubModel','hubSn','oldComSn','oldMonitorSn','oldUpsSn','ipAddress','startDate','endDate','assetStatus','prepStatus','problemDetail','installStatus','installReason'];
@@ -706,6 +707,7 @@
       function openWorkPrintPreview(jobNo) {
         const workRow = (portalData.jobWorkRows || []).find(function(row) { return String(row.jobNo || '').toLowerCase() === String(jobNo || '').toLowerCase(); });
         if (!workRow) { setStatus('ไม่พบข้อมูล Job สำหรับพรีวิว', true); return; }
+        currentWorkPrintJobNo = workRow.jobNo;
         document.getElementById('workPrintTitle').textContent = 'พรีวิวใบงาน A4 · ' + workRow.jobNo;
         document.getElementById('workPrintStatus').className = 'work-print-status';
         document.getElementById('workPrintStatus').textContent = 'กำลังโหลดรูปที่บันทึกไว้ของ ' + workRow.jobNo + '...';
@@ -741,6 +743,26 @@
         popup.document.close();
         popup.onload = function() { printPopupWhenImagesReady(popup); };
         popup.onafterprint = function() { window.setTimeout(function() { popup.close(); }, 100); };
+      }
+
+      function createSheetPdf() {
+        const workRow = (portalData.jobWorkRows || []).find(function(row) { return row.jobNo === currentWorkPrintJobNo; });
+        if (!workRow) { setStatus('ไม่พบ Job สำหรับสร้าง PDF', true); return; }
+        const pdfWindow = window.open('', '_blank');
+        const status = document.getElementById('workPrintStatus');
+        status.className = 'work-print-status';
+        status.textContent = 'กำลังส่งออก PDF จากชีท ' + workRow.jobNo + ' โดยใช้ภาพบนชีทโดยตรง...';
+        google.script.run.withSuccessHandler(function(result) {
+          status.textContent = result.message;
+          setStatus(result.message, false, true);
+          if (pdfWindow) pdfWindow.location.href = result.fileUrl;
+          else openUrl(result.fileUrl);
+        }).withFailureHandler(function(error) {
+          if (pdfWindow) pdfWindow.close();
+          status.className = 'work-print-status warning';
+          status.textContent = 'สร้าง PDF ไม่สำเร็จ: ' + getErrorMessage(error);
+          setStatus(status.textContent, true);
+        }).createJobPdf(workRow.jobNo);
       }
 
       function printPopupWhenImagesReady(popup) {
