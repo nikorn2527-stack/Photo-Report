@@ -275,7 +275,7 @@
           <p id="assetMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
           <div class="table-wrap">
             <table class="asset-table">
-              <thead><tr><th>เลข Job</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>S/N Hub USB</th><th>เลข IP</th><th>เลขครุภัณฑ์คอมพิวเตอร์</th><th>เลขครุภัณฑ์จอมอนิเตอร์</th><th>เลขครุภัณฑ์เครื่องสำรองไฟ</th><th>สถานะชุด</th><th>ส่ง AIO</th><th>ส่ง UPS + สายไฟ</th><th>ส่ง USB HUB</th><th>ส่ง KB + Mouse</th><th>ส่ง Adapter</th><th>เตรียมเครื่อง</th><th>สถานะการติดตั้ง</th><th>การทำงาน</th></tr></thead>
+              <thead><tr><th>เลข Job</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>Office Key</th><th>WatchGuard</th><th>S/N Hub USB</th><th>เลข IP</th><th>เลขครุภัณฑ์คอมพิวเตอร์</th><th>เลขครุภัณฑ์จอมอนิเตอร์</th><th>เลขครุภัณฑ์เครื่องสำรองไฟ</th><th>สถานะชุด</th><th>ส่ง AIO</th><th>ส่ง UPS + สายไฟ</th><th>ส่ง USB HUB</th><th>ส่ง KB + Mouse</th><th>ส่ง Adapter</th><th>เตรียมเครื่อง</th><th>สถานะการติดตั้ง</th><th>การทำงาน</th></tr></thead>
               <tbody id="assetTableBody"></tbody>
             </table>
           </div>
@@ -314,6 +314,7 @@
           <div class="field"><label>S/N AIO</label><input id="aioSn" class="input" type="text"></div>
           <div class="field"><label>MAC Address</label><input id="mac" class="input" type="text"></div>
           <div class="field"><label>Windows Key</label><input id="windowsKey" class="input" type="text"></div>
+          <div class="field"><label>Microsoft Office Key</label><input id="officeKey" class="input" type="text"></div>
           <div class="field"><label>รุ่น UPS</label><input id="upsModel" class="input" type="text"></div>
           <div class="field"><label>S/N UPS</label><input id="upsSn" class="input" type="text"></div>
           <div class="field"><label>รุ่น Hub USB</label><input id="hubModel" class="input" type="text"></div>
@@ -330,6 +331,7 @@
           <label class="check-field"><input id="deliverHub" type="checkbox"> ส่ง USB HUB</label>
           <label class="check-field"><input id="deliverKbMouse" type="checkbox"> ส่ง KB + Mouse</label>
           <label class="check-field"><input id="deliverAdapter" type="checkbox"> ส่ง Adapter AIO</label>
+          <label class="check-field"><input id="watchGuard" type="checkbox"> ติดตั้งโปรแกรม WatchGuard แล้ว</label>
           <div class="field"><label>วันเริ่มเช่า</label><input id="startDate" class="input" type="date"></div>
           <div class="field"><label>วันหมดสัญญา</label><input id="endDate" class="input" type="date"></div>
           <div class="field"><label>สถานะชุด</label><select id="assetStatus" class="select"><option>รอส่งมอบ</option><option>ส่งมอบแล้ว</option></select></div>
@@ -369,10 +371,11 @@
       const INITIAL_VIEW = <?!= JSON.stringify(initialView || 'dashboard') ?>;
       let currentView = 'dashboard';
       let portalLoaded = false;
+      let portalLoadRequest = 0;
       const PREP_STATUS_OPTIONS = ['รับเข้าแล้ว','ลง Windows','ลงโปรแกรม','รอ Activate','พร้อมติดตั้ง','ติดตั้งเสร็จ','ติดปัญหา'];
       const PROBLEM_OPTIONS = ['เครื่อง / Hardware','Windows','ติดตั้งโปรแกรม','Activate','อุปกรณ์ไม่ครบ','รออะไหล่ / รอเปลี่ยนเครื่อง','รอข้อมูลจากหน่วยงาน','อื่นๆ'];
-      const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','upsModel','upsSn','hubModel','hubSn','oldComSn','oldMonitorSn','oldUpsSn','ipAddress','startDate','endDate','assetStatus','prepStatus','problemDetail','installStatus','installReason'];
-      const CHECK_IDS = ['deliverAio','deliverUpsBundle','deliverHub','deliverKbMouse','deliverAdapter','noOldMachine'];
+      const FIELD_IDS = ['jobNo','setCode','assetType','building','floor','department','room','contact','contractNo','brand','specs','aioSn','mac','windowsKey','officeKey','upsModel','upsSn','hubModel','hubSn','oldComSn','oldMonitorSn','oldUpsSn','ipAddress','startDate','endDate','assetStatus','prepStatus','problemDetail','installStatus','installReason'];
+      const CHECK_IDS = ['deliverAio','deliverUpsBundle','deliverHub','deliverKbMouse','deliverAdapter','watchGuard','noOldMachine'];
       const INSTALL_BLOCKED_STATUSES = ['ติดตั้งแล้วแต่ไม่เสร็จ','ติดตั้งไม่ได้','ติดตั้งไม่ทัน'];
       const DOCS = [
         ['Dashboard','ภาพรวมสถานะชุดเช่า'],
@@ -389,8 +392,10 @@
         // Use the URL view only for the first load. Subsequent refreshes must keep
         // the tab that the user is working in (especially after saving an asset).
         const requestedView = portalLoaded ? currentView : INITIAL_VIEW;
+        const requestId = ++portalLoadRequest;
         setStatus('กำลังโหลดข้อมูลจาก IT_Rental.xlsx / Google Sheet...');
         google.script.run.withSuccessHandler(function(data) {
+          if (requestId !== portalLoadRequest) return;
           portalData = data || portalData;
           portalData.jobWorkRows = portalData.jobWorkRows || [];
           setPhotoReportLink();
@@ -404,6 +409,7 @@
           portalLoaded = true;
           setStatus('');
         }).withFailureHandler(function(error) {
+          if (requestId !== portalLoadRequest) return;
           setStatus('โหลดข้อมูลไม่สำเร็จ: ' + getErrorMessage(error), true);
         }).getWorkbookPortalData();
       }
@@ -493,6 +499,7 @@
           return '<div class="status-line"><span>' + status + '</span><span class="bar"><span style="width:' + percent + '%"></span></span><strong>' + count + '</strong></div>';
         }).join('');
         document.getElementById('equipmentMetrics').innerHTML =           '<div class="status-line"><span>มี UPS + สายไฟ</span><span class="bar"><span style="width:' + percent(d.upsBundle, total) + '%"></span></span><strong>' + (d.upsBundle || 0) + '</strong></div>' +
+          '<div class="status-line"><span>ลง WatchGuard แล้ว</span><span class="bar"><span style="width:' + percent(d.watchGuardInstalled, total) + '%"></span></span><strong>' + (d.watchGuardInstalled || 0) + '</strong></div>' +
           '<div class="status-line"><span>แจ้งเตือนสัญญา</span><span class="bar"><span style="width:' + percent(d.expiring, total) + '%"></span></span><strong>' + (d.expiring || 0) + '</strong></div>';
         renderIssueDashboard();
       }
@@ -553,17 +560,17 @@
         const status = document.getElementById('statusFilter').value;
         const prepStatus = document.getElementById('prepStatusFilter').value;
         const rows = (portalData.assetRows || []).filter(function(row) {
-          const text = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.upsSn,row.hubSn,row.oldComSn,row.oldMonitorSn,row.oldUpsSn,row.ipAddress,row.prepStatus,row.problemDetail,row.installStatus,row.installReason,row.noOldMachine ? 'ไม่มีเครื่องเดิม' : ''].join(' ').toLowerCase();
+          const text = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.officeKey,row.watchGuard ? 'WatchGuard' : '',row.upsSn,row.hubSn,row.oldComSn,row.oldMonitorSn,row.oldUpsSn,row.ipAddress,row.prepStatus,row.problemDetail,row.installStatus,row.installReason,row.noOldMachine ? 'ไม่มีเครื่องเดิม' : ''].join(' ').toLowerCase();
           return (!query || text.indexOf(query) !== -1) && (!status || row.status === status) && (!prepStatus || row.prepStatus === prepStatus);
         });
         document.getElementById('assetMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + (portalData.assetRows || []).length + ' รายการ';
         const body = document.getElementById('assetTableBody');
         body.innerHTML = '';
-          if (!rows.length) { body.innerHTML = '<tr><td colspan="18" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
+          if (!rows.length) { body.innerHTML = '<tr><td colspan="20" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
           const oldValue = function(value) { return escapeHtml(value || (row.noOldMachine ? 'ไม่มีเครื่องเดิม' : '-')); };
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + escapeHtml(row.hubSn || '-') + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + oldValue(row.oldComSn) + '</td><td>' + oldValue(row.oldMonitorSn) + '</td><td>' + oldValue(row.oldUpsSn) + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">พรีวิวรูป</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + escapeHtml(row.officeKey || '-') + '</td><td>' + watchGuardStatusControl(row) + '</td><td>' + escapeHtml(row.hubSn || '-') + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + oldValue(row.oldComSn) + '</td><td>' + oldValue(row.oldMonitorSn) + '</td><td>' + oldValue(row.oldUpsSn) + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">พรีวิวรูป</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
           body.appendChild(tr);
         });
       }
@@ -587,6 +594,23 @@
 
       function accessoryStatusControl(row, fieldName, label) {
         return '<label class="asset-check" title="' + escapeHtml(label) + '"><input type="checkbox"' + (row[fieldName] ? ' checked' : '') + ' data-field="' + escapeHtml(fieldName) + '" aria-label="' + escapeHtml(label + ' ' + row.jobNo) + '" onchange="handleAssetAccessoryChangeFromInput(' + row.rowNumber + ', this)"><span>' + (row[fieldName] ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + '</span></label>';
+      }
+
+      function watchGuardStatusControl(row) {
+        return '<label class="asset-check" title="สถานะติดตั้ง WatchGuard"><input type="checkbox"' + (row.watchGuard ? ' checked' : '') + ' aria-label="WatchGuard ' + escapeHtml(row.jobNo) + '" onchange="handleWatchGuardChange(' + row.rowNumber + ', this)"><span>' + (row.watchGuard ? 'ติดตั้งแล้ว' : 'ยังไม่ติดตั้ง') + '</span></label>';
+      }
+
+      function handleWatchGuardChange(rowNumber, input) {
+        const value = !!(input && input.checked);
+        if (input) input.disabled = true;
+        setStatus('กำลังบันทึกสถานะ WatchGuard...');
+        google.script.run.withSuccessHandler(function(result) {
+          setStatus(result.message, false, true);
+          loadPortal();
+        }).withFailureHandler(function(error) {
+          setStatus('อัปเดต WatchGuard ไม่สำเร็จ: ' + getErrorMessage(error), true);
+          loadPortal();
+        }).updateAssetWatchGuard(rowNumber, value);
       }
 
       function handleAssetAccessoryChangeFromInput(rowNumber, input) {
@@ -650,7 +674,7 @@
         const filter = (document.getElementById('workStatusFilter') || {}).value || '';
         const allRows = portalData.jobWorkRows || [];
         const rows = allRows.filter(function(row) {
-          const text = [row.jobNo, row.location, row.prepStatus, row.installStatus, row.installReason, row.accessoryStatus, row.nextAction, (row.missingPrimary || []).join(' ')].join(' ').toLowerCase();
+          const text = [row.jobNo, row.location, row.prepStatus, row.installStatus, row.installReason, row.watchGuard ? 'WatchGuard ติดตั้งแล้ว' : 'ยังไม่ได้ติดตั้ง WatchGuard', row.accessoryStatus, row.nextAction, (row.missingPrimary || []).join(' ')].join(' ').toLowerCase();
           return (!query || text.indexOf(query) !== -1) && (!filter || row.workStatus === filter);
         });
         const completed = allRows.filter(function(row) { return row.workStatus === 'งานจบ'; }).length;
@@ -658,7 +682,8 @@
         const blocked = allRows.filter(function(row) { return row.workStatus === 'ติดปัญหา'; }).length;
         const accessoryIncomplete = allRows.filter(function(row) { return (row.accessoryMissing || []).length > 0; }).length;
         const photoIncomplete = allRows.filter(function(row) { return !row.primaryPhotoComplete; }).length;
-        document.getElementById('workSummaryCards').innerHTML = [['งานจบ',completed,'complete'],['ยังไม่จบ',pending,'pending'],['ติดปัญหา',blocked,'blocked'],['ขาดอุปกรณ์',accessoryIncomplete,'pending'],['ขาดรูปหลัก',photoIncomplete,'pending']].map(function(item) { return '<div class="metric"><div class="metric-label">' + item[0] + '</div><div class="metric-value">' + item[1] + '</div></div>'; }).join('');
+        const watchGuardPending = allRows.filter(function(row) { return !row.watchGuard; }).length;
+        document.getElementById('workSummaryCards').innerHTML = [['งานจบ',completed,'complete'],['ยังไม่จบ',pending,'pending'],['ติดปัญหา',blocked,'blocked'],['ขาดอุปกรณ์',accessoryIncomplete,'pending'],['ยังไม่ลง WatchGuard',watchGuardPending,'pending'],['ขาดรูปหลัก',photoIncomplete,'pending']].map(function(item) { return '<div class="metric"><div class="metric-label">' + item[0] + '</div><div class="metric-value">' + item[1] + '</div></div>'; }).join('');
         document.getElementById('workTableMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + allRows.length + ' Job';
         const body = document.getElementById('workTableBody');
         if (!rows.length) { body.innerHTML = '<tr><td colspan="9" class="empty">ไม่พบ Job ที่ตรงกับเงื่อนไข</td></tr>'; return; }
@@ -667,7 +692,8 @@
           const photoDetail = row.primaryPhotoComplete ? 'ชื่อหน่วยงาน / ก่อน / หลัง ครบ' : 'ขาด: ' + (row.missingPrimary || []).join(', ');
           const accessoryDetail = row.accessoryMissing && row.accessoryMissing.length ? row.accessoryMissing.join(', ') : 'อุปกรณ์ครบ';
           const blockers = row.blockers && row.blockers.length ? row.blockers.join(' · ') : 'ไม่เหลือรายการค้าง';
-          return '<tr><td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml(row.location || '-') + '</td><td>' + statusBadge(row.prepStatus) + '</td><td>' + installStatusDisplay(row) + '</td><td>' + (row.accessoryMissing && row.accessoryMissing.length ? '<span class="work-status pending">ยังไม่ครบ</span>' : '<span class="work-status complete">ครบ</span>') + '<span class="work-status-detail">' + escapeHtml(accessoryDetail) + '</span></td><td><span class="work-photo ' + photoClass + '">' + row.primaryPhotoCount + '/' + row.primaryPhotoTotal + '</span><span class="work-status-detail">' + escapeHtml(photoDetail) + '</span></td><td>' + workStatusBadge(row.workStatus) + '<span class="work-status-detail">' + escapeHtml(blockers) + '</span></td><td class="work-next">' + escapeHtml(row.nextAction || '-') + '</td><td><button class="work-preview-button" type="button" onclick="openWorkPrintPreview(\'' + escapeJs(row.jobNo) + '\')">ดูพรีวิว A4</button><span class="work-preview-note">ตรวจภาพ ' + row.primaryPhotoCount + '/' + row.primaryPhotoTotal + ' จุดหลัก</span></td></tr>';
+          const prepDetail = row.watchGuard ? '<span class="work-status-detail">WatchGuard: ติดตั้งแล้ว</span>' : '<span class="work-status-detail">WatchGuard: ยังไม่ติดตั้ง</span>';
+          return '<tr><td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml(row.location || '-') + '</td><td>' + statusBadge(row.prepStatus) + prepDetail + '</td><td>' + installStatusDisplay(row) + '</td><td>' + (row.accessoryMissing && row.accessoryMissing.length ? '<span class="work-status pending">ยังไม่ครบ</span>' : '<span class="work-status complete">ครบ</span>') + '<span class="work-status-detail">' + escapeHtml(accessoryDetail) + '</span></td><td><span class="work-photo ' + photoClass + '">' + row.primaryPhotoCount + '/' + row.primaryPhotoTotal + '</span><span class="work-status-detail">' + escapeHtml(photoDetail) + '</span></td><td>' + workStatusBadge(row.workStatus) + '<span class="work-status-detail">' + escapeHtml(blockers) + '</span></td><td class="work-next">' + escapeHtml(row.nextAction || '-') + '</td><td><button class="work-preview-button" type="button" onclick="openWorkPrintPreview(\'' + escapeJs(row.jobNo) + '\')">ดูพรีวิว A4</button><span class="work-preview-note">ตรวจภาพ ' + row.primaryPhotoCount + '/' + row.primaryPhotoTotal + ' จุดหลัก</span></td></tr>';
         }).join('');
       }
 
@@ -860,7 +886,7 @@
         const value = function(v) { return escapeHtml(v === undefined || v === null || v === '' ? '-' : v); };
         const field = function(label, v, wide) { return '<div class="detail-card' + (wide ? ' detail-card-wide' : '') + '"><div class="detail-label">' + label + '</div><div class="detail-value">' + value(v) + '</div></div>'; };
         const section = function(label) { return '<div class="detail-section-title">' + label + '</div>'; };
-        document.getElementById('assetDetailsBody').innerHTML = section('ข้อมูล Job และสถานที่') + field('เลข Job', item.jobNo) + field('รหัสชุด', item.setCode) + field('ประเภทชุด', item.type) + field('ตึก', item.building) + field('ชั้น', item.floor) + field('หน่วยงาน', item.department, true) + field('ห้อง / จุดวาง', item.room) + field('ผู้ติดต่อ', item.contact) + field('เลขสัญญา', item.contractNo) + section('ข้อมูลเครื่องและอุปกรณ์') + field('Brand / Model', item.brand, true) + field('สเปกเครื่อง', item.specs, true) + field('S/N AIO', item.aioSn) + field('MAC Address', item.mac) + field('Windows Key', item.windowsKey, true) + field('รุ่น UPS', item.upsModel) + field('S/N UPS', item.upsSn) + field('รุ่น Hub USB', item.hubModel) + field('S/N Hub USB', item.hubSn) + section('ข้อมูลสัญญาและรับคืน') + field('วันเริ่มเช่า', item.startDate) + field('วันหมดสัญญา', item.endDate) + field('วันคงเหลือ', item.remaining) + field('แจ้งเตือน', item.alert) + field('มีเครื่องเดิมให้นำกลับ', item.noOldMachine ? 'ไม่มี' : 'มี') + field('เลขครุภัณฑ์คอมพิวเตอร์', item.oldComSn) + field('เลขครุภัณฑ์จอมอนิเตอร์', item.oldMonitorSn) + field('เลขครุภัณฑ์เครื่องสำรองไฟ', item.oldUpsSn) + section('สรุปสถานะ') + field('สถานะชุดอุปกรณ์', item.status) + field('สถานะเตรียมเครื่อง', item.prepStatus) + field('สาเหตุที่ติดปัญหา', item.problemDetail, true) + field('สถานะการติดตั้ง', item.installStatus) + field('เหตุผลติดตั้งไม่ได้/ไม่ทัน', item.installReason, true) + field('ส่ง AIO', item.deliverAio ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง UPS + สายไฟ', item.deliverUps ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง USB HUB', item.deliverHub ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง KB + Mouse', item.deliverKbMouse ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง Adapter', item.deliverAdapter ? 'ส่งแล้ว' : 'ยังไม่ส่ง');
+        document.getElementById('assetDetailsBody').innerHTML = section('ข้อมูล Job และสถานที่') + field('เลข Job', item.jobNo) + field('รหัสชุด', item.setCode) + field('ประเภทชุด', item.type) + field('ตึก', item.building) + field('ชั้น', item.floor) + field('หน่วยงาน', item.department, true) + field('ห้อง / จุดวาง', item.room) + field('ผู้ติดต่อ', item.contact) + field('เลขสัญญา', item.contractNo) + section('ข้อมูลเครื่องและอุปกรณ์') + field('Brand / Model', item.brand, true) + field('สเปกเครื่อง', item.specs, true) + field('S/N AIO', item.aioSn) + field('MAC Address', item.mac) + field('Windows Key', item.windowsKey, true) + field('Microsoft Office Key', item.officeKey, true) + field('ติดตั้ง WatchGuard', item.watchGuard ? '✓ ติดตั้งแล้ว' : 'ยังไม่ได้ติดตั้ง') + field('รุ่น UPS', item.upsModel) + field('S/N UPS', item.upsSn) + field('รุ่น Hub USB', item.hubModel) + field('S/N Hub USB', item.hubSn) + section('ข้อมูลสัญญาและรับคืน') + field('วันเริ่มเช่า', item.startDate) + field('วันหมดสัญญา', item.endDate) + field('วันคงเหลือ', item.remaining) + field('แจ้งเตือน', item.alert) + field('มีเครื่องเดิมให้นำกลับ', item.noOldMachine ? 'ไม่มี' : 'มี') + field('เลขครุภัณฑ์คอมพิวเตอร์', item.oldComSn) + field('เลขครุภัณฑ์จอมอนิเตอร์', item.oldMonitorSn) + field('เลขครุภัณฑ์เครื่องสำรองไฟ', item.oldUpsSn) + section('สรุปสถานะ') + field('สถานะชุดอุปกรณ์', item.status) + field('สถานะเตรียมเครื่อง', item.prepStatus) + field('สาเหตุที่ติดปัญหา', item.problemDetail, true) + field('สถานะการติดตั้ง', item.installStatus) + field('เหตุผลติดตั้งไม่ได้/ไม่ทัน', item.installReason, true) + field('ส่ง AIO', item.deliverAio ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง UPS + สายไฟ', item.deliverUps ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง USB HUB', item.deliverHub ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง KB + Mouse', item.deliverKbMouse ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง Adapter', item.deliverAdapter ? 'ส่งแล้ว' : 'ยังไม่ส่ง');
         document.getElementById('assetDetailsModal').classList.add('open');
       }
       function closeAssetDetails() { document.getElementById('assetDetailsModal').classList.remove('open'); currentDetailsItem = null; }

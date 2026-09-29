@@ -90,6 +90,10 @@ const CONFIG = Object.freeze({
   OLD_MONITOR_SN_HEADER: 'เลขครุภัณฑ์จอมอนิเตอร์',
   NO_OLD_MACHINE_COLUMN: 37,
   NO_OLD_MACHINE_HEADER: 'ไม่มีเครื่องเดิมให้นำกลับ',
+  OFFICE_KEY_COLUMN: 38,
+  OFFICE_KEY_HEADER: 'Microsoft Office Key',
+  WATCHGUARD_COLUMN: 39,
+  WATCHGUARD_HEADER: 'ติดตั้ง WatchGuard',
   INSTALL_STATUS_DEFAULT: 'รอดำเนินการ',
   INSTALL_STATUS_OPTIONS: Object.freeze([
     'รอดำเนินการ',
@@ -663,6 +667,8 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   sheet.getRange(targetRow, CONFIG.HUB_SN_COLUMN).setValue(data.hubSn || '');
   sheet.getRange(targetRow, CONFIG.OLD_MONITOR_SN_COLUMN).setValue(noOldMachine ? '' : (data.oldMonitorSn || ''));
   sheet.getRange(targetRow, CONFIG.NO_OLD_MACHINE_COLUMN).setValue(noOldMachine);
+  sheet.getRange(targetRow, CONFIG.OFFICE_KEY_COLUMN).setValue(data.officeKey || '');
+  sheet.getRange(targetRow, CONFIG.WATCHGUARD_COLUMN).setValue(toBoolean_(data.watchGuard));
   sheet.getRange(targetRow, CONFIG.OLD_COM_SN_COLUMN, 1, 2).setValues([[
     noOldMachine ? '' : (data.oldComSn || ''),
     noOldMachine ? '' : (data.oldUpsSn || '')
@@ -691,7 +697,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
 function getAssetPortalRows_(sheet) {
   const lastRow = Math.max(sheet.getLastRow(), CONFIG.HEADER_ROW - 1);
   if (lastRow < CONFIG.HEADER_ROW) return [];
-  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.NO_OLD_MACHINE_COLUMN).getValues();
+  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.WATCHGUARD_COLUMN).getValues();
   return raw.map(function(row, index) {
     return {
       rowNumber: CONFIG.HEADER_ROW + index,
@@ -734,6 +740,8 @@ function getAssetPortalRows_(sheet) {
       hubSn: toPortalValue_(row[CONFIG.HUB_SN_COLUMN - 1]),
       oldMonitorSn: toPortalValue_(row[CONFIG.OLD_MONITOR_SN_COLUMN - 1]),
       noOldMachine: toBoolean_(row[CONFIG.NO_OLD_MACHINE_COLUMN - 1]),
+      officeKey: toPortalValue_(row[CONFIG.OFFICE_KEY_COLUMN - 1]),
+      watchGuard: toBoolean_(row[CONFIG.WATCHGUARD_COLUMN - 1]),
     };
   }).filter(function(row) {
     return row.jobNo || row.setCode || row.building || row.department;
@@ -741,7 +749,7 @@ function getAssetPortalRows_(sheet) {
 }
 
 function ensurePreparationStatusColumn_(sheet) {
-  const requiredColumns = Math.max(CONFIG.PREP_STATUS_COLUMN, CONFIG.IP_COLUMN, CONFIG.PROBLEM_COLUMN, CONFIG.INSTALL_STATUS_COLUMN, CONFIG.INSTALL_REASON_COLUMN, CONFIG.HUB_SN_COLUMN, CONFIG.OLD_MONITOR_SN_COLUMN, CONFIG.NO_OLD_MACHINE_COLUMN);
+  const requiredColumns = Math.max(CONFIG.PREP_STATUS_COLUMN, CONFIG.IP_COLUMN, CONFIG.PROBLEM_COLUMN, CONFIG.INSTALL_STATUS_COLUMN, CONFIG.INSTALL_REASON_COLUMN, CONFIG.HUB_SN_COLUMN, CONFIG.OLD_MONITOR_SN_COLUMN, CONFIG.NO_OLD_MACHINE_COLUMN, CONFIG.OFFICE_KEY_COLUMN, CONFIG.WATCHGUARD_COLUMN);
   const currentColumns = sheet.getMaxColumns();
   if (currentColumns < requiredColumns) sheet.insertColumnsAfter(currentColumns, requiredColumns - currentColumns);
   const extraHeaders = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.HUB_SN_COLUMN, 1, 3).getDisplayValues()[0];
@@ -753,6 +761,13 @@ function ensurePreparationStatusColumn_(sheet) {
   // Do not overwrite future/custom columns that may already follow the old schema.
   // Reserve three extension columns immediately after the current managed data.
   if (hasConflictingExtraColumns) sheet.insertColumnsAfter(CONFIG.INSTALL_REASON_COLUMN, 3);
+  const programHeaders = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.OFFICE_KEY_COLUMN, 1, 2).getDisplayValues()[0];
+  const expectedProgramHeaders = [CONFIG.OFFICE_KEY_HEADER, CONFIG.WATCHGUARD_HEADER];
+  const hasConflictingProgramColumns = programHeaders.some(function(header, index) {
+    return header && header !== expectedProgramHeaders[index];
+  });
+  // Keep existing user columns intact when upgrading an older Asset_Master.
+  if (hasConflictingProgramColumns) sheet.insertColumnsAfter(CONFIG.NO_OLD_MACHINE_COLUMN, 2);
   const prepHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.PREP_STATUS_COLUMN);
   if (!prepHeaderCell.getDisplayValue()) prepHeaderCell.setValue(CONFIG.PREP_STATUS_HEADER);
   const ipHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.IP_COLUMN);
@@ -773,6 +788,10 @@ function ensurePreparationStatusColumn_(sheet) {
   if (!oldMonitorSnHeaderCell.getDisplayValue() || oldMonitorSnHeaderCell.getDisplayValue() === 'S/N จอเดิม') oldMonitorSnHeaderCell.setValue(CONFIG.OLD_MONITOR_SN_HEADER);
   const noOldMachineHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.NO_OLD_MACHINE_COLUMN);
   if (!noOldMachineHeaderCell.getDisplayValue()) noOldMachineHeaderCell.setValue(CONFIG.NO_OLD_MACHINE_HEADER);
+  const officeKeyHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.OFFICE_KEY_COLUMN);
+  if (!officeKeyHeaderCell.getDisplayValue()) officeKeyHeaderCell.setValue(CONFIG.OFFICE_KEY_HEADER);
+  const watchGuardHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.WATCHGUARD_COLUMN);
+  if (!watchGuardHeaderCell.getDisplayValue()) watchGuardHeaderCell.setValue(CONFIG.WATCHGUARD_HEADER);
 }
 
 function normalizePreparationStatus_(value) {
@@ -908,6 +927,24 @@ function updateAssetAccessoryStatus(rowNumber, fieldName, value) {
   }
 }
 
+function updateAssetWatchGuard(rowNumber, value) {
+  const targetRow = Number(rowNumber);
+  if (!targetRow || targetRow < CONFIG.HEADER_ROW) throw new Error('ไม่พบแถว Asset_Master ที่ต้องการแก้ไข');
+  const checked = toBoolean_(value);
+  const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    ensurePreparationStatusColumn_(sheet);
+    sheet.getRange(targetRow, CONFIG.WATCHGUARD_COLUMN).setValue(checked);
+    SpreadsheetApp.flush();
+    return { message: 'อัปเดตสถานะ WatchGuard ใน Asset_Master แล้ว', rowNumber: targetRow, watchGuard: checked };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function buildJobWorkRows_(assetRows, spreadsheet) {
   const photoByJob = getPhotoIndexByJob_(spreadsheet);
   const primaryTypes = ['signage', 'before1', 'after1'];
@@ -930,6 +967,7 @@ function buildJobWorkRows_(assetRows, spreadsheet) {
     if (row.status !== 'ส่งมอบแล้ว') blockers.push('อุปกรณ์ยังไม่ส่งมอบ');
     if (!upsBundleComplete) blockers.push('ขาด UPS + สายไฟ');
     if (!row.deliverHub) blockers.push('ขาด USB HUB');
+    if (!row.watchGuard) blockers.push('ยังไม่ได้ติดตั้ง WatchGuard');
     if (missingPrimary.length) blockers.push('ขาดรูป ' + missingPrimary.map(function(type) { return primaryLabels[type]; }).join(', '));
 
     return {
@@ -943,6 +981,7 @@ function buildJobWorkRows_(assetRows, spreadsheet) {
       prepStatus: row.prepStatus,
       installStatus: row.installStatus,
       installReason: row.installReason,
+      watchGuard: !!row.watchGuard,
       accessoryStatus: accessoryMissing.length ? accessoryMissing.join(', ') : 'อุปกรณ์ครบ',
       accessoryMissing: accessoryMissing,
       primaryPhotoCount: primaryTypes.length - missingPrimary.length,
@@ -1020,6 +1059,7 @@ function buildPortalDashboard_(rows, jobWorkRows) {
     prepReceived: prepCounts['รับเข้าแล้ว'] || 0,
     prepBlocked: prepCounts['ติดปัญหา'] || 0,
     upsBundle: rows.filter(function(row) { return row.deliverUps; }).length,
+    watchGuardInstalled: rows.filter(function(row) { return row.watchGuard; }).length,
     expiring: rows.filter(function(row) { return row.alert === 'เตือน: ใกล้หมดสัญญา'; }).length,
     statuses: counts,
     prepStatuses: prepCounts,
