@@ -623,8 +623,10 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   const problemDetail = String(data.problemDetail || '').trim();
   const installStatus = normalizeInstallationStatus_(data.installStatus || (existingRow && existingRow.installStatus) || '');
   const installReason = String(data.installReason !== undefined ? data.installReason : ((existingRow && existingRow.installReason) || '')).trim();
-  if (prepStatus === 'ติดปัญหา' && !problemDetail) throw new Error('กรุณาเลือกว่าติดปัญหาเรื่องอะไร');
-  if (installationNeedsReason_(installStatus) && !installReason) throw new Error('กรุณาระบุปัญหาของงานติดตั้งที่ยังไม่เสร็จ');
+  const assetStatus = String(data.assetStatus || (existingRow && existingRow.status) || 'รอส่งมอบ').trim();
+  const workflow = synchronizeWorkflowStatuses_('form', assetStatus, prepStatus, installStatus, problemDetail, installReason);
+  if (workflow.prepStatus === 'ติดปัญหา' && !workflow.problemDetail) throw new Error('กรุณาเลือกว่าติดปัญหาเรื่องอะไร');
+  if (installationNeedsReason_(workflow.installStatus) && !workflow.installReason) throw new Error('กรุณาระบุปัญหาของงานติดตั้งที่ยังไม่เสร็จ');
 
   const mainValues = [[
     jobNo,
@@ -658,11 +660,8 @@ function saveAssetMasterPortalRow(rowNumber, data) {
     parsePortalDate_(data.endDate)
   ]]);
   ensurePreparationStatusColumn_(sheet);
-  sheet.getRange(targetRow, CONFIG.PREP_STATUS_COLUMN).setValue(prepStatus);
+  writeWorkflowStatuses_(sheet, targetRow, workflow);
   sheet.getRange(targetRow, CONFIG.IP_COLUMN).setValue(ipAddress);
-  sheet.getRange(targetRow, CONFIG.PROBLEM_COLUMN).setValue(prepStatus === 'ติดปัญหา' ? problemDetail : '');
-  sheet.getRange(targetRow, CONFIG.INSTALL_STATUS_COLUMN).setValue(installStatus);
-  sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue(installationNeedsReason_(installStatus) ? installReason : '');
   const noOldMachine = toBoolean_(data.noOldMachine);
   sheet.getRange(targetRow, CONFIG.HUB_SN_COLUMN).setValue(data.hubSn || '');
   sheet.getRange(targetRow, CONFIG.OLD_MONITOR_SN_COLUMN).setValue(noOldMachine ? '' : (data.oldMonitorSn || ''));
@@ -808,6 +807,59 @@ function installationNeedsReason_(status) {
   return status === 'ติดตั้งแล้วแต่ไม่เสร็จ' || status === 'ติดตั้งไม่ได้' || status === 'ติดตั้งไม่ทัน';
 }
 
+/**
+ * Keep the three workflow status columns consistent.  Delivery alone does not
+ * mean installation is complete, but a completed installation always closes
+ * all three stages.  An installation problem means the equipment reached the
+ * installation stage and preparation must show the same blocker.
+ */
+function synchronizeWorkflowStatuses_(source, assetStatus, prepStatus, installStatus, problemDetail, installReason) {
+  const state = {
+    assetStatus: assetStatus === 'ส่งมอบแล้ว' ? 'ส่งมอบแล้ว' : 'รอส่งมอบ',
+    prepStatus: normalizePreparationStatus_(prepStatus),
+    installStatus: normalizeInstallationStatus_(installStatus),
+    problemDetail: String(problemDetail || '').trim(),
+    installReason: String(installReason || '').trim()
+  };
+  if (source === 'asset' && state.assetStatus === 'รอส่งมอบ') {
+    state.installStatus = CONFIG.INSTALL_STATUS_DEFAULT;
+    state.installReason = '';
+    if (state.prepStatus === 'ติดตั้งเสร็จ') state.prepStatus = 'พร้อมติดตั้ง';
+  } else if (source === 'preparation' && state.prepStatus !== 'ติดตั้งเสร็จ' && state.installStatus === 'ติดตั้งเสร็จ') {
+    state.installStatus = CONFIG.INSTALL_STATUS_DEFAULT;
+    state.installReason = '';
+  } else if (state.prepStatus === 'ติดตั้งเสร็จ' || state.installStatus === 'ติดตั้งเสร็จ') {
+    state.assetStatus = 'ส่งมอบแล้ว';
+    state.prepStatus = 'ติดตั้งเสร็จ';
+    state.installStatus = 'ติดตั้งเสร็จ';
+    state.problemDetail = '';
+    state.installReason = '';
+  } else if ((source === 'installation' || source === 'form') && installationNeedsReason_(state.installStatus)) {
+    state.assetStatus = 'ส่งมอบแล้ว';
+    state.prepStatus = 'ติดปัญหา';
+    state.problemDetail = state.installReason;
+  }
+  return state;
+}
+
+function readWorkflowStatuses_(sheet, rowNumber) {
+  return {
+    assetStatus: String(sheet.getRange(rowNumber, CONFIG.ASSET_STATUS_COLUMN).getDisplayValue() || 'รอส่งมอบ').trim(),
+    prepStatus: String(sheet.getRange(rowNumber, CONFIG.PREP_STATUS_COLUMN).getDisplayValue() || CONFIG.PREP_STATUS_NEW_DEFAULT).trim(),
+    installStatus: String(sheet.getRange(rowNumber, CONFIG.INSTALL_STATUS_COLUMN).getDisplayValue() || CONFIG.INSTALL_STATUS_DEFAULT).trim(),
+    problemDetail: String(sheet.getRange(rowNumber, CONFIG.PROBLEM_COLUMN).getDisplayValue() || '').trim(),
+    installReason: String(sheet.getRange(rowNumber, CONFIG.INSTALL_REASON_COLUMN).getDisplayValue() || '').trim()
+  };
+}
+
+function writeWorkflowStatuses_(sheet, rowNumber, state) {
+  sheet.getRange(rowNumber, CONFIG.ASSET_STATUS_COLUMN).setValue(state.assetStatus);
+  sheet.getRange(rowNumber, CONFIG.PREP_STATUS_COLUMN).setValue(state.prepStatus);
+  sheet.getRange(rowNumber, CONFIG.PROBLEM_COLUMN).setValue(state.prepStatus === 'ติดปัญหา' ? state.problemDetail : '');
+  sheet.getRange(rowNumber, CONFIG.INSTALL_STATUS_COLUMN).setValue(state.installStatus);
+  sheet.getRange(rowNumber, CONFIG.INSTALL_REASON_COLUMN).setValue(installationNeedsReason_(state.installStatus) ? state.installReason : '');
+}
+
 function updateAssetInstallationStatus(rowNumber, installStatus, installReason) {
   const targetRow = Number(rowNumber);
   const status = normalizeInstallationStatus_(installStatus);
@@ -821,10 +873,11 @@ function updateAssetInstallationStatus(rowNumber, installStatus, installReason) 
   lock.waitLock(30000);
   try {
     ensurePreparationStatusColumn_(sheet);
-    sheet.getRange(targetRow, CONFIG.INSTALL_STATUS_COLUMN).setValue(status);
-    sheet.getRange(targetRow, CONFIG.INSTALL_REASON_COLUMN).setValue(installationNeedsReason_(status) ? reason : '');
+    const current = readWorkflowStatuses_(sheet, targetRow);
+    const state = synchronizeWorkflowStatuses_('installation', current.assetStatus, current.prepStatus, status, current.problemDetail, reason);
+    writeWorkflowStatuses_(sheet, targetRow, state);
     SpreadsheetApp.flush();
-    return { message: 'อัปเดตผลการติดตั้งแล้ว', rowNumber: targetRow, installStatus: status, installReason: reason };
+    return { message: 'อัปเดตสถานะที่สัมพันธ์กันทั้ง 3 จุดแล้ว', rowNumber: targetRow, workflow: state };
   } finally {
     lock.releaseLock();
   }
@@ -844,10 +897,11 @@ function updateAssetPreparationStatus(rowNumber, prepStatus, problemDetail) {
   lock.waitLock(30000);
   try {
     ensurePreparationStatusColumn_(sheet);
-    sheet.getRange(targetRow, CONFIG.PREP_STATUS_COLUMN).setValue(status);
-    sheet.getRange(targetRow, CONFIG.PROBLEM_COLUMN).setValue(status === 'ติดปัญหา' ? reason : '');
+    const current = readWorkflowStatuses_(sheet, targetRow);
+    const state = synchronizeWorkflowStatuses_('preparation', current.assetStatus, status, current.installStatus, reason, current.installReason);
+    writeWorkflowStatuses_(sheet, targetRow, state);
     SpreadsheetApp.flush();
-    return { message: 'อัปเดตสถานะเตรียมเครื่องแล้ว', rowNumber: targetRow, prepStatus: status, problemDetail: status === 'ติดปัญหา' ? reason : '' };
+    return { message: 'อัปเดตสถานะที่สัมพันธ์กันทั้ง 3 จุดแล้ว', rowNumber: targetRow, workflow: state };
   } finally {
     lock.releaseLock();
   }
@@ -865,9 +919,30 @@ function updateAssetStatus(rowNumber, assetStatus) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    sheet.getRange(targetRow, CONFIG.ASSET_STATUS_COLUMN).setValue(status);
+    ensurePreparationStatusColumn_(sheet);
+    const current = readWorkflowStatuses_(sheet, targetRow);
+    const state = synchronizeWorkflowStatuses_('asset', status, current.prepStatus, current.installStatus, current.problemDetail, current.installReason);
+    writeWorkflowStatuses_(sheet, targetRow, state);
     SpreadsheetApp.flush();
-    return { message: 'อัปเดตสถานะชุดใน Asset_Master แล้ว', rowNumber: targetRow, status: status };
+    return { message: 'อัปเดตสถานะที่สัมพันธ์กันทั้ง 3 จุดแล้ว', rowNumber: targetRow, workflow: state };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function completeAssetWorkflow(rowNumber) {
+  const targetRow = Number(rowNumber);
+  if (!targetRow || targetRow < CONFIG.HEADER_ROW) throw new Error('ไม่พบแถว Asset_Master ที่ต้องการปิดงาน');
+  const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
+  if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    ensurePreparationStatusColumn_(sheet);
+    const state = synchronizeWorkflowStatuses_('installation', 'ส่งมอบแล้ว', 'ติดตั้งเสร็จ', 'ติดตั้งเสร็จ', '', '');
+    writeWorkflowStatuses_(sheet, targetRow, state);
+    SpreadsheetApp.flush();
+    return { message: 'ปิดงานเรียบร้อย: ส่งมอบแล้ว / เตรียมเครื่องเสร็จ / ติดตั้งเสร็จ', rowNumber: targetRow, workflow: state };
   } finally {
     lock.releaseLock();
   }

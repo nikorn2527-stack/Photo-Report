@@ -264,7 +264,7 @@
 
         <section id="assetView" class="view" hidden>
           <h2 class="view-title">Asset_Master</h2>
-          <p class="view-note">แหล่งข้อมูลหลักสำหรับงานประจำวัน แสดงเฉพาะคอลัมน์ที่ต้องใช้งาน ส่วนข้อมูลเพิ่มเติมเปิดดูได้ที่ “รายละเอียด” หรือ “แก้ไข”</p>
+          <p class="view-note">แหล่งข้อมูลหลักสำหรับงานประจำวัน สถานะชุด สถานะเตรียมเครื่อง และสถานะการติดตั้งจะปรับให้สัมพันธ์กันอัตโนมัติ และใช้ “ปิดงานครบ” เพื่อจบทั้ง 3 สถานะพร้อมกัน</p>
           <div class="toolbar">
             <input id="assetSearch" class="search" type="search" placeholder="ค้นหา Job, รหัสชุด, สถานที่, รุ่น หรือ S/N" oninput="renderAssetTable()">
             <select id="statusFilter" class="filter" onchange="renderAssetTable()"><option value="">สถานะชุดทั้งหมด</option></select>
@@ -570,7 +570,7 @@
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
           const oldValue = function(value) { return escapeHtml(value || (row.noOldMachine ? 'ไม่มีเครื่องเดิม' : '-')); };
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + escapeHtml(row.officeKey || '-') + '</td><td>' + watchGuardStatusControl(row) + '</td><td>' + escapeHtml(row.hubSn || '-') + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + oldValue(row.oldComSn) + '</td><td>' + oldValue(row.oldMonitorSn) + '</td><td>' + oldValue(row.oldUpsSn) + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">พรีวิวรูป</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + escapeHtml(row.officeKey || '-') + '</td><td>' + watchGuardStatusControl(row) + '</td><td>' + escapeHtml(row.hubSn || '-') + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + oldValue(row.oldComSn) + '</td><td>' + oldValue(row.oldMonitorSn) + '</td><td>' + oldValue(row.oldUpsSn) + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="completeWorkflow(' + row.rowNumber + ')">ปิดงานครบ</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">พรีวิวรูป</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
           body.appendChild(tr);
         });
       }
@@ -620,6 +620,12 @@
       function handleAssetStatusChange(rowNumber, assetStatus) {
         setStatus('กำลังอัปเดตสถานะชุดใน Asset_Master...');
         google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตสถานะชุดไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetStatus(rowNumber, assetStatus);
+      }
+
+      function completeWorkflow(rowNumber) {
+        if (!confirm('ยืนยันปิดงาน และตั้งทั้ง 3 สถานะเป็น ส่งมอบแล้ว / เตรียมเครื่องเสร็จ / ติดตั้งเสร็จ?')) return;
+        setStatus('กำลังปิดงานทั้ง 3 สถานะ...');
+        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('ปิดงานไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).completeAssetWorkflow(rowNumber);
       }
 
       function handleAssetAccessoryChange(rowNumber, fieldName, value) {
