@@ -277,7 +277,7 @@
           <h2 class="view-title">Asset_Master</h2>
           <p class="view-note">แหล่งข้อมูลหลักสำหรับงานประจำวัน สถานะชุด สถานะเตรียมเครื่อง และสถานะการติดตั้งจะปรับให้สัมพันธ์กันอัตโนมัติ และใช้ “ปิดงานครบ” เพื่อจบทั้ง 3 สถานะพร้อมกัน</p>
           <div class="toolbar">
-            <input id="assetSearch" class="search" type="search" placeholder="ค้นหา Job, รหัสชุด, สถานที่, รุ่น หรือ S/N" oninput="renderAssetTable()">
+            <input id="assetSearch" class="search" type="search" placeholder="ค้นหา Job, ชั้น, สถานที่ รุ่น หรือ S/N (ตัวเลขค้นหาแบบตรงค่า)" oninput="renderAssetTable()">
             <select id="statusFilter" class="filter" onchange="renderAssetTable()"><option value="">สถานะชุดทั้งหมด</option></select>
             <select id="prepStatusFilter" class="filter" onchange="renderAssetTable()"><option value="">เตรียมเครื่องทั้งหมด</option></select>
             <button type="button" class="button button-primary" onclick="openAssetEditor()">+ เพิ่มชุด</button>
@@ -286,7 +286,7 @@
           <p id="assetMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
           <div class="table-wrap">
             <table class="asset-table">
-              <thead><tr><th>เลข Job</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>S/N Hub USB</th><th>เลข IP</th><th>เลขครุภัณฑ์คอมพิวเตอร์</th><th>เลขครุภัณฑ์จอมอนิเตอร์</th><th>เลขครุภัณฑ์เครื่องสำรองไฟ</th><th>สถานะชุด</th><th>ส่ง AIO</th><th>ส่ง UPS + สายไฟ</th><th>ส่ง USB HUB</th><th>ส่ง KB + Mouse</th><th>ส่ง Adapter</th><th>เตรียมเครื่อง</th><th>สถานะการติดตั้ง</th><th>การทำงาน</th></tr></thead>
+              <thead><tr><th>เลข Job</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>เลข IP</th><th>เลขครุภัณฑ์คอมพิวเตอร์</th><th>เลขครุภัณฑ์จอมอนิเตอร์</th><th>เลขครุภัณฑ์เครื่องสำรองไฟ</th><th>สถานะชุด</th><th>ส่ง AIO</th><th>ส่ง UPS + สายไฟ</th><th>ส่ง USB HUB</th><th>ส่ง KB + Mouse</th><th>ส่ง Adapter</th><th>เตรียมเครื่อง</th><th>สถานะการติดตั้ง</th><th>การทำงาน</th></tr></thead>
               <tbody id="assetTableBody"></tbody>
             </table>
           </div>
@@ -590,18 +590,29 @@
         const status = document.getElementById('statusFilter').value;
         const prepStatus = document.getElementById('prepStatusFilter').value;
         const rows = (portalData.assetRows || []).filter(function(row) {
-          const text = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.officeKey,row.watchGuard ? 'WatchGuard' : '',row.upsSn,row.hubSn,row.oldComSn,row.oldMonitorSn,row.oldUpsSn,row.ipAddress,row.prepStatus,row.problemDetail,row.installStatus,row.installReason,row.noOldMachine ? 'ไม่มีเครื่องเดิม' : ''].join(' ').toLowerCase();
-          return (!query || text.indexOf(query) !== -1) && (!status || row.status === status) && (!prepStatus || row.prepStatus === prepStatus);
+          return smartAssetSearch(row, query) && (!status || row.status === status) && (!prepStatus || row.prepStatus === prepStatus);
         });
         document.getElementById('assetMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + (portalData.assetRows || []).length + ' รายการ';
         const body = document.getElementById('assetTableBody');
         body.innerHTML = '';
-          if (!rows.length) { body.innerHTML = '<tr><td colspan="18" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
+          if (!rows.length) { body.innerHTML = '<tr><td colspan="17" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
           const oldValue = function(value) { return escapeHtml(value || (row.noOldMachine ? 'ไม่มีเครื่องเดิม' : '-')); };
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + escapeHtml(row.hubSn || '-') + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + oldValue(row.oldComSn) + '</td><td>' + oldValue(row.oldMonitorSn) + '</td><td>' + oldValue(row.oldUpsSn) + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="completeWorkflow(' + row.rowNumber + ')">ปิดงานครบ</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">พรีวิวรูป</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + oldValue(row.oldComSn) + '</td><td>' + oldValue(row.oldMonitorSn) + '</td><td>' + oldValue(row.oldUpsSn) + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="completeWorkflow(' + row.rowNumber + ')">ปิดงานครบ</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">พรีวิวรูป</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
           body.appendChild(tr);
+        });
+      }
+
+      function smartAssetSearch(row, query) {
+        if (!query) return true;
+        const values = [row.jobNo,row.setCode,row.type,row.building,row.floor,row.department,row.room,row.brand,row.aioSn,row.upsSn,row.oldComSn,row.oldMonitorSn,row.oldUpsSn,row.ipAddress,row.prepStatus,row.problemDetail,row.installStatus,row.installReason,row.noOldMachine ? 'ไม่มีเครื่องเดิม' : ''].map(function(value) { return String(value || '').toLowerCase(); });
+        const text = values.join(' ');
+        return query.split(/\s+/).filter(Boolean).every(function(term) {
+          if (!/^\d+$/.test(term)) return text.indexOf(term) !== -1;
+          return values.some(function(value) {
+            return (value.match(/[a-z0-9ก-๙]+/g) || []).indexOf(term) !== -1;
+          });
         });
       }
 
