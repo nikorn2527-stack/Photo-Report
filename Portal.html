@@ -546,7 +546,7 @@
           const variance = Number(site.variance || 0);
           const varianceClass = variance > 0 ? ' over' : (variance < 0 ? ' short' : '');
           const varianceText = variance > 0 ? 'จำนวนจริงเกินแผน ' + variance + ' เครื่อง' : (variance < 0 ? 'จำนวนจริงขาดจากแผน ' + Math.abs(variance) + ' เครื่อง' : 'จำนวนจริงตรงตามแผน');
-          return '<section class="panel"><h3 class="panel-title">' + escapeHtml(site.label || key) + ' (' + key + ') · แผน ' + Number(site.planCount || 0) + ' เครื่อง</h3><div class="site-progress-summary"><div class="site-status-box complete">ฝั่งซ้าย · เสร็จแล้ว<strong>' + Number(site.installedCount || 0) + '</strong></div><div class="site-status-box pending">ฝั่งขวา · ยังไม่เสร็จ<strong>' + Number(site.unfinishedCount || 0) + '</strong></div></div><div class="site-variance' + varianceClass + '">' + varianceText + ' · ข้อมูลจริง ' + Number(site.actualCount || 0) + ' เครื่อง</div>' + rowHtml + '</section>';
+          return '<section class="panel"><h3 class="panel-title">' + escapeHtml(site.label || key) + ' (' + key + ') · แผน ' + Number(site.planCount || 0) + ' เครื่อง</h3><div class="site-progress-summary"><div class="site-status-box complete">เสร็จแล้ว<strong>' + Number(site.installedCount || 0) + '</strong></div><div class="site-status-box pending">ยังไม่เสร็จ<strong>' + Number(site.unfinishedCount || 0) + '</strong></div></div><div class="site-variance' + varianceClass + '">' + varianceText + ' · ข้อมูลจริง ' + Number(site.actualCount || 0) + ' เครื่อง · ยังไม่เสร็จคำนวณจากแผนลบจำนวนที่เสร็จแล้ว</div>' + rowHtml + '</section>';
         }).join('');
       }
 

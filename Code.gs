@@ -572,7 +572,8 @@ function getPlanOverviewData_(spreadsheet, assetRows) {
         total: floorPlans[label],
         actualCount: matchingRows.length,
         installedCount: matchingRows.filter(function(row) { return row.installStatus === 'ติดตั้งเสร็จ'; }).length,
-        unfinishedCount: Math.max(matchingRows.length, floorPlans[label]) - matchingRows.filter(function(row) { return row.installStatus === 'ติดตั้งเสร็จ'; }).length,
+        // งานที่ยังไม่เสร็จต้องอ้างอิงยอดแผน ไม่ใช่ยอดข้อมูลจริงที่อาจเกินแผน
+        unfinishedCount: Math.max(0, floorPlans[label] - matchingRows.filter(function(row) { return row.installStatus === 'ติดตั้งเสร็จ'; }).length),
         variance: matchingRows.length - floorPlans[label]
       };
     }).sort(function(left, right) { return comparePortalSortText_(left.label, right.label); });
@@ -584,7 +585,7 @@ function getPlanOverviewData_(spreadsheet, assetRows) {
       actualCount: actualRows.length,
       deliveredCount: delivered,
       installedCount: installed,
-      unfinishedCount: Math.max(actualRows.length, planRows.reduce(function(total, row) { return total + row.quantity; }, 0)) - installed,
+      unfinishedCount: Math.max(0, planRows.reduce(function(total, row) { return total + row.quantity; }, 0) - installed),
       variance: actualRows.length - planRows.reduce(function(total, row) { return total + row.quantity; }, 0),
       floorProgress: floorProgress
     };
