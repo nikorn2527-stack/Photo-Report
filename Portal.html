@@ -275,7 +275,7 @@
           <p id="assetMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
           <div class="table-wrap">
             <table class="asset-table">
-              <thead><tr><th>เลข Job</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>Office Key</th><th>WatchGuard</th><th>S/N Hub USB</th><th>เลข IP</th><th>เลขครุภัณฑ์คอมพิวเตอร์</th><th>เลขครุภัณฑ์จอมอนิเตอร์</th><th>เลขครุภัณฑ์เครื่องสำรองไฟ</th><th>สถานะชุด</th><th>ส่ง AIO</th><th>ส่ง UPS + สายไฟ</th><th>ส่ง USB HUB</th><th>ส่ง KB + Mouse</th><th>ส่ง Adapter</th><th>เตรียมเครื่อง</th><th>สถานะการติดตั้ง</th><th>การทำงาน</th></tr></thead>
+              <thead><tr><th>เลข Job</th><th>สถานที่ / แผนก</th><th>รุ่น</th><th>S/N AIO</th><th>S/N Hub USB</th><th>เลข IP</th><th>เลขครุภัณฑ์คอมพิวเตอร์</th><th>เลขครุภัณฑ์จอมอนิเตอร์</th><th>เลขครุภัณฑ์เครื่องสำรองไฟ</th><th>สถานะชุด</th><th>ส่ง AIO</th><th>ส่ง UPS + สายไฟ</th><th>ส่ง USB HUB</th><th>ส่ง KB + Mouse</th><th>ส่ง Adapter</th><th>เตรียมเครื่อง</th><th>สถานะการติดตั้ง</th><th>การทำงาน</th></tr></thead>
               <tbody id="assetTableBody"></tbody>
             </table>
           </div>
@@ -567,11 +567,11 @@
         document.getElementById('assetMeta').textContent = 'แสดง ' + rows.length + ' จาก ' + (portalData.assetRows || []).length + ' รายการ';
         const body = document.getElementById('assetTableBody');
         body.innerHTML = '';
-          if (!rows.length) { body.innerHTML = '<tr><td colspan="20" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
+          if (!rows.length) { body.innerHTML = '<tr><td colspan="18" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
           const oldValue = function(value) { return escapeHtml(value || (row.noOldMachine ? 'ไม่มีเครื่องเดิม' : '-')); };
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + escapeHtml(row.officeKey || '-') + '</td><td>' + watchGuardStatusControl(row) + '</td><td>' + escapeHtml(row.hubSn || '-') + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + oldValue(row.oldComSn) + '</td><td>' + oldValue(row.oldMonitorSn) + '</td><td>' + oldValue(row.oldUpsSn) + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="completeWorkflow(' + row.rowNumber + ')">ปิดงานครบ</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">พรีวิวรูป</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + escapeHtml(row.hubSn || '-') + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + oldValue(row.oldComSn) + '</td><td>' + oldValue(row.oldMonitorSn) + '</td><td>' + oldValue(row.oldUpsSn) + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="completeWorkflow(' + row.rowNumber + ')">ปิดงานครบ</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">พรีวิวรูป</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
           body.appendChild(tr);
         });
       }
@@ -595,23 +595,6 @@
 
       function accessoryStatusControl(row, fieldName, label) {
         return '<label class="asset-check" title="' + escapeHtml(label) + '"><input type="checkbox"' + (row[fieldName] ? ' checked' : '') + ' data-field="' + escapeHtml(fieldName) + '" aria-label="' + escapeHtml(label + ' ' + row.jobNo) + '" onchange="handleAssetAccessoryChangeFromInput(' + row.rowNumber + ', this)"><span>' + (row[fieldName] ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + '</span></label>';
-      }
-
-      function watchGuardStatusControl(row) {
-        return '<label class="asset-check" title="สถานะติดตั้ง WatchGuard"><input type="checkbox"' + (row.watchGuard ? ' checked' : '') + ' aria-label="WatchGuard ' + escapeHtml(row.jobNo) + '" onchange="handleWatchGuardChange(' + row.rowNumber + ', this)"><span>' + (row.watchGuard ? 'ติดตั้งแล้ว' : 'ยังไม่ติดตั้ง') + '</span></label>';
-      }
-
-      function handleWatchGuardChange(rowNumber, input) {
-        const value = !!(input && input.checked);
-        if (input) input.disabled = true;
-        setStatus('กำลังบันทึกสถานะ WatchGuard...');
-        google.script.run.withSuccessHandler(function(result) {
-          setStatus(result.message, false, true);
-          loadPortal();
-        }).withFailureHandler(function(error) {
-          setStatus('อัปเดต WatchGuard ไม่สำเร็จ: ' + getErrorMessage(error), true);
-          loadPortal();
-        }).updateAssetWatchGuard(rowNumber, value);
       }
 
       function handleAssetAccessoryChangeFromInput(rowNumber, input) {
