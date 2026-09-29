@@ -47,14 +47,24 @@
       .return-sn { display:block; margin-top:2px; color:var(--text); font-weight:800; }
       .ip-cell { min-width:125px; white-space:nowrap; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
       .dashboard-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:14px; }
-      .site-progress-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:14px; }
-      .site-progress-summary { display:flex; justify-content:space-between; gap:12px; margin-bottom:10px; color:var(--muted); font-size:12px; }
-      .site-progress-summary strong { color:var(--text); font-size:18px; }
-      .site-floor-row { display:grid; grid-template-columns:minmax(90px,1.1fr) minmax(120px,2fr) auto; align-items:center; gap:9px; margin-top:9px; }
+      .site-progress-grid { display:grid; grid-template-columns:1fr; gap:14px; margin-top:14px; }
+      .site-progress-summary,.site-floor-split { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+      .site-progress-summary { margin:10px 0; }
+      .site-status-box { padding:11px; border:1px solid var(--border); border-radius:9px; background:#f8fafc; }
+      .site-status-box.complete { border-color:#9ac7a7; background:#eaf6ed; color:#137333; }
+      .site-status-box.pending { border-color:#e5bc91; background:#fff4e5; color:#8a4b0f; }
+      .site-status-box strong { display:block; margin-top:3px; font-size:22px; }
+      .site-variance { margin:0 0 12px; padding:8px 10px; border-radius:8px; background:#eef2f6; color:var(--muted); font-size:12px; font-weight:800; }
+      .site-variance.over { background:#eaf6ed; color:#137333; }
+      .site-variance.short { background:#fce8e6; color:var(--danger); }
+      .site-floor-row { display:grid; grid-template-columns:minmax(110px,.65fr) minmax(260px,2fr); align-items:center; gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid #edf0f3; }
       .site-floor-label { overflow:hidden; font-size:12px; font-weight:800; text-overflow:ellipsis; white-space:nowrap; }
-      .site-floor-track { height:11px; overflow:hidden; border-radius:9px; background:#e4eaf2; }
-      .site-floor-track > span { display:block; height:100%; border-radius:9px; background:linear-gradient(90deg,#1967d2,#188038); }
-      .site-floor-value { min-width:70px; font-size:12px; font-weight:900; text-align:right; }
+      .site-floor-side { padding:8px; border-radius:8px; font-size:11px; font-weight:800; }
+      .site-floor-side.complete { background:#eaf6ed; color:#137333; }
+      .site-floor-side.pending { background:#fff4e5; color:#8a4b0f; }
+      .site-floor-side strong { float:right; font-size:14px; }
+      .site-floor-track { clear:both; height:7px; margin-top:6px; overflow:hidden; border-radius:9px; background:rgba(255,255,255,.75); }
+      .site-floor-track > span { display:block; height:100%; border-radius:9px; background:currentColor; }
       .site-floor-note { display:block; color:var(--muted); font-size:10px; font-weight:500; }
       .issue-dashboard { margin-top:14px; }
       .issue-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
@@ -206,7 +216,7 @@
       .brand-credit { margin:18px 0 2px; color:#9aa0a6; font-size:11px; font-weight:800; letter-spacing:.12em; text-align:center; }
       .error-box { padding:14px; border:1px solid #f4b8b4; border-radius:8px; background:#fce8e6; color:var(--danger); }
       @media (max-width:900px) { .cards{grid-template-columns:repeat(3,1fr)} .dashboard-grid,.issue-layout{grid-template-columns:1fr} .issue-kpis{grid-template-columns:repeat(2,1fr)} .document-grid{grid-template-columns:repeat(2,1fr)} }
-      @media (max-width:640px) { .site-progress-grid{grid-template-columns:1fr} }
+      @media (max-width:640px) { .site-floor-row{grid-template-columns:1fr} .site-progress-summary,.site-floor-split{gap:6px} }
       @media (max-width:640px) { body{padding:5px} .shell{padding:12px;min-height:calc(100vh - 10px)} .asset-table th:last-child, .asset-table td:last-child { width:252px; min-width:252px; } .asset-table td:last-child .action-row { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; } .brand{display:block} .brand-actions{display:grid;grid-template-columns:1fr;width:100%;margin-top:10px} .sheet-button,.photo-report-button{width:100%;margin-top:0} .cards{grid-template-columns:repeat(2,1fr)} .card-value{font-size:22px} .toolbar{display:grid;grid-template-columns:1fr 1fr} .search{grid-column:1 / -1;width:100%} .filter{width:100%;min-width:0} .button{width:100%} .document-grid{grid-template-columns:1fr} .form-grid{grid-template-columns:1fr 1fr;gap:8px} .field.full{grid-column:1 / -1} .work-summary{grid-template-columns:repeat(2,1fr)} .work-toolbar{display:grid;grid-template-columns:1fr 1fr} .work-search{grid-column:1 / -1;width:100%} .work-filter{width:100%;min-width:0} .work-print-backdrop{padding:6px} .work-print-shell{min-width:0} .work-print-toolbar{width:100%;max-width:none;align-items:stretch;flex-direction:column} .work-print-toolbar-actions{display:grid;grid-template-columns:1fr 1fr} .work-print-action{width:100%} .work-print-status{width:100%;max-width:none} }
       @media (max-width:380px) { .form-grid{grid-template-columns:1fr} .field.full{grid-column:auto} }
     </style>
@@ -526,11 +536,17 @@
           const rowHtml = rows.length ? rows.map(function(row) {
             const total = Number(row.total || 0);
             const installed = Number(row.installedCount || 0);
-            const progress = total ? Math.min(100, Math.round(installed / total * 100)) : 0;
-            return '<div class="site-floor-row"><span class="site-floor-label" title="' + escapeHtml(row.label) + '">' + escapeHtml(row.label) + '</span><span class="site-floor-track"><span style="width:' + progress + '%"></span></span><span class="site-floor-value">' + installed + '/' + total + '<small class="site-floor-note">ข้อมูลจริง ' + Number(row.actualCount || 0) + ' เครื่อง</small></span></div>';
+            const unfinished = Number(row.unfinishedCount || 0);
+            const completePercent = total ? Math.min(100, Math.round(installed / total * 100)) : 0;
+            const unfinishedPercent = total ? Math.min(100, Math.round(unfinished / total * 100)) : 0;
+            const variance = Number(row.variance || 0);
+            const varianceText = variance > 0 ? 'เกินแผน +' + variance : (variance < 0 ? 'ขาดจากแผน ' + Math.abs(variance) : 'ตรงตามแผน');
+            return '<div class="site-floor-row"><span class="site-floor-label" title="' + escapeHtml(row.label) + '">' + escapeHtml(row.label) + '<small class="site-floor-note">แผน ' + total + ' · ข้อมูลจริง ' + Number(row.actualCount || 0) + ' · ' + varianceText + '</small></span><span class="site-floor-split"><span class="site-floor-side complete">เสร็จ<strong>' + installed + '</strong><span class="site-floor-track"><span style="width:' + completePercent + '%"></span></span></span><span class="site-floor-side pending">ยังไม่เสร็จ<strong>' + unfinished + '</strong><span class="site-floor-track"><span style="width:' + unfinishedPercent + '%"></span></span></span></span></div>';
           }).join('') : '<div class="issue-empty">ยังไม่มีข้อมูลตึก / ชั้นในชีท ' + escapeHtml(key) + '</div>';
-          const overallPercent = site.planCount ? Math.min(100, Math.round((site.installedCount || 0) / site.planCount * 100)) : 0;
-          return '<section class="panel"><h3 class="panel-title">' + escapeHtml(site.label || key) + ' (' + key + ')</h3><div class="site-progress-summary"><span>ติดตั้งเสร็จ <strong>' + Number(site.installedCount || 0) + '/' + Number(site.planCount || 0) + '</strong> เครื่อง</span><span>' + overallPercent + '%<br>ข้อมูลจริง ' + Number(site.actualCount || 0) + '</span></div>' + rowHtml + '</section>';
+          const variance = Number(site.variance || 0);
+          const varianceClass = variance > 0 ? ' over' : (variance < 0 ? ' short' : '');
+          const varianceText = variance > 0 ? 'จำนวนจริงเกินแผน ' + variance + ' เครื่อง' : (variance < 0 ? 'จำนวนจริงขาดจากแผน ' + Math.abs(variance) + ' เครื่อง' : 'จำนวนจริงตรงตามแผน');
+          return '<section class="panel"><h3 class="panel-title">' + escapeHtml(site.label || key) + ' (' + key + ') · แผน ' + Number(site.planCount || 0) + ' เครื่อง</h3><div class="site-progress-summary"><div class="site-status-box complete">ฝั่งซ้าย · เสร็จแล้ว<strong>' + Number(site.installedCount || 0) + '</strong></div><div class="site-status-box pending">ฝั่งขวา · ยังไม่เสร็จ<strong>' + Number(site.unfinishedCount || 0) + '</strong></div></div><div class="site-variance' + varianceClass + '">' + varianceText + ' · ข้อมูลจริง ' + Number(site.actualCount || 0) + ' เครื่อง</div>' + rowHtml + '</section>';
         }).join('');
       }
 

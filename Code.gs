@@ -571,7 +571,9 @@ function getPlanOverviewData_(spreadsheet, assetRows) {
         label: label,
         total: floorPlans[label],
         actualCount: matchingRows.length,
-        installedCount: matchingRows.filter(function(row) { return row.installStatus === 'ติดตั้งเสร็จ'; }).length
+        installedCount: matchingRows.filter(function(row) { return row.installStatus === 'ติดตั้งเสร็จ'; }).length,
+        unfinishedCount: Math.max(matchingRows.length, floorPlans[label]) - matchingRows.filter(function(row) { return row.installStatus === 'ติดตั้งเสร็จ'; }).length,
+        variance: matchingRows.length - floorPlans[label]
       };
     }).sort(function(left, right) { return comparePortalSortText_(left.label, right.label); });
     locations[definition.sheetName] = {
@@ -582,6 +584,8 @@ function getPlanOverviewData_(spreadsheet, assetRows) {
       actualCount: actualRows.length,
       deliveredCount: delivered,
       installedCount: installed,
+      unfinishedCount: Math.max(actualRows.length, planRows.reduce(function(total, row) { return total + row.quantity; }, 0)) - installed,
+      variance: actualRows.length - planRows.reduce(function(total, row) { return total + row.quantity; }, 0),
       floorProgress: floorProgress
     };
   });
