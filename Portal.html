@@ -47,6 +47,22 @@
       .return-sn { display:block; margin-top:2px; color:var(--text); font-weight:800; }
       .ip-cell { min-width:125px; white-space:nowrap; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
       .dashboard-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:14px; }
+      .executive-photo-actions { display:flex; flex-wrap:wrap; gap:8px; }
+      .executive-photo-modal[hidden] { display:none!important; }
+      .executive-photo-modal { position:fixed; inset:0; z-index:1200; overflow:auto; background:#e5e9ef; padding:12px; }
+      .executive-photo-toolbar { position:sticky; top:0; z-index:2; max-width:980px; margin:0 auto 12px; padding:12px; border:1px solid var(--border); border-radius:10px; background:#fff; box-shadow:0 2px 8px #0002; }
+      .executive-photo-toolbar button { min-height:44px; }
+      .executive-photo-status { margin:10px 0 0; font-size:13px; color:var(--muted); }
+      .executive-photo-page { width:210mm; max-width:100%; margin:0 auto 16px; padding:8mm; background:#fff; color:#202124; box-shadow:0 2px 8px #0002; }
+      .executive-photo-page h2 { font-size:19px; margin:0 0 4px; overflow-wrap:anywhere; }
+      .executive-photo-page-note { margin:3px 0 10px; font-size:12px; color:#5f6368; overflow-wrap:anywhere; }
+      .executive-photo-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+      .executive-photo-job { min-width:0; border:1px solid #cad5e3; padding:8px; break-inside:avoid; }
+      .executive-photo-job h3 { margin:0 0 4px; font-size:14px; overflow-wrap:anywhere; }
+      .executive-photo-frame { height:70mm; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f7f9fc; border:1px solid #e1e5eb; }
+      .executive-photo-frame img { width:100%; height:100%; object-fit:contain; }
+      .executive-photo-empty { font-size:12px; color:#6b7280; text-align:center; }
+      @media(max-width:600px) { .executive-photo-modal{padding:6px}.executive-photo-page{padding:12px}.executive-photo-grid{grid-template-columns:1fr}.executive-photo-frame{height:60mm}.executive-photo-actions{width:100%} }
       .completion-dashboard { margin-top:14px; }
       .completion-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
       .completion-tables { display:grid; gap:14px; }
@@ -264,7 +280,7 @@
           <p class="view-note">สรุปจากข้อมูลใน Asset_Master ตามสถานะชุดอุปกรณ์และการแจ้งเตือนสัญญา</p>
           <div class="work-toolbar"><label for="dashboardDepartment">หน่วยงาน</label><select id="dashboardDepartment" class="filter" onchange="changeDashboardDepartment(this.value)"><option value="">ทุกหน่วยงาน</option></select></div>
           <section class="panel completion-dashboard" aria-labelledby="executiveTitle">
-            <div class="completion-head"><div><h3 id="executiveTitle" class="panel-title">สรุปติดตั้งและรับคืนสำหรับผู้บริหาร</h3><p id="executiveMeta" class="view-note"></p></div><button type="button" class="button button-primary" onclick="printExecutiveReport()">พิมพ์สรุปผู้บริหาร</button></div>
+            <div class="completion-head"><div><h3 id="executiveTitle" class="panel-title">สรุปติดตั้งและรับคืนสำหรับผู้บริหาร</h3><p id="executiveMeta" class="view-note"></p></div><div class="executive-photo-actions"><button type="button" class="button button-primary" onclick="printExecutiveReport()">พิมพ์สรุปผู้บริหาร</button><button type="button" class="button button-outline" onclick="openExecutivePhotoReport()">รายงานภาพคอมรายหน่วยงาน</button></div></div>
             <div id="executiveKpis" class="issue-kpis"></div>
             <p class="plan-note">ยอดรับคืนแยก AIO / PC / จอ / UPS ตามข้อมูลที่กรอก ช่องว่างไม่นับรับคืนและไม่ถือเป็นงานค้าง รายการติดตั้งเสร็จที่รอตรวจงานใช้เกณฑ์ส่งมอบ อุปกรณ์เสริม และรูปหลักในหน้าติดตามงาน</p>
             <div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr id="executiveHeaders"></tr></thead><tbody id="executiveDepartmentBody"></tbody></table></div>
@@ -408,6 +424,12 @@
       </section>
     </div>
 
+    <section id="executivePhotoModal" class="executive-photo-modal" role="dialog" aria-modal="true" aria-labelledby="executivePhotoTitle" onkeydown="handleExecutivePhotoKey(event)" hidden>
+      <div class="executive-photo-toolbar"><div class="completion-head"><strong id="executivePhotoTitle">รายงานภาพคอมรายหน่วยงาน</strong><div class="executive-photo-actions"><button id="executivePhotoPrint" class="button button-primary" type="button" onclick="printExecutivePhotoReport()" disabled>พิมพ์ / บันทึก PDF ภาพ</button><button class="button button-outline" type="button" onclick="loadExecutivePhotoReport()">โหลดใหม่</button><button id="executivePhotoBack" class="button button-outline" type="button" onclick="closeExecutivePhotoReport()">กลับ</button></div></div>
+        <p class="executive-photo-status">เฉพาะ Job ติดตั้งเสร็จ · ใช้ภาพหลังติดตั้ง 1 เท่านั้น · หน้าละ 4 เครื่อง แยกตามหน่วยงาน</p>
+        <p id="executivePhotoStatus" class="executive-photo-status" role="status" aria-live="polite"></p>
+      </div><div id="executivePhotoPages"></div>
+    </section>
     <div id="workPrintBackdrop" class="work-print-backdrop" role="dialog" aria-modal="true" aria-labelledby="workPrintTitle">
       <div class="work-print-shell">
         <div class="work-print-toolbar">
@@ -641,6 +663,76 @@
         const popup=window.open('','_blank','width=1100,height=800');if(!popup){setStatus('กรุณาอนุญาต Pop-up เพื่อพิมพ์รายงาน',true);return;}
         popup.opener=null;popup.document.open();popup.document.write(executiveReportHtml(getExecutiveReport()));popup.document.close();
         Promise.resolve(popup.document.fonts?popup.document.fonts.ready:undefined).then(function(){if(!popup.closed){popup.focus();popup.print();}});
+      }
+
+      let executivePhotoRequest=0,executivePhotoReady=false,executivePhotoSource=[],executivePhotoTime='',executivePhotoFocus=null;
+      function buildExecutivePhotoPlan(rows) {
+        const groups=new Map(),seen=new Set();
+        (rows||[]).forEach(function(row) {
+          const job=String(row.jobNo||'').trim(),department=departmentName(row),key=JSON.stringify([department,job.toLowerCase()]);
+          if(!job || row.installStatus!=='ติดตั้งเสร็จ' || seen.has(key))return;
+          seen.add(key);if(!groups.has(department))groups.set(department,[]);groups.get(department).push(Object.assign({},row,{jobNo:job}));
+        });
+        const pages=[];
+        Array.from(groups.keys()).sort(function(a,b){return a.localeCompare(b,'th',{numeric:true});}).forEach(function(department) {
+          const jobs=groups.get(department).slice().sort(function(a,b){return String(a.jobNo).localeCompare(String(b.jobNo),'th',{numeric:true});});
+          for(let index=0;index<jobs.length;index+=4)pages.push({department:department,jobs:jobs.slice(index,index+4),departmentJobs:jobs.length});
+        });return pages;
+      }
+      function executivePhotoJobHtml(row,image) {
+        const photo=image?'<img src="'+escapeHtml(image)+'" alt="'+escapeHtml(row.jobNo+' หลังติดตั้ง 1')+'">':'<span class="executive-photo-empty">ยังไม่มีภาพหลังติดตั้ง 1</span>';
+        return '<h3>'+escapeHtml(row.jobNo)+'</h3><p class="executive-photo-page-note">'+escapeHtml([row.building,row.floor?'ชั้น '+row.floor:'',row.room].filter(Boolean).join(' | '))+'</p><div class="executive-photo-frame">'+photo+'</div>';
+      }
+      function executivePhotoApi(job,image) {
+        return new Promise(function(resolve,reject){const api=google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);if(image)api.getPhotoPrintImage(job,'after1');else api.getPhotoPrintImages(job);});
+      }
+      function openExecutivePhotoReport() {
+        if(!portalData.loadedAt){setStatus('กรุณารอโหลดข้อมูลก่อนเปิดรายงานภาพ',true);return;}
+        executivePhotoFocus=document.activeElement;executivePhotoSource=getDashboardAssetRows().map(function(row){return Object.assign({},row);});executivePhotoTime=portalData.loadedAt;
+        document.getElementById('executivePhotoTitle').textContent='รายงานภาพคอมรายหน่วยงาน · '+(dashboardDepartment||'ทุกหน่วยงาน');
+        document.getElementById('executivePhotoModal').hidden=false;document.getElementById('executivePhotoBack').focus();loadExecutivePhotoReport();
+      }
+      async function loadExecutivePhotoReport() {
+        const request=++executivePhotoRequest;executivePhotoReady=false;document.getElementById('executivePhotoPrint').disabled=true;
+        const pages=buildExecutivePhotoPlan(executivePhotoSource),status=document.getElementById('executivePhotoStatus'),root=document.getElementById('executivePhotoPages'),jobs=[];
+        root.innerHTML=pages.map(function(page,pageIndex) {
+          const body=page.jobs.map(function(row){const index=jobs.length;jobs.push(row);return '<div class="executive-photo-job" id="executivePhotoJob'+index+'">กำลังโหลด '+escapeHtml(row.jobNo)+'...</div>';}).join('');
+          return '<article class="executive-photo-page"><h2>ภาพเครื่องที่ติดตั้งเสร็จ · '+escapeHtml(page.department)+'</h2><p class="executive-photo-page-note">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที · หลังติดตั้ง 1 · '+page.departmentJobs+' เครื่องในหน่วยงาน · หน้า '+(pageIndex+1)+'/'+pages.length+'</p><p class="executive-photo-page-note">ข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(executivePhotoTime))+'</p><div class="executive-photo-grid">'+body+'</div></article>';
+        }).join('');
+        if(!jobs.length){root.innerHTML='<article class="executive-photo-page"><p>ยังไม่มี Job ติดตั้งเสร็จในหน่วยงานที่เลือก</p></article>';status.textContent='ไม่มีรายการสำหรับพิมพ์';return;}
+        let next=0,loadedJobs=0,loadedPhotos=0;const missing=[];
+        status.textContent='กำลังโหลดต้นฉบับ · 0/'+jobs.length+' เครื่อง';
+        try {
+          async function worker() {
+            while(request===executivePhotoRequest&&next<jobs.length) {
+              const index=next++,row=jobs[index];
+              const meta=await executivePhotoApi(row.jobNo,false);if(request!==executivePhotoRequest)return;
+              let image='';if((meta.imageTypes||[]).indexOf('after1')!==-1){image=await executivePhotoApi(row.jobNo,true);if(request!==executivePhotoRequest)return;if(!image)throw new Error('ไม่พบข้อมูลภาพ '+row.jobNo);loadedPhotos++;}else missing.push(row.jobNo);
+              const target=document.getElementById('executivePhotoJob'+index);target.innerHTML=executivePhotoJobHtml(row,image);await waitForWorkPrintImages(target);if(request!==executivePhotoRequest)return;
+              loadedJobs++;status.textContent='โหลดต้นฉบับแล้ว '+loadedJobs+'/'+jobs.length+' เครื่อง · '+loadedPhotos+' รูป';
+            }
+          }
+          await Promise.all([worker(),worker()]);if(request!==executivePhotoRequest)return;
+          executivePhotoReady=true;document.getElementById('executivePhotoPrint').disabled=false;
+          status.textContent='พร้อมพิมพ์ '+jobs.length+' เครื่อง · '+loadedPhotos+' รูป · '+pages.length+' หน้า'+(missing.length?' · ยังไม่มีภาพหลังติดตั้ง 1: '+missing.join(', '):'');
+        }catch(error){if(request!==executivePhotoRequest)return;++executivePhotoRequest;executivePhotoReady=false;status.textContent='โหลดรายงานภาพไม่สำเร็จ: '+getErrorMessage(error)+' · กดโหลดใหม่เพื่อลองอีกครั้ง';}
+      }
+      function handleExecutivePhotoKey(event) {
+        if(event.key==='Escape'){event.preventDefault();closeExecutivePhotoReport();return;}
+        if(event.key!=='Tab')return;
+        const controls=Array.from(document.getElementById('executivePhotoModal').querySelectorAll('button:not([disabled])')),first=controls[0],last=controls[controls.length-1];
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+      }
+      function closeExecutivePhotoReport(){++executivePhotoRequest;executivePhotoReady=false;document.getElementById('executivePhotoPrint').disabled=true;document.getElementById('executivePhotoModal').hidden=true;document.getElementById('executivePhotoPages').innerHTML='';executivePhotoSource=[];if(executivePhotoFocus&&executivePhotoFocus.isConnected)executivePhotoFocus.focus();}
+      function executivePhotoPrintHtml(content) {
+        const styles=Array.from(document.querySelectorAll('style')).map(function(style){return style.textContent;}).join('\n');
+        return '<!doctype html><html lang="th"><head><meta charset="utf-8"><title>รายงานภาพคอมรายหน่วยงาน</title><style>'+styles+'\n@page{size:A4 portrait;margin:8mm}html,body{width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;background:#fff!important}.executive-photo-page{width:auto!important;max-width:none!important;margin:0!important;padding:0!important;box-shadow:none!important;break-after:page}.executive-photo-page:last-child{break-after:auto}.executive-photo-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}.executive-photo-frame{height:70mm!important}</style></head><body>'+content+'</body></html>';
+      }
+      function printExecutivePhotoReport() {
+        if(!executivePhotoReady)return;
+        const popup=window.open('','_blank','width=900,height=1000');if(!popup){document.getElementById('executivePhotoStatus').textContent='กรุณาอนุญาต Pop-up เพื่อพิมพ์รายงานภาพ';return;}
+        popup.opener=null;popup.document.open();popup.document.write(executivePhotoPrintHtml(document.getElementById('executivePhotoPages').innerHTML));popup.document.close();
+        waitForWorkPrintImages(popup.document).then(function(){return popup.document.fonts?popup.document.fonts.ready:undefined;}).then(function(){if(!popup.closed){popup.focus();popup.print();}}).catch(function(error){popup.close();document.getElementById('executivePhotoStatus').textContent='เตรียมภาพพิมพ์ไม่สำเร็จ: '+getErrorMessage(error);});
       }
 
       function classifyReturnedAsset(value) {
