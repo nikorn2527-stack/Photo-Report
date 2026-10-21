@@ -27,3 +27,12 @@ test('load errors block print, retry rebuilds cleanly, and units without complet
  api(p,r=>r.success({imageTypes:[]}));await p.context.loadExecutivePhotoReport();assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);const html=p.context.executivePhotoPrintHtml('<article>fixture</article>');assert.ok(html.includes('size:A4 portrait'));assert.ok(html.includes('break-after:page'));assert.ok(!html.includes('onclick='));
  vm.runInContext("executivePhotoSource=[{jobNo:'WAIT',installStatus:'รอดำเนินการ'}]",p.context);await p.context.loadExecutivePhotoReport();assert.equal(p.document.getElementById('executivePhotoPrint').disabled,true);assert.ok(p.document.getElementById('executivePhotoPages').innerHTML.includes('ยังไม่มี Job ติดตั้งเสร็จ'));
 });
+
+test('submission bundle snapshots summary and photos from the same selected unit in one printable document',async()=>{
+ const p=page();p.context.rows=[rows[0]];vm.runInContext("portalData={assetRows:rows,jobWorkRows:[],loadedAt:'2026-10-22T00:00:00Z'};dashboardDepartment='การเงิน'",p.context);api(p,r=>r.success(r.method==='meta'?{imageTypes:['after1']}:'original-after1'));p.context.openExecutivePhotoReport(true);await tick();await tick();
+ const content=p.document.getElementById('executivePhotoPages').innerHTML;assert.ok(content.includes('executive-submission-summary'));assert.ok(content.includes('สรุปติดตั้งและรับคืนตามหน่วยงาน'));assert.ok(content.includes('ภาพเครื่องที่ติดตั้งเสร็จ'));assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);
+ const html=p.context.executivePhotoPrintHtml(content,true);assert.ok(html.includes('ชุดเอกสารสรุปติดตั้งและรับคืนสำหรับผู้บริหาร'));assert.ok(html.includes('@page executive-summary{size:A4 landscape'));assert.ok(html.includes('@page executive-photos{size:A4 portrait'));assert.ok(!content.includes('รายละเอียดประกอบการตรวจสอบ'));
+});
+test('a submission without completed computers can print its summary without issuing image requests',async()=>{
+ const p=page();p.context.rows=[{jobNo:'WAIT',installStatus:'รอดำเนินการ'}];vm.runInContext("portalData={assetRows:rows,jobWorkRows:[],loadedAt:'2026-10-22T00:00:00Z'}",p.context);let calls=0;api(p,()=>calls++);p.context.openExecutivePhotoReport(true);await tick();assert.equal(calls,0);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);assert.ok(p.document.getElementById('executivePhotoStatus').textContent.includes('พิมพ์ได้เฉพาะรายงานสรุป'));
+});
