@@ -11,9 +11,9 @@ const rows=[
 const work=[{rowNumber:4,jobNo:'JOB-1',workStatus:'งานจบ'},{rowNumber:5,jobNo:'JOB-2',workStatus:'ยังไม่จบ',blockers:['ขาดรูปป้ายหน่วยงาน']}];
 test('executive summary groups by trimmed department across floors, including unnamed departments',()=>{
  const {context}=page(),before=JSON.stringify(rows),report=context.buildExecutiveReportData(rows,work,'2026-10-22T00:00:00Z');
- assert.equal(report.groups.length,3);const finance=report.groups.find(r=>r.department==='การเงิน');assert.equal(finance.total,2);assert.equal(finance.completed,2);assert.equal(finance.percent,100);assert.equal(finance.pendingReview,1);
- assert.equal(report.totals.total,5);assert.equal(report.totals.completed,3);assert.equal(report.totals.remaining,2);assert.equal(report.totals.percent,60);assert.equal(report.totals.pendingReview,2);assert.equal(report.totals.issues,1);
- assert.equal(report.attention.length,3);assert.ok(report.attention.some(r=>r.jobNo==='JOB-2'&&r.detail==='ขาดรูปป้ายหน่วยงาน'));assert.ok(report.attention.some(r=>r.jobNo==='JOB-5'&&r.detail==='ยังไม่มีข้อมูลติดตามงาน'));
+ assert.equal(report.groups.length,3);const finance=report.groups.find(r=>r.department==='การเงิน');assert.equal(finance.total,2);assert.equal(finance.completed,2);assert.equal(finance.percent,100);
+ assert.equal(report.totals.total,5);assert.equal(report.totals.completed,3);assert.equal(report.totals.remaining,2);assert.equal(report.totals.percent,60);assert.equal(report.totals.issues,1);
+ assert.equal(report.attention.length,1);assert.equal(report.attention[0].jobNo,'JOB-3');assert.equal(report.attention[0].detail,'รอหน่วยงาน');
  assert.equal(JSON.stringify(rows),before);
 });
 test('returned AIO, PC, monitors and UPS are independent; blank returns never create pending tasks',()=>{
@@ -72,10 +72,10 @@ test('executive and submission figures use the reference completion report: 156 
  const {context}=page(),rows=Array.from({length:156},(_,i)=>({rowNumber:i+4,jobNo:'JOB-'+i,department:i%2?'A':'B',installStatus:i<126?'ติดตั้งเสร็จ':'รอดำเนินการ',oldComSn:i<100?'COM-'+i:'',oldMonitorSn:i<60?'MON-'+i:'',oldUpsSn:i<90?'UPS-'+i:''})),work=rows.map((r,i)=>({rowNumber:r.rowNumber,jobNo:r.jobNo,workStatus:i<80?'งานจบ':'ยังไม่จบ'}));
  for(const selected of [rows,rows.filter(r=>r.department==='A'),rows.filter(r=>r.department==='B')]){
   const old=context.buildCompletionReportData(selected,work),report=context.buildExecutiveReportData(selected,work);
-  for(const key of ['total','completed','remaining','percent','workComplete'])assert.equal(report.totals[key],old[key]);
-  assert.equal(report.totals.pendingReview,old.completed-old.workComplete);
+  for(const key of ['total','completed','remaining','percent'])assert.equal(report.totals[key],old[key]);
+
  }
- const report=context.buildExecutiveReportData(rows,work);assert.equal(report.totals.total,156);assert.equal(report.totals.completed,126);assert.equal(report.totals.remaining,30);assert.equal(report.totals.percent,81);assert.equal(report.totals.workComplete,80);assert.equal(report.totals.pendingReview,46);assert.equal(report.totals.additional,0);assert.equal(report.totals.returnInfoMissing,26);assert.equal(report.totals.pc,60);assert.equal(report.totals.aio,40);assert.equal(report.totals.monitor,60);assert.equal(report.totals.ups,90);
+ const report=context.buildExecutiveReportData(rows,work);assert.equal(report.totals.total,156);assert.equal(report.totals.completed,126);assert.equal(report.totals.remaining,30);assert.equal(report.totals.percent,81);assert.equal(report.totals.workComplete,undefined);assert.equal(report.totals.pendingReview,undefined);assert.equal(report.totals.additional,0);assert.equal(report.totals.returnInfoMissing,26);assert.equal(report.totals.pc,60);assert.equal(report.totals.aio,40);assert.equal(report.totals.monitor,60);assert.equal(report.totals.ups,90);
  assert.ok(context.executiveSubmissionSummaryHtml(report,false).includes('81%'));
 });
 test('blank return fields on pending, blocked or incompletely installed jobs never count as completed additional installations',()=>{
@@ -91,4 +91,12 @@ test('brand descriptions without asset numbers count every returned machine and 
 test('confirmed no-old-equipment entries are separate from missing return information and never override entered returns',()=>{
  const {context}=page(),rows=[{installStatus:'ติดตั้งเสร็จ',noOldEquipment:true},{installStatus:'ติดตั้งเสร็จ',noOldEquipment:false},{installStatus:'ติดตั้งเสร็จ'},{installStatus:'รอดำเนินการ',noOldEquipment:true},{installStatus:'ติดตั้งเสร็จ',noOldEquipment:true,oldComSn:'COM',oldMonitorSn:'MON'}],report=context.buildExecutiveReportData(rows,[]);
  assert.equal(report.totals.additional,1);assert.equal(report.totals.returnInfoMissing,2);assert.equal(report.totals.pc,1);assert.equal(report.totals.monitor,1);assert.ok(context.executiveBriefHtml(report).includes('ติดตั้งจุดใหม่ / เพิ่มเครื่อง:'));
+});
+
+test('executive reports and optional appendix ignore photo completeness but retain real installation problems',()=>{
+ const {context}=page(),assets=[{rowNumber:4,jobNo:'DONE',installStatus:'ติดตั้งเสร็จ',oldComSn:'C',oldMonitorSn:'M'},{rowNumber:5,jobNo:'BLOCKED',installStatus:'ติดตั้งไม่ได้',installReason:'รอไฟฟ้า'}];
+ const missing=[{rowNumber:4,jobNo:'DONE',workStatus:'ยังไม่จบ',blockers:['ขาดรูปป้ายหน่วยงาน'],primaryPhotoComplete:false}],complete=[{rowNumber:4,jobNo:'DONE',workStatus:'งานจบ',primaryPhotoComplete:true}];
+ const a=context.buildExecutiveReportData(assets,missing),b=context.buildExecutiveReportData(assets,complete);assert.equal(a.totals.completed,1);assert.equal(a.totals.remaining,1);assert.equal(a.attention.length,1);assert.equal(a.attention[0].jobNo,'BLOCKED');
+ for(const details of [false,true]){const html=context.executiveReportHtml(a,details);assert.equal(html,context.executiveReportHtml(b,details));assert.doesNotMatch(html,/ขาดรูป|รูปไม่ครบ|รอตรวจข้อมูลหลังติดตั้ง|ข้อมูลและรูปครบ/);if(details)assert.ok(html.includes('รอไฟฟ้า'));}
+ const installation=context.buildCompletionReportData(assets,missing),html=context.completionReportHtml(installation);assert.doesNotMatch(html,/ขาดรูป|ความครบถ้วนของงาน|ข้อมูลและรูปครบ|รอตรวจข้อมูล/);
 });
