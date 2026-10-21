@@ -98,3 +98,13 @@ test('PC, monitor and UPS totals independently handle numbered and unnumbered re
  assert.equal(report.groups[0].monitor,3);assert.equal(report.groups[0].allThree,2);
  assert.ok(report.duplicates.some(item=>item.type==='จอมอนิเตอร์'&&item.number==='M1'));
 });
+
+test('a returned monitor identifies a PC, including monitors returned without an asset number',()=>{
+ const {context}=page();
+ for(const monitor of ['MON-001','ไม่มี','ไม่มีเลข'])assert.equal(context.returnedMachineType({oldComSn:'COM-001',oldMonitorSn:monitor}),'PC');
+ assert.equal(context.returnedMachineType({oldComSn:'',oldMonitorSn:'MON-001'}),'PC (รับคืนเฉพาะจอ)');
+ assert.equal(context.returnedMachineType({type:'AIO',oldComSn:'COM-001',oldMonitorSn:'MON-001'}),'PC');
+ assert.equal(context.returnedMachineType({oldComSn:'COM-001',oldMonitorSn:''}),'ยังไม่ระบุ PC/AIO');
+ const report=context.buildReturnAssetReportData([{jobNo:'JOB-PC',oldComSn:'COM-001',oldMonitorSn:'ไม่มีเลข'}]);
+ assert.equal(report.rows[0].machineType,'PC');assert.ok(context.returnAssetMachineRows(report).includes('<td>PC</td>'));
+});
