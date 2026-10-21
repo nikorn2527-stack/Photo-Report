@@ -90,5 +90,5 @@ test('brand descriptions without asset numbers count every returned machine and 
 });
 test('confirmed no-old-equipment entries are separate from missing return information and never override entered returns',()=>{
  const {context}=page(),rows=[{installStatus:'ติดตั้งเสร็จ',noOldEquipment:true},{installStatus:'ติดตั้งเสร็จ',noOldEquipment:false},{installStatus:'ติดตั้งเสร็จ'},{installStatus:'รอดำเนินการ',noOldEquipment:true},{installStatus:'ติดตั้งเสร็จ',noOldEquipment:true,oldComSn:'COM',oldMonitorSn:'MON'}],report=context.buildExecutiveReportData(rows,[]);
- assert.equal(report.totals.additional,1);assert.equal(report.totals.returnInfoMissing,2);assert.equal(report.totals.pc,1);assert.equal(report.totals.monitor,1);assert.ok(context.executiveBriefHtml(report).includes('ไม่มีเครื่องเดิมให้นำกลับ:'));
+ assert.equal(report.totals.additional,1);assert.equal(report.totals.returnInfoMissing,2);assert.equal(report.totals.pc,1);assert.equal(report.totals.monitor,1);assert.ok(context.executiveBriefHtml(report).includes('ติดตั้งจุดใหม่ / เพิ่มเครื่อง:'));
 });
