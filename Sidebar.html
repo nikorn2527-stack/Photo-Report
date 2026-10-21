@@ -210,6 +210,13 @@
     .keyboard-dismiss { position:fixed; top:0; left:0; width:1px; height:1px; padding:0; border:0; opacity:0; pointer-events:none; }
     @media (min-width:521px) { .phone-shell { max-width:none !important; } }
 
+    .upload-summary { position:sticky; top:0; z-index:20; margin:8px 0; padding:14px; border:2px solid #b36b00; border-radius:12px; background:#fff5dc; color:#704000; font-size:14px; }
+    .upload-summary[hidden] { display:none; }
+    .upload-summary strong { display:block; margin-bottom:5px; font-size:17px; }
+    .upload-summary p { margin:6px 0 0; }
+    .upload-summary.success { background:#e6f4ea; border-color:#16834b; color:#11652d; }
+    .upload-summary.failed { background:#fce8e6; border-color:#c62828; color:#a32020; }
+    .upload-summary button { margin-top:8px; min-height:44px; padding:8px 12px; font-weight:800; }
     .print-preview { position:fixed; z-index:50; inset:0; display:none; overflow:auto; padding:12px; background:#eef1f5; }
     .print-preview.open { display:block; }
     .print-toolbar { position:sticky; z-index:2; top:0; display:flex; align-items:center; justify-content:space-between; gap:8px; max-width:210mm; margin:0 auto 10px; padding:10px; border:1px solid #c7cbd1; border-radius:12px; background:rgba(255,255,255,.96); box-shadow:0 3px 12px rgba(32,33,36,.14); }
@@ -287,6 +294,7 @@
         <button class="ios-portal" type="button" onclick="openPortal()">IT Portal</button>
       </header>
 
+      <section id="uploadSummary" class="upload-summary" role="status" aria-live="polite" hidden><strong id="uploadSummaryTitle"></strong><div id="uploadSummaryCounts"></div><p id="uploadSummaryNote"></p><button id="retryUploadsButton" type="button" onclick="retryPendingUploads()" hidden>ลองส่งรูปที่ค้างใหม่</button></section>
       <section class="ios-search-panel">
         <div class="ios-search-row"><input id="jobSearch" class="ios-search" type="search" inputmode="search" autocomplete="off" placeholder="ค้นหา Job" aria-label="ค้นหา Job"><button id="clearSearch" class="ios-clear" type="button" onclick="clearSearch()" aria-label="ล้างการค้นหา">×</button></div>
         <div id="searchHint" class="ios-hint">พิมพ์เลขบางส่วนเพื่อค้นหา</div>
@@ -316,7 +324,7 @@
     const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'สภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'ผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
     let jobs = [], currentJob = null, currentProgress = { filledTypes:[], missingTypes:[] }, previewUrls = {}, previews = {}, uploadStates = {}, pendingFiles = [], activeType = '', activeGroupKey = '', activeMode = 'group', uploading = false, canceledUploads = {};
 
-    window.addEventListener('load', function() { document.getElementById('jobSearch').value = ''; document.getElementById('galleryFile').addEventListener('change', handleFile); document.getElementById('cameraFile').addEventListener('change', handleFile); document.getElementById('jobSearch').addEventListener('input', renderSearch); loadSheetLinks(); loadJobs(); });
+    window.addEventListener('load', function() { document.getElementById('jobSearch').value = ''; document.getElementById('galleryFile').addEventListener('change', handleFile); document.getElementById('cameraFile').addEventListener('change', handleFile); document.getElementById('jobSearch').addEventListener('input', renderSearch); loadSheetLinks(); loadJobs(); initializeUploadQueue(); });
     function allTypes() { return Object.keys(PHOTO_LABELS); }
     function isFilled(type) { return (currentProgress.filledTypes || []).indexOf(type) !== -1; }
     function setStatus(text, error, success) { const el = document.getElementById('status'); el.textContent = text || ''; el.className = 'status' + (error ? ' error' : '') + (success ? ' success' : ''); }
@@ -328,14 +336,29 @@
     function jobScore(job, query) { const raw = String(job.jobNo || '').toLowerCase(); const n = normalizeSearch(raw); const q = normalizeSearch(query); if (!q) return 99; if (n === q) return 0; if (n.indexOf(q) === 0) return 1; if (n.indexOf(q) !== -1) return 2; const digits = String(query || '').replace(/\D/g,''); return digits && raw.replace(/\D/g,'').indexOf(digits) !== -1 ? 3 : -1; }
     function loadJobs() { setStatus('กำลังโหลดรายการ Job...'); google.script.run.withSuccessHandler(function(data) { jobs = data || []; resetJob(false); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรายการ Job ไม่สำเร็จ: ' + errorMessage(error), true); }).getJobData(); }
     function renderSearch() { const query = document.getElementById('jobSearch').value.trim(); const hint = document.getElementById('searchHint'); const root = document.getElementById('searchResults'); const ranked = jobs.map(function(job,index) { return { job:job, index:index, score:jobScore(job,query) }; }).filter(function(item) { return item.score >= 0; }).sort(function(a,b) { return a.score - b.score || a.index - b.index; }); root.innerHTML = ''; root.classList.remove('open'); if (!query) { hint.textContent = 'พิมพ์เลขบางส่วน ระบบจะเข้า Job ให้อัตโนมัติเมื่อพบรายการเดียว'; return; } if (ranked.length === 1) { hint.textContent = 'พบ ' + ranked[0].job.jobNo + ' — กำลังเปิดงาน'; selectJob(ranked[0].index); return; } if (!ranked.length) { hint.textContent = 'ไม่พบ Job ที่ตรงกับคำค้นหา'; return; } hint.textContent = 'พบ ' + ranked.length + ' Job — แตะรายการที่ต้องการ 1 ครั้ง'; root.classList.add('open'); root.innerHTML = ranked.slice(0,20).map(function(item) { return '<button class="job-result" type="button" onclick="selectJob(' + item.index + ')"><strong>' + escapeHtml(item.job.jobNo) + '</strong><span>' + escapeHtml(item.job.location || 'ไม่ระบุสถานที่') + ' · รูปแล้ว ' + (item.job.filledCount || 0) + '/9</span></button>'; }).join(''); }
-    function selectJob(index) { if (!jobs[index]) return; currentJob = jobs[index]; uploadStates = {}; const searchInput = document.getElementById('jobSearch'); searchInput.value = currentJob.jobNo; document.getElementById('searchResults').classList.remove('open'); document.getElementById('jobSelect').value = String(index); document.getElementById('workspace').classList.add('open'); dismissMobileKeyboard(); setTimeout(dismissMobileKeyboard, 80); previews = {}; previewUrls = {}; currentProgress = { filledTypes:[], missingTypes:[] }; renderStage(); google.script.run.withSuccessHandler(function(progress) { currentProgress = progress || { filledTypes:[], missingTypes:[] }; previewUrls = progress.previewUrls || {}; renderStage(); setStatus(''); }).withFailureHandler(function(error) { setStatus('โหลดรูปไม่สำเร็จ: ' + errorMessage(error), true); }).getJobProgress(currentJob.jobNo); }
+    function selectJob(index) {
+      if (!jobs[index]) return;
+      currentJob=jobs[index]; const jobNo=currentJob.jobNo;
+      document.getElementById('jobSearch').value=jobNo;
+      document.getElementById('searchResults').classList.remove('open');
+      document.getElementById('jobSelect').value=String(index);
+      document.getElementById('workspace').classList.add('open');
+      dismissMobileKeyboard(); setTimeout(dismissMobileKeyboard,80);
+      previews={}; previewUrls={}; currentProgress={filledTypes:[],missingTypes:[]}; syncCurrentUploadState();
+      google.script.run.withSuccessHandler(function(progress) {
+        if (!currentJob || currentJob.jobNo !== jobNo) return;
+        currentProgress=progress || {filledTypes:[],missingTypes:[]}; previewUrls=currentProgress.previewUrls || {};
+        syncCurrentUploadState(); setStatus('');
+      }).withFailureHandler(function(error) { if (currentJob && currentJob.jobNo === jobNo) setStatus('โหลดรูปไม่สำเร็จ: '+errorMessage(error),true); }).getJobProgress(jobNo);
+    }
+
     function resetJob(focus) { currentJob = null; currentProgress = { filledTypes:[], missingTypes:[] }; previewUrls = {}; previews = {}; uploadStates = {}; document.getElementById('jobSearch').value = ''; document.getElementById('searchResults').innerHTML = ''; document.getElementById('searchResults').classList.remove('open'); document.getElementById('workspace').classList.remove('open'); document.getElementById('mobilePhotoGrid').innerHTML = ''; if (focus) document.getElementById('jobSearch').focus(); }
     function clearSearch() { resetJob(true); setStatus(''); }
     function dismissMobileKeyboard() { const input = document.getElementById('jobSearch'); if (input) input.blur(); const sink = document.getElementById('keyboardDismiss'); if (sink && typeof sink.focus === 'function') { try { sink.focus({ preventScroll:true }); } catch (error) { sink.focus(); } } if (document.activeElement && document.activeElement !== sink && typeof document.activeElement.blur === 'function') document.activeElement.blur(); }
     function hideMobileKeyboard() { dismissMobileKeyboard(); }
     function renderStage() { renderMobileGrid(); }
     function renderMobileGrid() { if (!currentJob) return; const filled = currentProgress.filledTypes || []; const root = document.getElementById('mobilePhotoGrid'); document.getElementById('mobileJobNo').textContent = currentJob.jobNo; document.getElementById('mobileJobLocation').textContent = currentJob.location || 'ไม่ระบุสถานที่'; document.getElementById('mobileJobCount').textContent = filled.length + '/9'; let html = '<div class="mobile-section-label signage">รูปชื่อหน่วยงาน / จุดติดตั้ง</div>' + mobileSlot('signage', 'signage', 'รูปชื่อหน่วยงาน'); html += '<div class="mobile-section-label before">ก่อนติดตั้ง</div>'; for (let i = 1; i <= 4; i += 1) html += mobileSlot('before' + i, 'before', 'ก่อน ' + i); html += '<div class="mobile-section-label after">หลังติดตั้ง</div>'; for (let i = 1; i <= 4; i += 1) html += mobileSlot('after' + i, 'after', 'หลัง ' + i); root.innerHTML = html; }
-    function mobileSlot(type, kind, label) { const has = (currentProgress.filledTypes || []).indexOf(type) !== -1; const url = previews[type] || previewUrls[type] || ''; const state = uploadStates[type] || ''; const stateMarkup = state === 'pending' ? '<span class="mobile-slot-state pending">กำลัง<br>บันทึก</span>' : (state === 'success' ? '<span class="mobile-slot-state success">✓</span>' : (state === 'failed' ? '<span class="mobile-slot-state failed">!</span>' : '')); const image = url ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(label) + '">' : '<div class="mobile-slot-empty"><span class="mobile-slot-icon">' + (has ? '✓' : '+') + '</span><span class="mobile-slot-label">' + escapeHtml(label) + '</span><span class="mobile-slot-note">' + (has ? 'แตะเพื่อเปลี่ยน' : 'แตะเพื่อเพิ่ม') + '</span></div>'; const remove = has ? '<button class="mobile-slot-x" type="button" aria-label="ลบ ' + escapeHtml(label) + '" onclick="event.stopPropagation(); mobileDelete(\'' + type + '\')">×</button>' : ''; return '<div class="mobile-slot ' + kind + (has ? ' has-image' : '') + (type === 'signage' ? ' signage' : '') + '" role="button" tabindex="0" onclick="mobileSlotClick(\'' + type + '\', this)" onpointerdown="mobileStartHold(\'' + type + '\', this)" onpointerup="mobileEndHold(this)" onpointercancel="mobileEndHold(this)" onpointerleave="mobileEndHold(this)" oncontextmenu="return false">' + image + stateMarkup + (has ? '<span class="mobile-slot-label">' + escapeHtml(label) + '</span>' : '') + remove + '</div>'; }
+    function mobileSlot(type, kind, label) { const has = (currentProgress.filledTypes || []).indexOf(type) !== -1; const url = previews[type] || previewUrls[type] || ''; const state = uploadStates[type] || ''; const stateMarkup = state === 'pending' ? '<span class="mobile-slot-state pending">ยังส่ง<br>ไม่เสร็จ</span>' : (state === 'success' ? '<span class="mobile-slot-state success">✓</span>' : (state === 'failed' ? '<span class="mobile-slot-state failed">!</span>' : '')); const image = url ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(label) + '">' : '<div class="mobile-slot-empty"><span class="mobile-slot-icon">' + (has ? '✓' : '+') + '</span><span class="mobile-slot-label">' + escapeHtml(label) + '</span><span class="mobile-slot-note">' + (has ? 'แตะเพื่อเปลี่ยน' : 'แตะเพื่อเพิ่ม') + '</span></div>'; const remove = has ? '<button class="mobile-slot-x" type="button" aria-label="ลบ ' + escapeHtml(label) + '" onclick="event.stopPropagation(); mobileDelete(\'' + type + '\')">×</button>' : ''; return '<div class="mobile-slot ' + kind + (has ? ' has-image' : '') + (type === 'signage' ? ' signage' : '') + '" role="button" tabindex="0" onclick="mobileSlotClick(\'' + type + '\', this)" onpointerdown="mobileStartHold(\'' + type + '\', this)" onpointerup="mobileEndHold(this)" onpointercancel="mobileEndHold(this)" onpointerleave="mobileEndHold(this)" oncontextmenu="return false">' + image + stateMarkup + (has ? '<span class="mobile-slot-label">' + escapeHtml(label) + '</span>' : '') + remove + '</div>'; }
     function mobileSlotClick(type, element) { if (element.classList.contains('hold-on')) return; if (holdTriggered) { holdTriggered = false; return; } if (isFilled(type)) { openPhotoViewer(type); return; } openSingleSlot(type); }
     function mobileStartHold(type, element) { holdTriggered = false; clearTimeout(holdTimer); if (!isFilled(type)) return; holdTimer = setTimeout(function() { element.classList.add('hold-on'); holdTriggered = true; }, 520); }
     function mobileEndHold(element) { clearTimeout(holdTimer); if (!holdTriggered) element.classList.remove('hold-on'); }
@@ -346,27 +369,165 @@
     function deleteViewedPhoto() { closePhotoViewer(); deletePhoto(); }
     function openGroupModal(groupKey) { if (!currentJob || uploading) return; activeMode = 'group'; activeGroupKey = groupKey; activeType = ''; resetPending(); const group = GROUPS[groupKey]; document.getElementById('modalTitle').textContent = group.title; document.getElementById('modalNote').textContent = 'เลือกช่องที่ต้องการ แล้วเลือกรูปจากคลังหรือกล้อง'; document.getElementById('existingBox').classList.remove('open'); document.getElementById('deleteButton').hidden = true; document.getElementById('slotPicker').classList.add('open'); renderSlotPicker(group.types); document.getElementById('galleryFile').setAttribute('multiple','multiple'); document.getElementById('photoModal').classList.add('open'); }
     function renderSlotPicker(types) { const root = document.getElementById('slotPicker'); root.innerHTML = types.map(function(type,index) { return '<button type="button" class="slot-button' + (isFilled(type) ? ' filled' : '') + '" onclick="openSingleSlot(\'' + type + '\')">ช่อง ' + (index + 1) + (isFilled(type) ? ' · มีรูปเดิม' : ' · ว่าง') + '</button>'; }).join(''); }
-    function openSingleSlot(type) { if (!currentJob || uploading) return; activeMode = 'single'; activeGroupKey = ''; activeType = type; resetPending(); const filled = isFilled(type); document.getElementById('modalTitle').textContent = filled ? 'เปลี่ยนรูป: ' + PHOTO_LABELS[type] : 'เพิ่มรูป: ' + PHOTO_LABELS[type]; document.getElementById('modalNote').textContent = 'เลือกรูปหรือถ่ายรูป ระบบจะบันทึกอัตโนมัติทันที'; document.getElementById('existingBox').classList.toggle('open', filled); document.getElementById('deleteButton').hidden = !filled; document.getElementById('slotPicker').classList.remove('open'); document.getElementById('galleryFile').removeAttribute('multiple'); document.getElementById('photoModal').classList.add('open'); }
+    function openSingleSlot(type) { if (!currentJob || uploading) return; if (taskForSlot(currentJob.jobNo,type)) { setStatus('ช่องนี้มีรูปค้างส่ง กรุณารอหรือกดลองส่งใหม่ที่แถบสถานะ',true); return; } activeMode = 'single'; activeGroupKey = ''; activeType = type; resetPending(); const filled = isFilled(type); document.getElementById('modalTitle').textContent = filled ? 'เปลี่ยนรูป: ' + PHOTO_LABELS[type] : 'เพิ่มรูป: ' + PHOTO_LABELS[type]; document.getElementById('modalNote').textContent = 'เลือกรูปหรือถ่ายรูป ระบบจะบันทึกอัตโนมัติทันที'; document.getElementById('existingBox').classList.toggle('open', filled); document.getElementById('deleteButton').hidden = !filled; document.getElementById('slotPicker').classList.remove('open'); document.getElementById('galleryFile').removeAttribute('multiple'); document.getElementById('photoModal').classList.add('open'); }
     function closeModal() { if (uploading) return; resetPending(); document.getElementById('photoModal').classList.remove('open'); activeType = ''; activeGroupKey = ''; activeMode = 'group'; }
     function resetPending() { pendingFiles = []; document.getElementById('galleryFile').value = ''; document.getElementById('cameraFile').value = ''; document.getElementById('pendingGrid').innerHTML = ''; document.getElementById('pendingName').textContent = ''; document.getElementById('uploadNote').textContent = ''; document.getElementById('pending').classList.remove('open'); document.getElementById('saveButton').disabled = true; document.getElementById('saveButton').style.display = 'none'; document.getElementById('saveButton').textContent = 'บันทึก'; }
     function chooseGallery() { if (!uploading) document.getElementById('galleryFile').click(); }
     function chooseCamera() { if (!uploading) document.getElementById('cameraFile').click(); }
-    function startCameraNextEmpty() { if (!currentJob || uploading) return; const emptyType = allTypes().find(function(type) { return !isFilled(type); }) || allTypes()[0]; openSingleSlot(emptyType); chooseCamera(); }
-    function handleFile(event) { const files = Array.from(event.target.files || []); if (!files.length || uploading) return; const invalid = files.find(function(file) { return !['image/jpeg','image/png','image/gif','image/webp'].includes(file.type) || file.size > MAX_FILE_SIZE; }); if (invalid) { setStatus('ทุกไฟล์ต้องเป็น JPG, PNG, GIF หรือ WEBP และไม่เกิน 10 MB', true); event.target.value = ''; return; } if (activeMode === 'group') { const empty = GROUPS[activeGroupKey].types.filter(function(type) { return !isFilled(type); }); if (!empty.length || files.length > empty.length) { setStatus('จำนวนรูปเกินช่องที่ว่างอยู่', true); event.target.value = ''; return; } } else if (files.length !== 1) { setStatus('ช่องนี้รับครั้งละ 1 รูป', true); event.target.value = ''; return; } showPending(files); savePendingPhotos(files); }
-    function showPending(files) { pendingFiles = files; const root = document.getElementById('pendingGrid'); root.innerHTML = ''; document.getElementById('pendingName').textContent = files.length === 1 ? files[0].name : 'เลือกแล้ว ' + files.length + ' รูป'; document.getElementById('uploadNote').textContent = 'กำลังบันทึกอัตโนมัติ...'; document.getElementById('pending').classList.add('open'); document.getElementById('saveButton').disabled = true; files.forEach(function(file) { const img = document.createElement('img'); root.appendChild(img); readFileAsDataUrl(file).then(function(url) { img.src = url; }); }); }
+    function startCameraNextEmpty() { if (!currentJob || uploading) return; const emptyType = allTypes().find(function(type) { return !isFilled(type) && !taskForSlot(currentJob.jobNo,type); }) || allTypes()[0]; openSingleSlot(emptyType); chooseCamera(); }
+    function handleFile(event) { const files = Array.from(event.target.files || []); if (!files.length || uploading || uploadPreparing) return; if (!uploadQueueReady) { setStatus('กำลังเตรียมคิวรูป กรุณารอสักครู่',true); return; } const invalid = files.find(function(file) { return !['image/jpeg','image/png','image/gif','image/webp'].includes(file.type) || file.size > MAX_FILE_SIZE; }); if (invalid) { setStatus('ทุกไฟล์ต้องเป็น JPG, PNG, GIF หรือ WEBP และไม่เกิน 10 MB', true); event.target.value = ''; return; } if (activeMode === 'group') { const empty = GROUPS[activeGroupKey].types.filter(function(type) { return !isFilled(type) && !taskForSlot(currentJob.jobNo,type); }); if (!empty.length || files.length > empty.length) { setStatus('จำนวนรูปเกินช่องที่ว่างอยู่', true); event.target.value = ''; return; } } else if (files.length !== 1) { setStatus('ช่องนี้รับครั้งละ 1 รูป', true); event.target.value = ''; return; } showPending(files); savePendingPhotos(files); }
+    function showPending(files) { pendingFiles=files; document.getElementById('pendingName').textContent='เลือกแล้ว '+files.length+' รูป'; document.getElementById('uploadNote').textContent='กำลังเก็บต้นฉบับเข้าคิว...'; }
+
     function saveSelectedPhotos() { if (!pendingFiles.length || uploading) return; savePendingPhotos(pendingFiles); }
-    async function savePendingPhotos(files) { if (!currentJob) return; const jobNo = currentJob.jobNo, location = currentJob.location, mode = activeMode, groupKey = activeGroupKey, type = activeType; document.getElementById('saveButton').disabled = true; document.getElementById('uploadNote').textContent = 'กำลังเตรียมรูป...'; try { if (mode === 'single') { const originalData = await readFileAsDataUrl(files[0]); previews[type] = originalData; if (!isFilled(type)) currentProgress.filledTypes.push(type); closeModal(); renderStage(); setStatus('แสดงรูปแล้ว กำลังอัปโหลดพื้นหลัง...',false,true); uploadPreparedPhoto(jobNo, location, type, files[0], originalData); } else { const empty = GROUPS[groupKey].types.filter(function(slotType) { return !isFilled(slotType); }); closeModal(); for (let i=0;i<files.length;i++) { const slotType = empty[i], originalData = await readFileAsDataUrl(files[i]); previews[slotType] = originalData; if (!isFilled(slotType)) currentProgress.filledTypes.push(slotType); renderStage(); uploadPreparedPhoto(jobNo, location, slotType, files[i], originalData); } setStatus('แสดงรูปแล้ว กำลังอัปโหลดพื้นหลัง...',false,true); } } catch (error) { document.getElementById('saveButton').disabled = false; document.getElementById('saveButton').style.display = 'block'; document.getElementById('saveButton').textContent = 'ลองอีกครั้ง'; document.getElementById('uploadNote').textContent = 'เตรียมรูปไม่สำเร็จ กดลองอีกครั้ง'; renderStage(); setStatus('เตรียมรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
-    async function uploadPreparedPhoto(jobNo, location, type, file, originalData) { const key = uploadKey(jobNo,type); delete canceledUploads[key]; uploadStates[type] = 'pending'; previews[type] = originalData; renderStage(); try { await uploadOneForJob(jobNo,location,type,originalData,file.name); if (canceledUploads[key]) { await deleteImageForJob(jobNo,location,type); delete previews[type]; delete uploadStates[type]; renderStage(); return; } uploadStates[type] = 'success'; renderStage(); setStatus('บันทึกรูปอัตโนมัติเรียบร้อยแล้ว',false,true); window.setTimeout(function() { if (uploadStates[type] === 'success') { delete uploadStates[type]; renderStage(); } }, 1800); } catch (error) { uploadStates[type] = 'failed'; renderStage(); if (!canceledUploads[key]) setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
+    async function savePendingPhotos(files) {
+      if (!currentJob || uploadPreparing) return;
+      const jobNo=currentJob.jobNo, location=currentJob.location;
+      const types=activeMode === 'single' ? [activeType] : GROUPS[activeGroupKey].types.filter(function(type) { return !isFilled(type) && !taskForSlot(jobNo,type); });
+      const selected=Array.from(files);
+      uploadPreparing++; renderUploadSummary(); closeModal();
+      try {
+        for (let i=0;i<selected.length;i++) await enqueueOriginalUpload(jobNo,location,types[i],selected[i]);
+      } catch (error) { setStatus('เตรียมรูปไม่สำเร็จ: '+errorMessage(error),true); }
+      finally { uploadPreparing--; renderUploadSummary(); }
+    }
+    let uploadTasks = [], uploadQueueRunning = false, uploadPreparing = 0, uploadSavedCount = 0;
+    let uploadDatabasePromise = null, uploadStorageWarning = '', uploadQueueReady = false, uploadWakeLock = null, uploadWakeRequest = false;
+    const confirmedUploadSlots = {}, uploadPreviewUrls = {};
+    function taskForSlot(jobNo,type) { return uploadTasks.find(function(task) { return task.jobNo === jobNo && task.type === type; }); }
+    function pendingUploadWork() { return uploadPreparing > 0 || uploadTasks.length > 0; }
+    function openUploadDatabase() {
+      if (!uploadDatabasePromise) uploadDatabasePromise = new Promise(function(resolve,reject) {
+        if (typeof indexedDB === 'undefined') { reject(new Error('เบราว์เซอร์นี้ไม่รองรับการเก็บคิวรูป')); return; }
+        const request = indexedDB.open('photo-report-original-upload-queue',1);
+        request.onupgradeneeded = function() { request.result.createObjectStore('uploads',{keyPath:'id'}); };
+        request.onsuccess = function() { resolve(request.result); };
+        request.onerror = function() { reject(request.error || new Error('เปิดที่เก็บคิวรูปไม่ได้')); };
+        request.onblocked = function() { reject(new Error('ที่เก็บคิวรูปถูกใช้งานโดยหน้าอื่น')); };
+      });
+      return uploadDatabasePromise;
+    }
+    async function uploadQueueStorage(action,value) {
+      const db = await openUploadDatabase();
+      return new Promise(function(resolve,reject) {
+        const transaction = db.transaction('uploads',action === 'getAll' ? 'readonly' : 'readwrite');
+        const store = transaction.objectStore('uploads');
+        const request = action === 'getAll' ? store.getAll() : (action === 'put' ? store.put(value) : store.delete(value));
+        transaction.oncomplete = function() { resolve(request.result); };
+        transaction.onerror = transaction.onabort = function() { reject(transaction.error || request.error || new Error('บันทึกคิวรูปไม่ได้')); };
+      });
+    }
+    async function persistUploadTask(task) {
+      try { await uploadQueueStorage('put',task); }
+      catch (error) { uploadStorageWarning = 'เก็บคิวในเครื่องไม่ได้ กรุณาเปิดหน้านี้ไว้จนบันทึกครบ'; }
+    }
+    async function initializeUploadQueue() {
+      try {
+        const restored = await uploadQueueStorage('getAll');
+        uploadTasks = (restored || []).filter(function(task) { return task.blob && task.jobNo && PHOTO_LABELS[task.type]; }).sort(function(a,b) { return a.createdAt-b.createdAt; });
+        uploadTasks.forEach(function(task) { task.state = 'queued'; task.error = ''; });
+      } catch (error) { uploadStorageWarning = 'เก็บคิวในเครื่องไม่ได้ กรุณาเปิดหน้านี้ไว้จนบันทึกครบ'; }
+      uploadQueueReady = true;
+      syncCurrentUploadState(); renderUploadSummary();
+      if (uploadTasks.length) pumpUploadQueue();
+    }
+    function syncCurrentUploadState() {
+      if (!currentJob) return;
+      uploadStates = {};
+      allTypes().forEach(function(type) {
+        const key = uploadKey(currentJob.jobNo,type);
+        if (confirmedUploadSlots[key]) {
+          uploadStates[type] = 'success';
+          if (!isFilled(type)) currentProgress.filledTypes.push(type);
+        }
+        const task = taskForSlot(currentJob.jobNo,type);
+        if (task) {
+          uploadStates[type] = task.state === 'failed' ? 'failed' : 'pending';
+          if (!uploadPreviewUrls[task.id] && typeof URL !== 'undefined' && URL.createObjectURL) uploadPreviewUrls[task.id] = URL.createObjectURL(task.blob);
+          if (uploadPreviewUrls[task.id]) previews[type] = uploadPreviewUrls[task.id];
+        }
+      });
+      currentProgress.missingTypes=allTypes().filter(function(type) { return !isFilled(type); });
+      currentProgress.complete=currentProgress.missingTypes.length===0;
+      currentProgress.filledCount=currentProgress.filledTypes.length;
+      renderStage();
+    }
+    function renderUploadSummary() {
+      const banner = document.getElementById('uploadSummary');
+      if (!banner) return;
+      const failed = uploadTasks.filter(function(task) { return task.state === 'failed'; }).length;
+      const waiting = uploadTasks.length-failed;
+      const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+      const total = uploadSavedCount+uploadTasks.length;
+      banner.hidden = !pendingUploadWork() && !uploadSavedCount;
+      banner.className = 'upload-summary ' + (pendingUploadWork() ? (failed ? 'failed' : 'pending') : 'success');
+      document.getElementById('uploadSummaryTitle').textContent = uploadPreparing ? 'กำลังเก็บรูปเข้าคิว — ยังไม่บันทึกสำเร็จ' : (offline && uploadTasks.length ? 'ออฟไลน์ — รูปยังไม่ถูกบันทึกบนเซิร์ฟเวอร์' : (waiting ? 'กำลังส่งรูปต้นฉบับ — กรุณาอย่าปิดจอ' : (failed ? 'ยังมีรูปส่งไม่สำเร็จ' : '✓ บันทึกรูปครบแล้ว ปิดหน้านี้ได้')));
+      document.getElementById('uploadSummaryCounts').textContent = 'เซิร์ฟเวอร์ยืนยันแล้ว '+uploadSavedCount+'/'+total+' รูป · รอส่ง/กำลังส่ง '+waiting+' · ไม่สำเร็จ '+failed;
+      const active = uploadTasks.find(function(task) { return task.state === 'uploading'; });
+      const jobs = Array.from(new Set(uploadTasks.map(function(task) { return task.jobNo; })));
+      document.getElementById('uploadSummaryNote').textContent = uploadStorageWarning || (active ? active.jobNo+' · '+PHOTO_LABELS[active.type]+' · '+(active.blob.size/1024/1024).toFixed(1)+' MB — ต้องรอให้เซิร์ฟเวอร์ยืนยันก่อน' : (jobs.length ? 'งานที่ยังค้าง: '+jobs.join(', ')+' · กลับมาเปิดหน้าเดิมในเบราว์เซอร์และเครื่องเดิมเพื่อส่งต่อ' : 'รูปต้นฉบับบันทึกใน Drive และตารางกลางแล้ว'));
+      document.getElementById('retryUploadsButton').hidden = !failed;
+      updateUploadWakeLock();
+    }
+    async function updateUploadWakeLock() {
+      const active = (typeof navigator === 'undefined' || navigator.onLine !== false) && (uploadPreparing > 0 || uploadTasks.some(function(task) { return task.state !== 'failed'; }));
+      if (!active && uploadWakeLock) { const lock=uploadWakeLock; uploadWakeLock=null; try { await lock.release(); } catch (error) {} return; }
+      if (!active || uploadWakeLock || uploadWakeRequest || document.visibilityState === 'hidden' || typeof navigator === 'undefined' || !navigator.wakeLock) return;
+      uploadWakeRequest = true;
+      try { uploadWakeLock = await navigator.wakeLock.request('screen'); uploadWakeLock.addEventListener('release',function() { uploadWakeLock=null; }); }
+      catch (error) {} finally { uploadWakeRequest=false; }
+    }
+    async function enqueueOriginalUpload(jobNo,location,type,file) {
+      if (!PHOTO_LABELS[type]) throw new Error('ไม่พบช่องสำหรับอัปโหลดรูป');
+      if (taskForSlot(jobNo,type)) throw new Error('ช่องนี้มีรูปค้างส่งอยู่ กรุณารอหรือกดลองส่งใหม่');
+      const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'upload-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+      const task = {id:id,jobNo:jobNo,location:location || '',type:type,filename:file.name,blob:file,installDate:todayString(),state:'queued',createdAt:Date.now(),error:''};
+      await persistUploadTask(task);
+      uploadTasks.push(task); delete confirmedUploadSlots[uploadKey(jobNo,type)];
+      syncCurrentUploadState(); renderUploadSummary(); pumpUploadQueue();
+    }
+    async function pumpUploadQueue() {
+      if (!uploadQueueReady || uploadQueueRunning || (typeof navigator !== 'undefined' && navigator.onLine === false)) return;
+      uploadQueueRunning = true;
+      try {
+        let task;
+        while ((task=uploadTasks.find(function(item) { return item.state === 'queued'; }))) {
+          if (typeof navigator !== 'undefined' && navigator.onLine === false) break;
+          task.state = 'uploading'; await persistUploadTask(task); syncCurrentUploadState(); renderUploadSummary();
+          try {
+            const data = await readFileAsDataUrl(task.blob);
+            await uploadOneForJob(task.jobNo,task.location,task.type,data,task.filename,undefined,task.id,task.installDate);
+          } catch (error) {
+            task.state='failed'; task.error=errorMessage(error); await persistUploadTask(task);
+            setStatus(task.jobNo+' ส่งรูปไม่สำเร็จ: '+task.error,true); syncCurrentUploadState(); renderUploadSummary(); continue;
+          }
+          confirmedUploadSlots[uploadKey(task.jobNo,task.type)] = true;
+          uploadSavedCount++;
+          uploadTasks = uploadTasks.filter(function(item) { return item.id !== task.id; });
+          try { await uploadQueueStorage('delete',task.id); } catch (error) { uploadStorageWarning='บันทึกสำเร็จแล้ว แต่ล้างคิวในเครื่องไม่ได้ หากกลับมาส่งซ้ำระบบจะตรวจรหัสเดิม'; }
+          syncCurrentUploadState(); renderUploadSummary();
+        }
+      } finally { uploadQueueRunning=false; syncCurrentUploadState(); renderUploadSummary(); }
+    }
+    async function retryPendingUploads() {
+      for (const task of uploadTasks) {
+        if (task.state === 'failed') { task.state='queued'; task.error=''; await persistUploadTask(task); }
+      }
+      syncCurrentUploadState(); renderUploadSummary(); pumpUploadQueue();
+    }
+    window.addEventListener('beforeunload',function(event) { if (pendingUploadWork()) { event.preventDefault(); event.returnValue=''; } });
+    window.addEventListener('online',function() { retryPendingUploads(); });
+    window.addEventListener('offline',function() { renderUploadSummary(); });
+    document.addEventListener('visibilitychange',function() { if (document.visibilityState !== 'hidden') { updateUploadWakeLock(); pumpUploadQueue(); } });
     function uploadKey(jobNo,type) { return String(jobNo || '') + '::' + String(type || ''); }
-    function uploadOneForJob(jobNo,location,type,data,filename,originalData) { return new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadImageToSheet(jobNo,location,type,data,filename,todayString(),originalData); }); }
+    function uploadOneForJob(jobNo,location,type,data,filename,originalData,uploadId,installDate) { return new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadImageToSheet(jobNo,location,type,data,filename,installDate || todayString(),originalData || null,uploadId || null); }); }
     function uploadOne(type,data,filename,originalData) { return uploadOneForJob(currentJob.jobNo,currentJob.location,type,data,filename,originalData); }
     function deleteImageForJob(jobNo,location,type) { return new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).deleteImageFromSheet(jobNo,location,type,todayString()); }); }
-    function deletePhoto() { if (!currentJob || !activeType || uploading) return; const deletingType = activeType; canceledUploads[uploadKey(currentJob.jobNo,deletingType)] = true; uploading = true; document.getElementById('deleteButton').disabled = true; renderStage(); google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || currentProgress.filledTypes.filter(function(type) { return type !== deletingType; }); delete previews[deletingType]; delete previewUrls[deletingType]; uploading = false; closeModal(); renderStage(); setStatus(result.message,false,true); }).withFailureHandler(function(error) { uploading = false; document.getElementById('deleteButton').disabled = false; renderStage(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error),true); }).deleteImageFromSheet(currentJob.jobNo,currentJob.location,deletingType,todayString()); }
+    function deletePhoto() { if (!currentJob || !activeType || uploading) return; if (taskForSlot(currentJob.jobNo,activeType)) { setStatus('กรุณารอให้ส่งรูปช่องนี้สำเร็จก่อนลบ',true); return; } delete confirmedUploadSlots[uploadKey(currentJob.jobNo,activeType)]; const deletingType = activeType; canceledUploads[uploadKey(currentJob.jobNo,deletingType)] = true; uploading = true; document.getElementById('deleteButton').disabled = true; renderStage(); google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || currentProgress.filledTypes.filter(function(type) { return type !== deletingType; }); delete previews[deletingType]; delete previewUrls[deletingType]; uploading = false; closeModal(); renderStage(); setStatus(result.message,false,true); }).withFailureHandler(function(error) { uploading = false; document.getElementById('deleteButton').disabled = false; renderStage(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error),true); }).deleteImageFromSheet(currentJob.jobNo,currentJob.location,deletingType,todayString()); }
     function readFileAsDataUrl(file) { return new Promise(function(resolve,reject) { const reader = new FileReader(); reader.onload = function(e) { resolve(e.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); }); }
     let printImages = {}, printReady = false, printRequest = 0, printDate = '';
     function openPrintTemplate() {
       if (!currentJob) return;
-      if (Object.keys(uploadStates).some(function(type) { return uploadStates[type] === 'pending' || uploadStates[type] === 'failed'; })) {
+      if (uploadPreparing || (currentJob && uploadTasks.some(function(task) { return task.jobNo === currentJob.jobNo; })) || Object.keys(uploadStates).some(function(type) { return uploadStates[type] === 'pending' || uploadStates[type] === 'failed'; })) {
         setStatus('กรุณารอให้อัปโหลดรูปสำเร็จครบก่อนเปิดใบงาน', true);
         return;
       }
@@ -474,7 +635,7 @@
     function renderPrintTemplate() {
       const job=currentJob, date=printDate || todayString(), location=job.location || 'ไม่ระบุสถานที่';
       document.getElementById('printToolbarTitle').textContent='Template A4 · ' + job.jobNo;
-      const signage = printImages.signage ? '<div class="print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="print-signage">' + printImage('signage','ป้ายจุดติดตั้ง') + '</div>' : '';
+      const signage = '<div class="print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="print-signage">' + printImage('signage','ป้ายจุดติดตั้ง') + '</div>';
       document.getElementById('printPage').innerHTML='<p class="print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p><h1 class="print-document-title">ภาพถ่ายการติดตั้งอุปกรณ์</h1><div class="print-meta"><div class="print-meta-box"><span class="print-meta-label">เลข Job: </span><span class="print-meta-value">' + escapeHtml(job.jobNo) + '</span></div><div class="print-meta-box"><span class="print-meta-label">สถานที่ติดตั้ง: </span><span class="print-meta-value">' + escapeHtml(location) + '</span></div><div class="print-meta-box"><span class="print-meta-label">วันที่: </span><span class="print-meta-value">' + formatDate(date) + '</span></div></div>' + signage + '<div class="print-photo-columns">' + printPhotoColumn('before') + printPhotoColumn('after') + '</div>';
     }
     function portalUrlFromCurrentPage() { const url = new URL(window.location.href); url.search = ''; url.hash = ''; url.searchParams.set('page','portal'); return url.toString(); }

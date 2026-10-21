@@ -1115,16 +1115,29 @@ function createJobPdfLocked_(jobNo) {
 /**
  * รับรูปจาก Sidebar บันทึกต้นฉบับลง Drive และอัปเดตตารางกลางเท่านั้น
  */
-function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFilename, installDate, originalBase64Data) {
+function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFilename, installDate, originalBase64Data, uploadId) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
     if (CONFIG.IMAGE_TYPES.indexOf(imageType) === -1) throw new Error('ไม่พบประเภทรูป');
     if (!jobNo || !base64Data) throw new Error('กรุณาเลือก Job และไฟล์รูปภาพ');
+    if (uploadId && !/^[a-zA-Z0-9_-]{10,80}$/.test(String(uploadId))) throw new Error('รหัสอัปโหลดไม่ถูกต้อง');
     // รูปต้นฉบับอยู่ใน Drive เท่านั้น ไม่สร้างแท็บหรือฝังภาพในชีตขณะอัปโหลด
     const originalBlob = dataUrlToImageBlob_(originalBase64Data || base64Data, originalFilename);
-    const savedFile = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID).createFile(originalBlob);
-    savedFile.setName(buildPhotoFilename_(jobNo, imageType, originalFilename));
+    const folder = DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID);
+    let savedFile = null;
+    if (uploadId) {
+      const prefix = String(jobNo).replace(/[^a-zA-Z0-9ก-๙_-]/g, '_') + '_' + imageType + '_';
+      const files = folder.searchFiles("trashed = false and title contains '" + prefix + "'");
+      while (files.hasNext()) {
+        const candidate = files.next();
+        if (candidate.getName().indexOf(prefix) === 0 && candidate.getName().indexOf('_' + uploadId + '_') !== -1) { savedFile = candidate; break; }
+      }
+    }
+    if (!savedFile) {
+      savedFile = folder.createFile(originalBlob);
+      savedFile.setName(buildPhotoFilename_(jobNo, imageType, originalFilename, uploadId));
+    }
     appendPhotoFileIndex_(jobNo, imageType, originalFilename, savedFile, '');
     upsertPhotoJobMetadata_(jobNo, location, installDate);
     const replaced = trashPhotoFilesForSlot_(jobNo, imageType, savedFile.getId());
@@ -1594,7 +1607,7 @@ function dataUrlToImageBlob_(dataUrl, filename) {
   return Utilities.newBlob(bytes, contentType, filename || 'photo');
 }
 
-function buildPhotoFilename_(jobNo, imageType, originalFilename) {
+function buildPhotoFilename_(jobNo, imageType, originalFilename, uploadId) {
   const safeJobNo = String(jobNo).replace(/[^a-zA-Z0-9ก-๙_-]/g, '_');
   const safeOriginalName = String(originalFilename || 'photo')
     .replace(/[^a-zA-Z0-9ก-๙._-]/g, '_');
@@ -1604,7 +1617,7 @@ function buildPhotoFilename_(jobNo, imageType, originalFilename) {
     'yyyyMMdd_HHmmss'
   );
 
-  return [safeJobNo, imageType, timestamp, safeOriginalName].join('_');
+  return [safeJobNo, imageType, timestamp, uploadId || '', safeOriginalName].filter(Boolean).join('_');
 }
 
 function insertImageInTemplate_(sheet, blob, targetCell) {

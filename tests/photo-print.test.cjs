@@ -99,7 +99,8 @@ test('sparse uploads produce consecutive report numbers without modifying upload
   assert.ok(html.indexOf('data-photo-type="before2"') < html.indexOf('data-photo-type="before4"'));
   assert.ok(html.includes('ก่อนติดตั้ง 1')); assert.ok(html.includes('ก่อนติดตั้ง 2'));
   assert.ok(html.includes('หลังติดตั้ง 1')); assert.ok(!html.includes('หลังติดตั้ง 3'));
-  assert.ok(!html.includes('ยังไม่มีรูป')); assert.ok(!html.includes('print-signage'));
+  assert.ok(html.includes('print-signage'));
+  assert.equal((html.match(/ยังไม่มีรูป/g)||[]).length,1, 'only the department sign reserves an empty placeholder');
   assert.ok(details.includes('ก่อนติดตั้ง 2')); assert.ok(!details.includes('ก่อนติดตั้ง 4'));
   assert.deepEqual([...vm.runInContext('currentProgress.filledTypes', b.context)], ['before2','before4','after3']);
   assert.deepEqual(Object.keys(vm.runInContext('printImages', b.context)), ['before2','before4','after3']);

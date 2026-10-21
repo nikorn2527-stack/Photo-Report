@@ -221,3 +221,13 @@ test('sheet report compacts each side while keeping persisted source slots and U
   assert.equal(JSON.stringify(h.sheets.get('Photo_File_Index').data),before);
   assert.deepEqual([...h.context.getJobProgress('JOB-001').filledTypes],['before2','after3','before4']);
 });
+
+test('retrying a persisted upload ID reuses the same original instead of creating duplicate Drive files', () => {
+  const h=harness(),data=h.dataUrl([7,8,9]),id='stable-upload-id-00001';
+  h.context.uploadImageToSheet('JOB-001','Room','before2',data,'phone.jpg','2026-10-21',undefined,id);
+  const firstId=[...h.files.keys()][0];
+  h.context.uploadImageToSheet('JOB-001','Room','before2',data,'phone.jpg','2026-10-21',undefined,id);
+  assert.equal(h.files.size,1);assert.equal([...h.files.keys()][0],firstId);
+  assert.equal([...h.files.values()][0].trashed,false);
+  assert.equal(h.context.getJobProgress('JOB-001').filledCount,1);
+});

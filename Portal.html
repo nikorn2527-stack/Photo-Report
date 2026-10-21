@@ -104,6 +104,22 @@
       .work-print-toolbar-actions { display:flex; gap:7px; flex:0 0 auto; }
       .work-print-action { min-height:42px; padding:8px 12px; border:1px solid var(--blue); border-radius:9px; background:var(--blue); color:#fff; font:inherit; font-size:13px; font-weight:900; cursor:pointer; }
       .work-print-action.secondary { border-color:#9aa0a6; background:#fff; color:var(--text); }
+      .work-photo-columns { display:grid; grid-template-columns:1fr 1fr; }
+      .work-photo-card { margin-top:2mm; }
+      .work-photo-card .work-print-image-box { height:38mm; border:1px solid #b8c0ca; }
+      .work-photo-heading { padding:1.5mm; font-size:8pt; font-weight:900; text-align:center; }
+      .work-print-image-box { position:relative; }
+      .work-photo-adjust-button { position:absolute; bottom:2px; right:2px; z-index:1; border:1px solid #1967d2; border-radius:5px; background:#fff; color:#174ea6; padding:5px; font-size:11px; cursor:pointer; }
+      .work-photo-adjust { position:fixed; z-index:1000; inset:0; padding:16px; display:flex; align-items:center; justify-content:center; overflow:auto; background:rgba(0,0,0,.65); }
+      .work-photo-adjust[hidden] { display:none; }
+      .work-photo-adjust-shell { width:min(640px,100%); max-height:94vh; overflow:auto; padding:16px; border-radius:12px; background:#fff; }
+      .work-photo-adjust-shell h3 { margin:0 0 8px; }
+      .work-photo-adjust-shell p { font-size:13px; }
+      .work-photo-adjust-shell label { display:block; margin:10px 0; }
+      .work-photo-adjust-shell input { display:block; width:100%; }
+      .work-photo-adjust-frame { width:100%; aspect-ratio:2.6; overflow:hidden; background:#fff; border:1px solid #9aa0a6; }
+      .work-photo-adjust-frame img { display:block; width:100%; height:100%; object-fit:contain; }
+      @media print { .work-photo-adjust,.work-photo-adjust-button { display:none!important; } html,body{width:210mm!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important} .work-print-backdrop{width:210mm!important;height:auto!important;min-height:0!important;inset:auto!important;overflow:visible!important} .work-print-shell{width:210mm!important;overflow:visible!important} }
       .work-print-status { max-width:210mm; margin:0 auto 8px; padding:8px 10px; border-radius:9px; background:#fff; color:var(--muted); font-size:12px; text-align:center; }
       .work-print-status.warning { background:#fff4e5; color:#8a4b0f; }
       .work-print-page { width:210mm; min-width:210mm; height:297mm; margin:0 auto; padding:6mm 7mm; overflow:hidden; background:#fff; color:#202124; font-family:Arial,"Noto Sans Thai",sans-serif; box-shadow:0 4px 18px rgba(0,0,0,.22); }
@@ -253,6 +269,11 @@
               <div><h4 class="panel-title">รายการเครื่องที่ติดตั้งเสร็จ</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>Job</th><th>สถานที่ติดตั้ง</th><th>รุ่นเครื่อง</th><th>S/N เครื่อง</th><th>เลข IP</th><th>ความครบถ้วนของงาน</th></tr></thead><tbody id="completionMachineBody"></tbody></table></div></div>
             </div>
           </section>
+          <section class="panel completion-dashboard" aria-labelledby="returnAssetTitle">
+            <div class="completion-head"><div><h3 id="returnAssetTitle" class="panel-title">รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h3><p class="view-note">นับเลขครุภัณฑ์จาก COM S/N เดิม และ UPS S/N เดิม แยกคอมพิวเตอร์กับ UPS</p></div><button type="button" class="button button-outline" onclick="printReturnAssetReport()">พิมพ์ / บันทึก PDF รับคืน</button></div>
+            <div id="returnAssetKpis" class="issue-kpis"></div><p id="returnAssetMeta" class="plan-note"></p><p id="returnAssetDuplicates" class="plan-note"></p>
+            <div class="completion-tables"><div><h4 class="panel-title">สรุปตามพื้นที่</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>ตึก</th><th>ชั้น</th><th>แผนก</th><th>รายการทั้งหมด</th><th>คอม (เลขไม่ซ้ำ)</th><th>UPS (เลขไม่ซ้ำ)</th><th>มีเลขครบทั้งคู่</th></tr></thead><tbody id="returnAssetAreaBody"></tbody></table></div></div><div><h4 class="panel-title">รายการเลขครุภัณฑ์ที่บันทึกการรับคืน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>Job</th><th>สถานที่</th><th>เลขครุภัณฑ์คอมเดิม</th><th>เลขครุภัณฑ์ UPS เดิม</th></tr></thead><tbody id="returnAssetMachineBody"></tbody></table></div></div></div>
+          </section>
           <section class="panel issue-dashboard">
             <div class="issue-head"><div><h3 class="panel-title">ปัญหาหน้างานที่ทำให้ติดตั้งยังไม่เสร็จ</h3><p class="view-note">สรุปความคืบหน้า สาเหตุ และรายการที่ทีมบริการต้องช่วยประสาน</p></div><button type="button" class="button button-outline" onclick="printIssueReport()">พิมพ์รายงานสรุป</button></div>
             <div id="issueKpis" class="issue-kpis"></div>
@@ -336,8 +357,8 @@
           <div class="field"><label>รุ่น UPS</label><input id="upsModel" class="input" type="text"></div>
           <div class="field"><label>S/N UPS</label><input id="upsSn" class="input" type="text"></div>
           <div class="field"><label>รุ่น Hub USB</label><input id="hubModel" class="input" type="text"></div>
-          <div class="field"><label>COM S/N เดิม</label><input id="oldComSn" class="input" type="text"></div>
-          <div class="field"><label>UPS S/N เดิม</label><input id="oldUpsSn" class="input" type="text"></div>
+          <div class="field"><label>เลขครุภัณฑ์คอมเดิม (COM S/N เดิม)</label><input id="oldComSn" class="input" type="text"></div>
+          <div class="field"><label>เลขครุภัณฑ์ UPS เดิม (UPS S/N เดิม)</label><input id="oldUpsSn" class="input" type="text"></div>
           <div class="field"><label>เลข IP</label><input id="ipAddress" class="input" type="text" inputmode="decimal" placeholder="เช่น 192.168.1.10"></div>
         </div></div>
         <div class="form-section"><h3 class="form-section-title">รายการที่ส่งและสถานะ</h3><div class="form-grid">
@@ -372,7 +393,7 @@
       <div class="work-print-shell">
         <div class="work-print-toolbar">
           <strong id="workPrintTitle" class="work-print-toolbar-title">พรีวิวใบงาน A4</strong>
-          <div class="work-print-toolbar-actions"><button class="work-print-action secondary" type="button" onclick="closeWorkPrintPreview()">กลับ</button><button class="work-print-action" type="button" onclick="printWorkPreview()">สั่งพิมพ์</button></div>
+          <div class="work-print-toolbar-actions"><button class="work-print-action secondary" type="button" onclick="closeWorkPrintPreview()">กลับ</button><button id="workPrintButton" class="work-print-action" type="button" onclick="printWorkPreview()" disabled>สั่งพิมพ์</button></div>
         </div>
         <div id="workPrintStatus" class="work-print-status">กำลังเตรียมพรีวิว...</div>
         <article id="workPrintPage" class="work-print-page"></article>
@@ -380,6 +401,7 @@
       </div>
     </div>
 
+    <section id="workPhotoAdjust" class="work-photo-adjust" role="dialog" aria-modal="true" aria-labelledby="workPhotoAdjustTitle" hidden><div class="work-photo-adjust-shell"><h3 id="workPhotoAdjustTitle">ปรับป้ายครุภัณฑ์</h3><p>ซูมและเลื่อนให้เห็นป้ายในกรอบ ปรับเฉพาะรายงานที่พิมพ์จากหน้านี้ ไม่เปลี่ยนรูปต้นฉบับใน Drive</p><div id="workPhotoAdjustFrame" class="work-photo-adjust-frame"><img id="workPhotoAdjustImage" alt="ภาพป้ายครุภัณฑ์ที่เลือก"></div><label>ขยาย <span id="workPhotoZoomValue"></span><input id="workPhotozoom" type="range" min="1" max="8" step="0.1" value="1" oninput="updateWorkPhotoAdjust()"></label><label>เลื่อนซ้าย / ขวา<input id="workPhotox" type="range" min="-100" max="100" value="0" oninput="updateWorkPhotoAdjust()"></label><label>เลื่อนขึ้น / ลง<input id="workPhotoy" type="range" min="-100" max="100" value="0" oninput="updateWorkPhotoAdjust()"></label><div class="modal-actions"><button class="button button-primary" type="button" onclick="saveWorkPhotoAdjust()">ใช้ภาพนี้ในรายงาน</button><button class="button button-outline" type="button" onclick="resetWorkPhotoAdjust()">คืนมุมเดิม</button><button class="button button-outline" type="button" onclick="closeWorkPhotoAdjust()">ยกเลิก</button></div></div></section>
     <script>
       let portalData = { dashboard:{}, assetRows:[], jobWorkRows:[], sheetLinks:{} };
       const INITIAL_VIEW = <?!= JSON.stringify(initialView || 'dashboard') ?>;
@@ -513,6 +535,65 @@
           '<div class="status-line"><span>แจ้งเตือนสัญญา</span><span class="bar"><span style="width:' + percent(d.expiring, total) + '%"></span></span><strong>' + (d.expiring || 0) + '</strong></div>';
         renderIssueDashboard();
         renderCompletionDashboard();
+        renderReturnAssetDashboard();
+      }
+
+      function buildReturnAssetReportData(rows,updatedAt) {
+        const com = new Map(), ups = new Map(), areas = new Map(), returned = [];
+        let both=0, missingCom=0, missingUps=0;
+        function number(value) { return String(value === null || value === undefined ? '' : value).trim(); }
+        function add(map,value,row) {
+          if (!value) return;
+          const key=value.toUpperCase();
+          if (!map.has(key)) map.set(key,{number:value,jobs:[]});
+          map.get(key).jobs.push(row.jobNo || 'แถว '+row.rowNumber);
+        }
+        (rows || []).forEach(function(row) {
+          const comNo=number(row.oldComSn), upsNo=number(row.oldUpsSn);
+          if (!comNo) missingCom++; if (!upsNo) missingUps++; if (comNo && upsNo) both++;
+          add(com,comNo,row); add(ups,upsNo,row);
+          const location=[row.building,row.floor,row.department].map(function(value) { return number(value) || 'ไม่ระบุ'; });
+          const key=JSON.stringify(location);
+          if (!areas.has(key)) areas.set(key,{building:location[0],floor:location[1],department:location[2],total:0,com:new Set(),ups:new Set(),both:0});
+          const area=areas.get(key); area.total++; if (comNo) area.com.add(comNo.toUpperCase()); if (upsNo) area.ups.add(upsNo.toUpperCase()); if (comNo&&upsNo) area.both++;
+          if (comNo || upsNo) returned.push({jobNo:row.jobNo || '-',location:[row.building,row.floor,row.department,row.room].filter(Boolean).join(' | ') || '-',comNo:comNo,upsNo:upsNo});
+        });
+        const duplicates=[];
+        [[com,'คอมพิวเตอร์'],[ups,'UPS']].forEach(function(entry) { entry[0].forEach(function(value) { if (value.jobs.length>1) duplicates.push({type:entry[1],number:value.number,jobs:value.jobs}); }); });
+        const groups=Array.from(areas.values()).map(function(area) { return {building:area.building,floor:area.floor,department:area.department,total:area.total,com:area.com.size,ups:area.ups.size,both:area.both}; });
+        groups.sort(function(a,b) { return [a.building,a.floor,a.department].join('|').localeCompare([b.building,b.floor,b.department].join('|'),'th',{numeric:true}); });
+        returned.sort(function(a,b) { return a.jobNo.localeCompare(b.jobNo,'th',{numeric:true}); });
+        return {total:(rows||[]).length,comCount:com.size,upsCount:ups.size,both:both,missingCom:missingCom,missingUps:missingUps,recorded:returned.length,duplicates:duplicates,groups:groups,rows:returned,updatedAt:updatedAt || ''};
+      }
+      function getReturnAssetReport() { return buildReturnAssetReportData(portalData.assetRows,portalData.loadedAt); }
+      function returnAssetAreaRows(report) {
+        return report.groups.map(function(row) { return '<tr><td>'+escapeHtml(row.building)+'</td><td>'+escapeHtml(row.floor)+'</td><td>'+escapeHtml(row.department)+'</td><td>'+row.total+'</td><td>'+row.com+'</td><td>'+row.ups+'</td><td>'+row.both+'</td></tr>'; }).join('') || '<tr><td colspan="7" class="issue-empty">ยังไม่มีข้อมูล</td></tr>';
+      }
+      function returnAssetMachineRows(report) {
+        return report.rows.map(function(row) { return '<tr><td>'+escapeHtml(row.jobNo)+'</td><td>'+escapeHtml(row.location)+'</td><td>'+escapeHtml(row.comNo || 'ยังไม่บันทึก')+'</td><td>'+escapeHtml(row.upsNo || 'ยังไม่บันทึก')+'</td></tr>'; }).join('') || '<tr><td colspan="4" class="issue-empty">ยังไม่มีเลขครุภัณฑ์รับคืนที่บันทึก</td></tr>';
+      }
+      function returnAssetDuplicateRows(report) {
+        return report.duplicates.map(function(row) { return escapeHtml(row.type+' '+row.number+' ('+row.jobs.join(', ')+')'); }).join(' · ');
+      }
+      function renderReturnAssetDashboard() {
+        const report=getReturnAssetReport();
+        document.getElementById('returnAssetKpis').innerHTML=[['คอมรับคืน (เลขไม่ซ้ำ)',report.comCount],['UPS รับคืน (เลขไม่ซ้ำ)',report.upsCount],['รายการที่มีเลขครบทั้งคู่',report.both],['มีเลขบันทึกแล้ว / ทั้งหมด',report.recorded+'/'+report.total]].map(function(item) { return '<div class="issue-kpi"><span class="card-label">'+item[0]+'</span><strong>'+item[1]+'</strong></div>'; }).join('');
+        document.getElementById('returnAssetMeta').textContent='ดึงข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt)+' · ยังไม่มีเลขคอม '+report.missingCom+' รายการ / UPS '+report.missingUps+' รายการ การไม่มีเลขหมายถึงยังไม่บันทึกข้อมูล ไม่ได้ยืนยันว่าเครื่องยังไม่คืน';
+        document.getElementById('returnAssetDuplicates').innerHTML=report.duplicates.length ? 'พบเลขซ้ำ '+report.duplicates.length+' เลข — นับแต่ละเลขเพียงครั้งเดียว: '+returnAssetDuplicateRows(report) : 'ไม่พบเลขครุภัณฑ์ซ้ำ';
+        document.getElementById('returnAssetAreaBody').innerHTML=returnAssetAreaRows(report);
+        document.getElementById('returnAssetMachineBody').innerHTML=returnAssetMachineRows(report);
+      }
+      function returnAssetReportHtml(report) {
+        const html=completionReportHtml({total:report.total,completed:report.recorded,remaining:report.total-report.recorded,percent:report.total?Math.round(report.recorded/report.total*100):0,workComplete:0,updatedAt:report.updatedAt,areas:[],rows:[]});
+        const start=html.indexOf('<body>'),end=html.indexOf('</body>');
+        return html.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>รายงานเลขครุภัณฑ์รับคืน</title>')+'<body><h1>รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที | ดึงข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(report.updatedAt))+'</p><div class="summary"><div>คอมรับคืน (เลขไม่ซ้ำ)<strong>'+report.comCount+'</strong></div><div>UPS รับคืน (เลขไม่ซ้ำ)<strong>'+report.upsCount+'</strong></div><div>รายการที่มีเลขครบทั้งคู่<strong>'+report.both+'</strong></div><div>มีเลขบันทึกแล้ว / ทั้งหมด<strong>'+report.recorded+'/'+report.total+'</strong></div></div><p>อ้างอิง COM S/N เดิม และ UPS S/N เดิม ไม่ใช่ S/N เครื่องใหม่ ยังไม่มีเลขคอม '+report.missingCom+' รายการ และ UPS '+report.missingUps+' รายการ การไม่มีเลขหมายถึงยังไม่บันทึก ไม่ได้ยืนยันว่าเครื่องยังไม่คืน ยอดรวมคอม/UPS นับเลขไม่ซ้ำแยกประเภท หากมีเลขซ้ำข้ามพื้นที่ ผลรวมรายพื้นที่อาจสูงกว่ายอดรวม</p><p>'+ (report.duplicates.length ? 'พบเลขซ้ำ '+report.duplicates.length+' เลข: '+returnAssetDuplicateRows(report) : 'ไม่พบเลขครุภัณฑ์ซ้ำ')+'</p><h2>สรุปตามพื้นที่</h2><table><thead><tr><th>ตึก</th><th>ชั้น</th><th>แผนก</th><th>รายการทั้งหมด</th><th>คอม (เลขไม่ซ้ำ)</th><th>UPS (เลขไม่ซ้ำ)</th><th>มีเลขครบทั้งคู่</th></tr></thead><tbody>'+returnAssetAreaRows(report)+'</tbody></table><h2>รายการเลขครุภัณฑ์ที่บันทึกการรับคืน</h2><table><thead><tr><th>Job</th><th>สถานที่</th><th>เลขครุภัณฑ์คอมเดิม</th><th>เลขครุภัณฑ์ UPS เดิม</th></tr></thead><tbody>'+returnAssetMachineRows(report)+'</tbody></table>'+html.slice(end);
+      }
+      function printReturnAssetReport() {
+        if (!portalData.loadedAt) { setStatus('กรุณารอโหลดข้อมูลก่อนพิมพ์',true); return; }
+        const popup=window.open('','_blank','width=1100,height=800');
+        if (!popup) { setStatus('กรุณาอนุญาต Pop-up เพื่อพิมพ์รายงาน',true); return; }
+        popup.opener=null; popup.document.open(); popup.document.write(returnAssetReportHtml(getReturnAssetReport())); popup.document.close();
+        Promise.resolve(popup.document.fonts ? popup.document.fonts.ready : undefined).then(function() { if (!popup.closed) { popup.focus(); popup.print(); } });
       }
 
       function buildCompletionReportData(assetRows, workRows, updatedAt) {
@@ -753,66 +834,121 @@
         }).join('');
       }
 
+      let workPrintRequest=0, workPrintReady=false, workPreviewRow=null, workPreviewImages={}, activeWorkPhotoType='';
+      const workPhotoAdjustments=new Map();
+      const workPhotoTypes=['signage','before1','before2','before3','before4','after1','after2','after3','after4'];
+      function workPhotoItems(urls) {
+        const items=[];
+        if (urls.signage) items.push({type:'signage',label:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง',group:'signage'});
+        ['before','after'].forEach(function(group) {
+          [1,2,3,4].map(function(n) { return group+n; }).filter(function(type) { return !!urls[type]; }).forEach(function(type,index) {
+            items.push({type:type,label:(group==='before'?'ก่อนติดตั้ง ':'หลังติดตั้ง ')+(index+1),group:group});
+          });
+        });
+        return items;
+      }
+      function waitForWorkPrintImages(root) {
+        return Promise.all(Array.from(root.querySelectorAll('img')).map(function(img) {
+          if (img.complete) return img.naturalWidth ? Promise.resolve() : Promise.reject(new Error('รูปโหลดไม่สำเร็จ'));
+          return new Promise(function(resolve,reject) {
+            const timer=window.setTimeout(function() { cleanup();reject(new Error('โหลดรูปนานเกินไป กรุณาลองใหม่')); },30000);
+            function cleanup() { window.clearTimeout(timer);img.removeEventListener('load',loaded);img.removeEventListener('error',failed); }
+            function loaded() { cleanup();resolve(); } function failed() { cleanup();reject(new Error('รูปโหลดไม่สำเร็จ')); }
+            img.addEventListener('load',loaded);img.addEventListener('error',failed);
+          });
+        }));
+      }
       function openWorkPrintPreview(jobNo) {
-        const workRow = (portalData.jobWorkRows || []).find(function(row) { return String(row.jobNo || '').toLowerCase() === String(jobNo || '').toLowerCase(); });
-        if (!workRow) { setStatus('ไม่พบข้อมูล Job สำหรับพรีวิว', true); return; }
-        document.getElementById('workPrintTitle').textContent = 'พรีวิวใบงาน A4 · ' + workRow.jobNo;
-        document.getElementById('workPrintStatus').className = 'work-print-status';
-        document.getElementById('workPrintStatus').textContent = 'กำลังโหลดรูปที่บันทึกไว้ของ ' + workRow.jobNo + '...';
-        document.getElementById('workPrintPage').innerHTML = '<div class="work-print-empty">กำลังเตรียมพรีวิว...</div>';
+        const row=(portalData.jobWorkRows||[]).find(function(item) { return String(item.jobNo).toLowerCase()===String(jobNo).toLowerCase(); });
+        if (!row) { setStatus('ไม่พบข้อมูล Job สำหรับพรีวิว',true);return; }
+        const request=++workPrintRequest;workPrintReady=false;workPreviewRow=row;workPreviewImages={};
+        document.getElementById('workPrintButton').disabled=true;
+        document.getElementById('workPrintTitle').textContent='พรีวิวใบงาน A4 · '+row.jobNo;
+        document.getElementById('workPrintStatus').textContent='กำลังโหลดต้นฉบับจาก Drive...';
+        document.getElementById('workPrintPage').textContent='กำลังโหลดรูป...';
         document.getElementById('workPrintBackdrop').classList.add('open');
-        google.script.run.withSuccessHandler(function(progress) {
-          progress = progress || {};
-          renderWorkPrintTemplate(workRow, progress);
-          const primaryCount = Number(workRow.primaryPhotoCount || 0);
-          const totalCount = Number(progress.filledCount || workRow.totalPhotoCount || 0);
-          const missing = (workRow.missingPrimary || []).length ? ' · ยังขาด ' + workRow.missingPrimary.join(', ') : ' · รูปหลักครบ';
-          const status = document.getElementById('workPrintStatus');
-          status.className = 'work-print-status' + (primaryCount < 3 ? ' warning' : '');
-          status.textContent = 'รูปหลัก ' + primaryCount + '/3 จุด · รูปทั้งหมด ' + totalCount + '/9' + missing + ' · ตรวจมุมภาพและความตรงกับงานจริงก่อนสั่งพิมพ์';
-        }).withFailureHandler(function(error) {
-          document.getElementById('workPrintStatus').className = 'work-print-status warning';
-          document.getElementById('workPrintStatus').textContent = 'โหลดรูปสำหรับพรีวิวไม่สำเร็จ: ' + getErrorMessage(error);
-          document.getElementById('workPrintPage').innerHTML = '<div class="work-print-empty">ไม่สามารถโหลดรูปได้</div>';
-        }).getJobProgress(workRow.jobNo);
+        function failed(error) { if (request!==workPrintRequest) return;workPrintReady=false;document.getElementById('workPrintButton').disabled=true;document.getElementById('workPrintStatus').textContent='โหลดต้นฉบับไม่สำเร็จ: '+getErrorMessage(error); }
+        google.script.run.withSuccessHandler(function(meta) {
+          if (request!==workPrintRequest) return;
+          const types=workPhotoTypes.filter(function(type) { return (meta.imageTypes||[]).indexOf(type)!==-1; });
+          let next=0,loaded=0;
+          async function worker() {
+            while (request===workPrintRequest && next<types.length) {
+              const type=types[next++];
+              const data=await new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getPhotoPrintImage(row.jobNo,type); });
+              if (request!==workPrintRequest) return;
+              workPreviewImages[type]=data;loaded++;
+              document.getElementById('workPrintStatus').textContent='โหลดต้นฉบับแล้ว '+loaded+'/'+types.length+' รูป...';
+            }
+          }
+          Promise.all([worker(),worker()]).then(function() {
+            if (request!==workPrintRequest) return;
+            renderWorkPrintTemplate(row,{images:workPreviewImages,date:meta.date});
+            return waitForWorkPrintImages(document.getElementById('workPrintPage')).then(function() {
+              if (request!==workPrintRequest) return;
+              workPrintReady=true;document.getElementById('workPrintButton').disabled=false;
+              document.getElementById('workPrintStatus').textContent='โหลดต้นฉบับครบ '+types.length+' รูป · แตะ “ปรับป้ายครุภัณฑ์” เฉพาะภาพที่ต้องการขยายหรือเลื่อน ก่อนสั่งพิมพ์';
+            });
+          }).catch(failed);
+        }).withFailureHandler(failed).getPhotoPrintImages(row.jobNo);
       }
-
-      function closeWorkPrintPreview() { document.getElementById('workPrintBackdrop').classList.remove('open'); }
-
+      function closeWorkPrintPreview() { ++workPrintRequest;workPrintReady=false;closeWorkPhotoAdjust();document.getElementById('workPrintBackdrop').classList.remove('open'); }
       function printWorkPreview() {
-        const source = document.getElementById('workPrintPage');
-        if (!source || !source.innerHTML.trim()) return;
-        const popup = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
-        if (!popup) { window.print(); return; }
-        const styles = Array.from(document.querySelectorAll('style')).map(function(style) { return style.textContent; }).join('\n');
-        const title = document.getElementById('workPrintTitle').textContent || 'Photo Report';
+        if (!workPrintReady) return;
+        const source=document.getElementById('workPrintPage');
+        const popup=window.open('','_blank','width=900,height=1200');
+        if (!popup) { window.print();return; } popup.opener=null;
+        const styles=Array.from(document.querySelectorAll('style')).map(function(style) { return style.textContent; }).join('\n');
         popup.document.open();
-        popup.document.write('<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + escapeHtml(title) + '</title><style>' + styles + '\n@page{size:A4 portrait;margin:0}html,body{width:210mm!important;height:297mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}.work-print-page{display:block!important;width:210mm!important;height:285mm!important;min-height:0!important;margin:0!important;padding:4mm 7mm!important;overflow:hidden!important;box-shadow:none!important;page-break-after:avoid!important;break-after:avoid-page!important}</style></head><body><article class="work-print-page">' + source.innerHTML + '</article></body></html>');
-        popup.document.close();
-        popup.onload = function() { window.setTimeout(function() { popup.focus(); popup.print(); }, 250); };
-        popup.onafterprint = function() { window.setTimeout(function() { popup.close(); }, 100); };
+        popup.document.write('<!doctype html><html lang="th"><head><meta charset="utf-8"><title>'+escapeHtml(document.getElementById('workPrintTitle').textContent)+'</title><style>'+styles+'\n@page{size:A4 portrait;margin:0}html,body{width:210mm!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important}.work-print-page{display:block!important;width:210mm!important;height:285mm!important;margin:0!important;padding:4mm 7mm!important;box-shadow:none!important}</style></head><body><article class="work-print-page">'+source.innerHTML+'</article></body></html>');
+        popup.document.close();popup.onafterprint=function() { popup.close(); };
+        waitForWorkPrintImages(popup.document).then(function() { return popup.document.fonts ? popup.document.fonts.ready : undefined; }).then(function() { if (!popup.closed) { popup.focus();popup.print(); } }).catch(function(error) { popup.close();setStatus(getErrorMessage(error),true); });
       }
-
-      function workPrintImage(type, label, urls) {
-        const url = (urls || {})[type] || '';
-        return '<div class="work-print-image-box">' + (url ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(label) + '">' : '<span class="work-print-empty">ยังไม่มีรูป<br>' + escapeHtml(label) + '</span>') + '</div>';
+      function workPhotoTransform(settings) {
+        function bound(value,min,max,fallback) { const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback; }
+        const value=settings||{};return {zoom:bound(value.zoom,1,8,1),x:bound(value.x,-100,100,0),y:bound(value.y,-100,100,0)};
       }
-
-      function workPrintPair(before, after, index, urls) {
-        return '<div class="work-print-pair-head"><div class="work-print-before-head">ก่อนติดตั้ง ' + index + '</div><div class="work-print-after-head">หลังติดตั้ง ' + index + '</div></div><div class="work-print-pair">' + workPrintImage(before, 'ก่อนติดตั้ง ' + index, urls) + workPrintImage(after, 'หลังติดตั้ง ' + index, urls) + '</div>';
+      function workPhotoStyle(settings) { const value=workPhotoTransform(settings);return 'transform:translate('+value.x+'%,'+value.y+'%) scale('+value.zoom+');transform-origin:center'; }
+      function workPrintImage(type,label,urls) {
+        if (!urls[type]) return '';
+        const key=workPreviewRow ? workPreviewRow.jobNo+'::'+type : type;
+        return '<div class="work-print-image-box" data-work-photo="'+type+'"><img src="'+escapeHtml(urls[type])+'" alt="'+escapeHtml(label)+'" style="'+workPhotoStyle(workPhotoAdjustments.get(key))+'"><button class="work-photo-adjust-button" type="button" onclick="openWorkPhotoAdjust(\''+type+'\')"'+(type==='signage'?' hidden':'')+'>ปรับป้ายครุภัณฑ์</button></div>';
       }
-
-      function workPrintToday() {
-        const d = new Date();
-        return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+      function workPrintToday() { return new Date().toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}); }
+      function renderWorkPrintTemplate(row,progress) {
+        const urls=progress.images||{};workPreviewRow=row;
+        const date=progress.date?formatPlanDate(progress.date):workPrintToday();
+        const items=workPhotoItems(urls);
+        const signage='<div class="work-print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="work-print-signage">'+(urls.signage ? workPrintImage('signage','ป้ายจุดติดตั้ง',urls) : '<span class="work-print-empty">ยังไม่มีรูปป้ายหน่วยงาน</span>')+'</div>';
+        function column(group) { return '<div>'+items.filter(function(item) { return item.group===group; }).map(function(item) { return '<div class="work-photo-card"><div class="work-photo-heading work-print-'+group+'-head">'+escapeHtml(item.label)+'</div>'+workPrintImage(item.type,item.label,urls)+'</div>'; }).join('')+'</div>'; }
+        document.getElementById('workPrintPage').innerHTML='<p class="work-print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p><h1 class="work-print-document-title">ภาพถ่ายการติดตั้งอุปกรณ์</h1><div class="work-print-meta"><div class="work-print-meta-box">เลข Job: '+escapeHtml(row.jobNo)+'</div><div class="work-print-meta-box">สถานที่ติดตั้ง: '+escapeHtml(row.location||'-')+'</div><div class="work-print-meta-box">วันที่: '+escapeHtml(date)+'</div></div>'+signage+'<div class="work-photo-columns">'+column('before')+column('after')+'</div>';
       }
-
-      function renderWorkPrintTemplate(row, progress) {
-        const urls = progress.previewUrls || {};
-        const location = row.location || 'ไม่ระบุสถานที่';
-        const date = progress.date ? formatPlanDate(progress.date) : workPrintToday();
-        document.getElementById('workPrintPage').innerHTML = '<p class="work-print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p><h1 class="work-print-document-title">ภาพถ่ายการติดตั้งอุปกรณ์</h1><div class="work-print-meta"><div class="work-print-meta-box"><span class="work-print-meta-label">เลข Job: </span><span class="work-print-meta-value">' + escapeHtml(row.jobNo) + '</span></div><div class="work-print-meta-box"><span class="work-print-meta-label">สถานที่ติดตั้ง: </span><span class="work-print-meta-value">' + escapeHtml(location) + '</span></div><div class="work-print-meta-box"><span class="work-print-meta-label">วันที่: </span><span class="work-print-meta-value">' + escapeHtml(date) + '</span></div></div><div class="work-print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="work-print-signage">' + workPrintImage('signage', 'ป้ายจุดติดตั้ง', urls) + '</div>' + workPrintPair('before1', 'after1', 1, urls) + workPrintPair('before2', 'after2', 2, urls) + workPrintPair('before3', 'after3', 3, urls) + workPrintPair('before4', 'after4', 4, urls);
+      function openWorkPhotoAdjust(type) {
+        if (!workPrintReady || !workPreviewImages[type]) return;
+        activeWorkPhotoType=type;
+        const settings=workPhotoTransform(workPhotoAdjustments.get(workPreviewRow.jobNo+'::'+type));
+        ['zoom','x','y'].forEach(function(name) { document.getElementById('workPhoto'+name).value=settings[name]; });
+        document.getElementById('workPhotoAdjustImage').src=workPreviewImages[type];
+        const frame=Array.from(document.getElementById('workPrintPage').querySelectorAll('[data-work-photo]')).find(function(element) { return element.getAttribute('data-work-photo')===type; });
+        const rect=frame.getBoundingClientRect();document.getElementById('workPhotoAdjustFrame').style.aspectRatio=rect.width+'/'+rect.height;
+        document.getElementById('workPhotoAdjustTitle').textContent='ขยายบริเวณป้ายครุภัณฑ์ · '+workPhotoItems(workPreviewImages).find(function(item) { return item.type===type; }).label;
+        updateWorkPhotoAdjust();document.getElementById('workPhotoAdjust').hidden=false;
       }
+      function updateWorkPhotoAdjust() {
+        const settings=workPhotoTransform({zoom:document.getElementById('workPhotozoom').value,x:document.getElementById('workPhotox').value,y:document.getElementById('workPhotoy').value});
+        document.getElementById('workPhotoAdjustImage').style.cssText=workPhotoStyle(settings);
+        document.getElementById('workPhotoZoomValue').textContent=settings.zoom.toFixed(1)+' เท่า';
+        return settings;
+      }
+      function saveWorkPhotoAdjust() {
+        if (!workPreviewRow || !activeWorkPhotoType) return;
+        const settings=updateWorkPhotoAdjust();workPhotoAdjustments.set(workPreviewRow.jobNo+'::'+activeWorkPhotoType,settings);
+        const frame=Array.from(document.getElementById('workPrintPage').querySelectorAll('[data-work-photo]')).find(function(element) { return element.getAttribute('data-work-photo')===activeWorkPhotoType; });
+        if (frame) frame.querySelector('img').style.cssText=workPhotoStyle(settings);
+        closeWorkPhotoAdjust();
+      }
+      function resetWorkPhotoAdjust() { document.getElementById('workPhotozoom').value=1;document.getElementById('workPhotox').value=0;document.getElementById('workPhotoy').value=0;updateWorkPhotoAdjust(); }
+      function closeWorkPhotoAdjust() { document.getElementById('workPhotoAdjust').hidden=true;activeWorkPhotoType=''; }
 
       function handlePrepStatusChange(rowNumber, prepStatus) {
         if (prepStatus === 'ติดปัญหา') {
@@ -923,7 +1059,7 @@
         const value = function(v) { return escapeHtml(v === undefined || v === null || v === '' ? '-' : v); };
         const field = function(label, v, wide) { return '<div class="detail-card' + (wide ? ' detail-card-wide' : '') + '"><div class="detail-label">' + label + '</div><div class="detail-value">' + value(v) + '</div></div>'; };
         const section = function(label) { return '<div class="detail-section-title">' + label + '</div>'; };
-        document.getElementById('assetDetailsBody').innerHTML = section('ข้อมูล Job และสถานที่') + field('เลข Job', item.jobNo) + field('รหัสชุด', item.setCode) + field('ประเภทชุด', item.type) + field('ตึก', item.building) + field('ชั้น', item.floor) + field('หน่วยงาน', item.department, true) + field('ห้อง / จุดวาง', item.room) + field('ผู้ติดต่อ', item.contact) + field('เลขสัญญา', item.contractNo) + section('ข้อมูลเครื่องและอุปกรณ์') + field('Brand / Model', item.brand, true) + field('สเปกเครื่อง', item.specs, true) + field('S/N AIO', item.aioSn) + field('MAC Address', item.mac) + field('Windows Key', item.windowsKey, true) + field('รุ่น UPS', item.upsModel) + field('S/N UPS', item.upsSn) + field('รุ่น Hub USB', item.hubModel) + section('ข้อมูลสัญญาและรับคืน') + field('วันเริ่มเช่า', item.startDate) + field('วันหมดสัญญา', item.endDate) + field('วันคงเหลือ', item.remaining) + field('แจ้งเตือน', item.alert) + field('COM S/N เดิม', item.oldComSn) + field('UPS S/N เดิม', item.oldUpsSn) + section('สรุปสถานะ') + field('สถานะชุดอุปกรณ์', item.status) + field('สถานะเตรียมเครื่อง', item.prepStatus) + field('สาเหตุที่ติดปัญหา', item.problemDetail, true) + field('สถานะการติดตั้ง', item.installStatus) + field('เหตุผลติดตั้งไม่ได้/ไม่ทัน', item.installReason, true) + field('ส่ง AIO', item.deliverAio ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง UPS + สายไฟ', item.deliverUps ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง USB HUB', item.deliverHub ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง KB + Mouse', item.deliverKbMouse ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง Adapter', item.deliverAdapter ? 'ส่งแล้ว' : 'ยังไม่ส่ง');
+        document.getElementById('assetDetailsBody').innerHTML = section('ข้อมูล Job และสถานที่') + field('เลข Job', item.jobNo) + field('รหัสชุด', item.setCode) + field('ประเภทชุด', item.type) + field('ตึก', item.building) + field('ชั้น', item.floor) + field('หน่วยงาน', item.department, true) + field('ห้อง / จุดวาง', item.room) + field('ผู้ติดต่อ', item.contact) + field('เลขสัญญา', item.contractNo) + section('ข้อมูลเครื่องและอุปกรณ์') + field('Brand / Model', item.brand, true) + field('สเปกเครื่อง', item.specs, true) + field('S/N AIO', item.aioSn) + field('MAC Address', item.mac) + field('Windows Key', item.windowsKey, true) + field('รุ่น UPS', item.upsModel) + field('S/N UPS', item.upsSn) + field('รุ่น Hub USB', item.hubModel) + section('ข้อมูลสัญญาและรับคืน') + field('วันเริ่มเช่า', item.startDate) + field('วันหมดสัญญา', item.endDate) + field('วันคงเหลือ', item.remaining) + field('แจ้งเตือน', item.alert) + field('เลขครุภัณฑ์คอมเดิม', item.oldComSn) + field('เลขครุภัณฑ์ UPS เดิม', item.oldUpsSn) + section('สรุปสถานะ') + field('สถานะชุดอุปกรณ์', item.status) + field('สถานะเตรียมเครื่อง', item.prepStatus) + field('สาเหตุที่ติดปัญหา', item.problemDetail, true) + field('สถานะการติดตั้ง', item.installStatus) + field('เหตุผลติดตั้งไม่ได้/ไม่ทัน', item.installReason, true) + field('ส่ง AIO', item.deliverAio ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง UPS + สายไฟ', item.deliverUps ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง USB HUB', item.deliverHub ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง KB + Mouse', item.deliverKbMouse ? 'ส่งแล้ว' : 'ยังไม่ส่ง') + field('ส่ง Adapter', item.deliverAdapter ? 'ส่งแล้ว' : 'ยังไม่ส่ง');
         document.getElementById('assetDetailsModal').classList.add('open');
       }
       function closeAssetDetails() { document.getElementById('assetDetailsModal').classList.remove('open'); currentDetailsItem = null; }
