@@ -54,3 +54,33 @@ test('Portal loads full originals, keeps print disabled until ready, and ignores
  requests[2].success('late-image');requests[3].success('late-image');await new Promise(resolve=>setImmediate(resolve));
  assert.equal(vm.runInContext('workPrintReady',p.context),false);
 });
+
+test('blank means no returned machine, while ไม่มี and ไม่มีเลข each mean a returned machine without a number',()=>{
+ const {context}=page();
+ for(const value of ['',null,undefined,'  '])assert.equal(context.classifyReturnedAsset(value).received,false);
+ for(const value of ['ไม่มี',' ไม่มีเลข ','ไม่มี เลข']){
+  const state=context.classifyReturnedAsset(value);assert.equal(state.received,true);assert.equal(state.noNumber,true);assert.equal(state.number,'');
+ }
+ assert.equal(context.classifyReturnedAsset('00123').number,'00123');
+ assert.equal(context.returnAssetLabel(''),'ไม่มีเครื่องกลับ');
+ assert.equal(context.returnAssetLabel('ไม่มี'),'มีเครื่องกลับ แต่ไม่มีเลขครุภัณฑ์');
+});
+test('anonymous returned machines are counted per row, separately from unique numbered machines and duplicate warnings',()=>{
+ const {context}=page();
+ const rows=[{jobNo:'JOB-1',oldComSn:'ไม่มี',oldUpsSn:'ไม่มีเลข'},{jobNo:'JOB-2',oldComSn:'ไม่มีเลข',oldUpsSn:''},{jobNo:'JOB-3',oldComSn:'',oldUpsSn:'ไม่มี'},{jobNo:'JOB-4',oldComSn:'00123',oldUpsSn:'UPS-1'},{jobNo:'JOB-5',oldComSn:'00123',oldUpsSn:'UPS-2'},{jobNo:'JOB-6',oldComSn:'',oldUpsSn:''}];
+ const report=context.buildReturnAssetReportData(rows);
+ assert.equal(report.comCount,3);assert.equal(report.comWithNumber,1);assert.equal(report.comWithoutNumber,2);
+ assert.equal(report.upsCount,4);assert.equal(report.upsWithNumber,2);assert.equal(report.upsWithoutNumber,2);
+ assert.equal(report.missingCom,2);assert.equal(report.missingUps,2);assert.equal(report.both,3);assert.equal(report.recorded,5);
+ assert.equal(report.groups[0].com,3);assert.equal(report.groups[0].ups,4);assert.equal(report.groups[0].comWithoutNumber,2);
+ assert.equal(report.duplicates.length,1);assert.equal(report.duplicates[0].number,'00123');
+});
+test('dashboard and PDF explain all three return states and include unnumbered returns in the totals',()=>{
+ const p=page();p.context.rows=[{jobNo:'JOB-1',oldComSn:'ไม่มี',oldUpsSn:''},{jobNo:'JOB-2',oldComSn:'',oldUpsSn:'ไม่มีเลข'}];
+ vm.runInContext("portalData={assetRows:rows,loadedAt:'2026-10-21T00:00:00Z'}",p.context);
+ p.context.renderReturnAssetDashboard();const report=p.context.getReturnAssetReport(),html=p.context.returnAssetReportHtml(report);
+ assert.ok(p.document.getElementById('returnAssetKpis').innerHTML.includes('คอมรับคืนทั้งหมด'));
+ assert.ok(p.document.getElementById('returnAssetMachineBody').innerHTML.includes('ไม่มีเครื่องกลับ'));
+ assert.ok(html.includes('มีเครื่องกลับ แต่ไม่มีเลขครุภัณฑ์'));assert.ok(html.includes('ไม่มีคอมกลับ'));
+ assert.equal(report.comCount,1);assert.equal(report.upsCount,1);assert.equal(report.duplicates.length,0);
+});

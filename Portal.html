@@ -272,7 +272,7 @@
           <section class="panel completion-dashboard" aria-labelledby="returnAssetTitle">
             <div class="completion-head"><div><h3 id="returnAssetTitle" class="panel-title">รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h3><p class="view-note">นับเลขครุภัณฑ์จาก COM S/N เดิม และ UPS S/N เดิม แยกคอมพิวเตอร์กับ UPS</p></div><button type="button" class="button button-outline" onclick="printReturnAssetReport()">พิมพ์ / บันทึก PDF รับคืน</button></div>
             <div id="returnAssetKpis" class="issue-kpis"></div><p id="returnAssetMeta" class="plan-note"></p><p id="returnAssetDuplicates" class="plan-note"></p>
-            <div class="completion-tables"><div><h4 class="panel-title">สรุปตามพื้นที่</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>ตึก</th><th>ชั้น</th><th>แผนก</th><th>รายการทั้งหมด</th><th>คอม (เลขไม่ซ้ำ)</th><th>UPS (เลขไม่ซ้ำ)</th><th>มีเลขครบทั้งคู่</th></tr></thead><tbody id="returnAssetAreaBody"></tbody></table></div></div><div><h4 class="panel-title">รายการเลขครุภัณฑ์ที่บันทึกการรับคืน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>Job</th><th>สถานที่</th><th>เลขครุภัณฑ์คอมเดิม</th><th>เลขครุภัณฑ์ UPS เดิม</th></tr></thead><tbody id="returnAssetMachineBody"></tbody></table></div></div></div>
+            <div class="completion-tables"><div><h4 class="panel-title">สรุปตามพื้นที่</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>ตึก</th><th>ชั้น</th><th>แผนก</th><th>รายการทั้งหมด</th><th>คอมรับคืน</th><th>คอมไม่มีเลข</th><th>UPS รับคืน</th><th>UPS ไม่มีเลข</th><th>มีเครื่องกลับทั้งคู่</th></tr></thead><tbody id="returnAssetAreaBody"></tbody></table></div></div><div><h4 class="panel-title">รายการเลขครุภัณฑ์ที่บันทึกการรับคืน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>Job</th><th>สถานที่</th><th>เลขครุภัณฑ์คอมเดิม</th><th>เลขครุภัณฑ์ UPS เดิม</th></tr></thead><tbody id="returnAssetMachineBody"></tbody></table></div></div></div>
           </section>
           <section class="panel issue-dashboard">
             <div class="issue-head"><div><h3 class="panel-title">ปัญหาหน้างานที่ทำให้ติดตั้งยังไม่เสร็จ</h3><p class="view-note">สรุปความคืบหน้า สาเหตุ และรายการที่ทีมบริการต้องช่วยประสาน</p></div><button type="button" class="button button-outline" onclick="printIssueReport()">พิมพ์รายงานสรุป</button></div>
@@ -357,8 +357,8 @@
           <div class="field"><label>รุ่น UPS</label><input id="upsModel" class="input" type="text"></div>
           <div class="field"><label>S/N UPS</label><input id="upsSn" class="input" type="text"></div>
           <div class="field"><label>รุ่น Hub USB</label><input id="hubModel" class="input" type="text"></div>
-          <div class="field"><label>เลขครุภัณฑ์คอมเดิม (COM S/N เดิม)</label><input id="oldComSn" class="input" type="text"></div>
-          <div class="field"><label>เลขครุภัณฑ์ UPS เดิม (UPS S/N เดิม)</label><input id="oldUpsSn" class="input" type="text"></div>
+          <div class="field"><label>เลขครุภัณฑ์คอมเดิม (COM S/N เดิม)</label><input id="oldComSn" class="input" type="text" placeholder="ว่าง = ไม่มีเครื่องกลับ / ไม่มีเลข = มีเครื่องแต่ไม่มีเลข"></div>
+          <div class="field"><label>เลขครุภัณฑ์ UPS เดิม (UPS S/N เดิม)</label><input id="oldUpsSn" class="input" type="text" placeholder="ว่าง = ไม่มีเครื่องกลับ / ไม่มีเลข = มีเครื่องแต่ไม่มีเลข"></div>
           <div class="field"><label>เลข IP</label><input id="ipAddress" class="input" type="text" inputmode="decimal" placeholder="เช่น 192.168.1.10"></div>
         </div></div>
         <div class="form-section"><h3 class="form-section-title">รายการที่ส่งและสถานะ</h3><div class="form-grid">
@@ -538,9 +538,18 @@
         renderReturnAssetDashboard();
       }
 
+      function classifyReturnedAsset(value) {
+        const text=String(value === null || value === undefined ? '' : value).trim();
+        const marker=text.replace(/\s+/g,'');
+        return {received:!!text,noNumber:marker==='ไม่มี' || marker==='ไม่มีเลข',number:marker==='ไม่มี' || marker==='ไม่มีเลข' ? '' : text};
+      }
+      function returnAssetLabel(value) {
+        const state=classifyReturnedAsset(value);
+        return !state.received ? 'ไม่มีเครื่องกลับ' : (state.noNumber ? 'มีเครื่องกลับ แต่ไม่มีเลขครุภัณฑ์' : state.number);
+      }
       function buildReturnAssetReportData(rows,updatedAt) {
         const com = new Map(), ups = new Map(), areas = new Map(), returned = [];
-        let both=0, missingCom=0, missingUps=0;
+        let both=0, missingCom=0, missingUps=0, comWithoutNumber=0, upsWithoutNumber=0;
         function number(value) { return String(value === null || value === undefined ? '' : value).trim(); }
         function add(map,value,row) {
           if (!value) return;
@@ -549,36 +558,45 @@
           map.get(key).jobs.push(row.jobNo || 'แถว '+row.rowNumber);
         }
         (rows || []).forEach(function(row) {
+          const comState=classifyReturnedAsset(row.oldComSn), upsState=classifyReturnedAsset(row.oldUpsSn);
           const comNo=number(row.oldComSn), upsNo=number(row.oldUpsSn);
-          if (!comNo) missingCom++; if (!upsNo) missingUps++; if (comNo && upsNo) both++;
-          add(com,comNo,row); add(ups,upsNo,row);
+          if (!comState.received) missingCom++; if (!upsState.received) missingUps++;
+          if (comState.noNumber) comWithoutNumber++; if (upsState.noNumber) upsWithoutNumber++;
+          if (comState.received && upsState.received) both++;
+          add(com,comState.number,row); add(ups,upsState.number,row);
           const location=[row.building,row.floor,row.department].map(function(value) { return number(value) || 'ไม่ระบุ'; });
           const key=JSON.stringify(location);
-          if (!areas.has(key)) areas.set(key,{building:location[0],floor:location[1],department:location[2],total:0,com:new Set(),ups:new Set(),both:0});
-          const area=areas.get(key); area.total++; if (comNo) area.com.add(comNo.toUpperCase()); if (upsNo) area.ups.add(upsNo.toUpperCase()); if (comNo&&upsNo) area.both++;
+          if (!areas.has(key)) areas.set(key,{building:location[0],floor:location[1],department:location[2],total:0,com:new Set(),ups:new Set(),comWithoutNumber:0,upsWithoutNumber:0,both:0});
+          const area=areas.get(key); area.total++; if (comState.number) area.com.add(comState.number.toUpperCase()); if (upsState.number) area.ups.add(upsState.number.toUpperCase()); if (comState.noNumber) area.comWithoutNumber++; if (upsState.noNumber) area.upsWithoutNumber++; if (comState.received&&upsState.received) area.both++;
           if (comNo || upsNo) returned.push({jobNo:row.jobNo || '-',location:[row.building,row.floor,row.department,row.room].filter(Boolean).join(' | ') || '-',comNo:comNo,upsNo:upsNo});
         });
         const duplicates=[];
         [[com,'คอมพิวเตอร์'],[ups,'UPS']].forEach(function(entry) { entry[0].forEach(function(value) { if (value.jobs.length>1) duplicates.push({type:entry[1],number:value.number,jobs:value.jobs}); }); });
-        const groups=Array.from(areas.values()).map(function(area) { return {building:area.building,floor:area.floor,department:area.department,total:area.total,com:area.com.size,ups:area.ups.size,both:area.both}; });
+        const groups=Array.from(areas.values()).map(function(area) { return {building:area.building,floor:area.floor,department:area.department,total:area.total,com:area.com.size+area.comWithoutNumber,ups:area.ups.size+area.upsWithoutNumber,comWithoutNumber:area.comWithoutNumber,upsWithoutNumber:area.upsWithoutNumber,both:area.both}; });
         groups.sort(function(a,b) { return [a.building,a.floor,a.department].join('|').localeCompare([b.building,b.floor,b.department].join('|'),'th',{numeric:true}); });
         returned.sort(function(a,b) { return a.jobNo.localeCompare(b.jobNo,'th',{numeric:true}); });
-        return {total:(rows||[]).length,comCount:com.size,upsCount:ups.size,both:both,missingCom:missingCom,missingUps:missingUps,recorded:returned.length,duplicates:duplicates,groups:groups,rows:returned,updatedAt:updatedAt || ''};
+        return {total:(rows||[]).length,comCount:com.size+comWithoutNumber,upsCount:ups.size+upsWithoutNumber,comWithNumber:com.size,upsWithNumber:ups.size,comWithoutNumber:comWithoutNumber,upsWithoutNumber:upsWithoutNumber,both:both,missingCom:missingCom,missingUps:missingUps,recorded:returned.length,duplicates:duplicates,groups:groups,rows:returned,updatedAt:updatedAt || ''};
       }
       function getReturnAssetReport() { return buildReturnAssetReportData(portalData.assetRows,portalData.loadedAt); }
       function returnAssetAreaRows(report) {
-        return report.groups.map(function(row) { return '<tr><td>'+escapeHtml(row.building)+'</td><td>'+escapeHtml(row.floor)+'</td><td>'+escapeHtml(row.department)+'</td><td>'+row.total+'</td><td>'+row.com+'</td><td>'+row.ups+'</td><td>'+row.both+'</td></tr>'; }).join('') || '<tr><td colspan="7" class="issue-empty">ยังไม่มีข้อมูล</td></tr>';
+        return report.groups.map(function(row) { return '<tr><td>'+escapeHtml(row.building)+'</td><td>'+escapeHtml(row.floor)+'</td><td>'+escapeHtml(row.department)+'</td><td>'+row.total+'</td><td>'+row.com+'</td><td>'+row.comWithoutNumber+'</td><td>'+row.ups+'</td><td>'+row.upsWithoutNumber+'</td><td>'+row.both+'</td></tr>'; }).join('') || '<tr><td colspan="9" class="issue-empty">ยังไม่มีข้อมูล</td></tr>';
       }
       function returnAssetMachineRows(report) {
-        return report.rows.map(function(row) { return '<tr><td>'+escapeHtml(row.jobNo)+'</td><td>'+escapeHtml(row.location)+'</td><td>'+escapeHtml(row.comNo || 'ยังไม่บันทึก')+'</td><td>'+escapeHtml(row.upsNo || 'ยังไม่บันทึก')+'</td></tr>'; }).join('') || '<tr><td colspan="4" class="issue-empty">ยังไม่มีเลขครุภัณฑ์รับคืนที่บันทึก</td></tr>';
+        return report.rows.map(function(row) { return '<tr><td>'+escapeHtml(row.jobNo)+'</td><td>'+escapeHtml(row.location)+'</td><td>'+escapeHtml(returnAssetLabel(row.comNo))+'</td><td>'+escapeHtml(returnAssetLabel(row.upsNo))+'</td></tr>'; }).join('') || '<tr><td colspan="4" class="issue-empty">ไม่มีรายการเครื่องกลับที่บันทึก</td></tr>';
       }
       function returnAssetDuplicateRows(report) {
         return report.duplicates.map(function(row) { return escapeHtml(row.type+' '+row.number+' ('+row.jobs.join(', ')+')'); }).join(' · ');
       }
+      function returnAssetKpis(report) {
+        return [['คอมรับคืนทั้งหมด',report.comCount],['คอมมีเครื่องแต่ไม่มีเลข',report.comWithoutNumber],['ไม่มีคอมกลับ',report.missingCom],['UPS รับคืนทั้งหมด',report.upsCount],['UPS มีเครื่องแต่ไม่มีเลข',report.upsWithoutNumber],['ไม่มี UPS กลับ',report.missingUps],['รายการที่มีเครื่องกลับทั้งคู่',report.both],['มีเครื่องกลับ / รายการทั้งหมด',report.recorded+'/'+report.total]];
+      }
+      function returnAssetRules(report) {
+        return 'ช่องว่าง = ไม่มีเครื่องกลับ; “ไม่มี” หรือ “ไม่มีเลข” = มีเครื่องกลับแต่ไม่มีเลขครุภัณฑ์ คอมที่มีเลขไม่ซ้ำ '+report.comWithNumber+' เครื่อง + ไม่มีเลข '+report.comWithoutNumber+' เครื่อง; UPS ที่มีเลขไม่ซ้ำ '+report.upsWithNumber+' เครื่อง + ไม่มีเลข '+report.upsWithoutNumber+' เครื่อง รายการไม่มีเลขนับเครื่องแยกตามแถว ไม่ใช้ข้อความ “ไม่มี/ไม่มีเลข” ตรวจเลขซ้ำ';
+      }
       function renderReturnAssetDashboard() {
         const report=getReturnAssetReport();
-        document.getElementById('returnAssetKpis').innerHTML=[['คอมรับคืน (เลขไม่ซ้ำ)',report.comCount],['UPS รับคืน (เลขไม่ซ้ำ)',report.upsCount],['รายการที่มีเลขครบทั้งคู่',report.both],['มีเลขบันทึกแล้ว / ทั้งหมด',report.recorded+'/'+report.total]].map(function(item) { return '<div class="issue-kpi"><span class="card-label">'+item[0]+'</span><strong>'+item[1]+'</strong></div>'; }).join('');
-        document.getElementById('returnAssetMeta').textContent='ดึงข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt)+' · ยังไม่มีเลขคอม '+report.missingCom+' รายการ / UPS '+report.missingUps+' รายการ การไม่มีเลขหมายถึงยังไม่บันทึกข้อมูล ไม่ได้ยืนยันว่าเครื่องยังไม่คืน';
+        document.getElementById('returnAssetKpis').innerHTML=returnAssetKpis(report).map(function(item) { return '<div class="issue-kpi"><span class="card-label">'+item[0]+'</span><strong>'+item[1]+'</strong></div>'; }).join('');
+        document.getElementById('returnAssetMeta').textContent='ดึงข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt)+' · '+returnAssetRules(report);
         document.getElementById('returnAssetDuplicates').innerHTML=report.duplicates.length ? 'พบเลขซ้ำ '+report.duplicates.length+' เลข — นับแต่ละเลขเพียงครั้งเดียว: '+returnAssetDuplicateRows(report) : 'ไม่พบเลขครุภัณฑ์ซ้ำ';
         document.getElementById('returnAssetAreaBody').innerHTML=returnAssetAreaRows(report);
         document.getElementById('returnAssetMachineBody').innerHTML=returnAssetMachineRows(report);
@@ -586,7 +604,8 @@
       function returnAssetReportHtml(report) {
         const html=completionReportHtml({total:report.total,completed:report.recorded,remaining:report.total-report.recorded,percent:report.total?Math.round(report.recorded/report.total*100):0,workComplete:0,updatedAt:report.updatedAt,areas:[],rows:[]});
         const start=html.indexOf('<body>'),end=html.indexOf('</body>');
-        return html.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>รายงานเลขครุภัณฑ์รับคืน</title>')+'<body><h1>รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที | ดึงข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(report.updatedAt))+'</p><div class="summary"><div>คอมรับคืน (เลขไม่ซ้ำ)<strong>'+report.comCount+'</strong></div><div>UPS รับคืน (เลขไม่ซ้ำ)<strong>'+report.upsCount+'</strong></div><div>รายการที่มีเลขครบทั้งคู่<strong>'+report.both+'</strong></div><div>มีเลขบันทึกแล้ว / ทั้งหมด<strong>'+report.recorded+'/'+report.total+'</strong></div></div><p>อ้างอิง COM S/N เดิม และ UPS S/N เดิม ไม่ใช่ S/N เครื่องใหม่ ยังไม่มีเลขคอม '+report.missingCom+' รายการ และ UPS '+report.missingUps+' รายการ การไม่มีเลขหมายถึงยังไม่บันทึก ไม่ได้ยืนยันว่าเครื่องยังไม่คืน ยอดรวมคอม/UPS นับเลขไม่ซ้ำแยกประเภท หากมีเลขซ้ำข้ามพื้นที่ ผลรวมรายพื้นที่อาจสูงกว่ายอดรวม</p><p>'+ (report.duplicates.length ? 'พบเลขซ้ำ '+report.duplicates.length+' เลข: '+returnAssetDuplicateRows(report) : 'ไม่พบเลขครุภัณฑ์ซ้ำ')+'</p><h2>สรุปตามพื้นที่</h2><table><thead><tr><th>ตึก</th><th>ชั้น</th><th>แผนก</th><th>รายการทั้งหมด</th><th>คอม (เลขไม่ซ้ำ)</th><th>UPS (เลขไม่ซ้ำ)</th><th>มีเลขครบทั้งคู่</th></tr></thead><tbody>'+returnAssetAreaRows(report)+'</tbody></table><h2>รายการเลขครุภัณฑ์ที่บันทึกการรับคืน</h2><table><thead><tr><th>Job</th><th>สถานที่</th><th>เลขครุภัณฑ์คอมเดิม</th><th>เลขครุภัณฑ์ UPS เดิม</th></tr></thead><tbody>'+returnAssetMachineRows(report)+'</tbody></table>'+html.slice(end);
+        const kpis=returnAssetKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('');
+        return html.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>รายงานเลขครุภัณฑ์รับคืน</title>')+'<body><h1>รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที | ดึงข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(report.updatedAt))+'</p><div class="summary">'+kpis+'</div><p>'+escapeHtml(returnAssetRules(report))+' หากเลขซ้ำข้ามพื้นที่ ผลรวมรายพื้นที่อาจสูงกว่ายอดรวม</p><p>'+(report.duplicates.length ? 'พบเลขซ้ำ '+report.duplicates.length+' เลข: '+returnAssetDuplicateRows(report) : 'ไม่พบเลขครุภัณฑ์ซ้ำ')+'</p><h2>สรุปตามพื้นที่</h2><table><thead><tr><th>ตึก</th><th>ชั้น</th><th>แผนก</th><th>รายการทั้งหมด</th><th>คอมรับคืน</th><th>คอมไม่มีเลข</th><th>UPS รับคืน</th><th>UPS ไม่มีเลข</th><th>มีเครื่องกลับทั้งคู่</th></tr></thead><tbody>'+returnAssetAreaRows(report)+'</tbody></table><h2>รายการเครื่องที่รับคืน</h2><table><thead><tr><th>Job</th><th>สถานที่</th><th>คอมเดิม / เลขครุภัณฑ์</th><th>UPS เดิม / เลขครุภัณฑ์</th></tr></thead><tbody>'+returnAssetMachineRows(report)+'</tbody></table>'+html.slice(end);
       }
       function printReturnAssetReport() {
         if (!portalData.loadedAt) { setStatus('กรุณารอโหลดข้อมูลก่อนพิมพ์',true); return; }
@@ -785,7 +804,8 @@
       }
 
       function returnSnCell(row) {
-        return row.oldComSn ? '<span class="status-badge status-installed">รับคืนแล้ว</span><span class="return-sn">' + escapeHtml(row.oldComSn) + '</span>' : '<span class="status-badge">ยังไม่คืน</span>';
+        const state=classifyReturnedAsset(row.oldComSn);
+        return state.received ? '<span class="status-badge status-installed">รับคืนแล้ว</span><span class="return-sn">'+escapeHtml(returnAssetLabel(row.oldComSn))+'</span>' : '<span class="status-badge">ไม่มีคอมกลับ</span>';
       }
 
       const INSTALL_STATUS_OPTIONS = ['รอดำเนินการ','ติดตั้งแล้วแต่ไม่เสร็จ','ติดตั้งเสร็จ','ติดตั้งไม่ได้','ติดตั้งไม่ทัน'];
