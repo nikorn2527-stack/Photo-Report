@@ -296,13 +296,10 @@
 
   <div id="photoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><section class="modal"><div class="modal-handle"></div><h2 id="modalTitle" class="modal-title">เพิ่มรูป</h2><p id="modalNote" class="modal-note">เลือกช่อง แล้วเลือกรูปจากคลังหรือกล้อง</p><div id="slotPicker" class="slot-picker"></div><div id="existingBox" class="existing-box">ช่องนี้มีรูปเดิมอยู่แล้ว เลือกรูปใหม่เพื่อแทนที่ หรือกดลบรูปนี้</div><div class="source-grid"><button class="source-button gallery" type="button" onclick="chooseGallery()">เลือกรูปจากคลัง</button><button class="source-button camera" type="button" onclick="chooseCamera()">ถ่ายรูปด้วยกล้อง</button></div><input id="galleryFile" class="hidden" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple><input id="cameraFile" class="hidden" type="file" accept="image/*" capture="environment"><div id="pending" class="pending"><div id="pendingGrid" class="pending-grid"></div><div id="pendingName" class="pending-name"></div><div id="uploadNote" class="upload-note"></div></div><div class="modal-actions"><button id="saveButton" class="save-button" type="button" onclick="saveSelectedPhotos()" disabled>บันทึก</button><button id="deleteButton" class="delete-button" type="button" onclick="deletePhoto()" hidden>ลบรูปนี้</button><button class="cancel-button" type="button" onclick="closeModal()">ยกเลิก</button></div></section></div>
 
-  <section id="printPreview" class="print-preview" aria-label="Template A4 สำหรับพิมพ์"><div class="print-toolbar"><strong id="printToolbarTitle" class="print-toolbar-title">Template A4</strong><div class="print-toolbar-actions"><button class="print-action print-close" type="button" onclick="closePrintPreview()">กลับ</button><button class="print-action" type="button" onclick="printNow()">สั่งพิมพ์</button></div></div><article id="printPage" class="print-page"></article><p class="print-preview-note">รูปที่แสดงคือรูปที่บันทึกไว้ของ Job นี้ ระบบพิมพ์หน้า Template นี้โดยตรง ไม่สร้าง PDF ลง Drive อัตโนมัติ</p></section>
+  <section id="printPreview" class="print-preview" aria-label="Template A4 สำหรับพิมพ์"><div class="print-toolbar"><strong id="printToolbarTitle" class="print-toolbar-title">Template A4</strong><div class="print-toolbar-actions"><button class="print-action print-close" type="button" onclick="closePrintPreview()">กลับ</button><button id="printNowButton" class="print-action" type="button" onclick="printNow()" disabled>สั่งพิมพ์</button></div></div><article id="printPage" class="print-page"></article><p class="print-preview-note">รูปที่แสดงคือรูปที่บันทึกไว้ของ Job นี้ ระบบพิมพ์หน้า Template นี้โดยตรง ไม่สร้าง PDF ลง Drive อัตโนมัติ</p></section>
 
   <script>
     const MAX_FILE_SIZE = 10 * 1024 * 1024;
-    const MAX_UPLOAD_BYTES = 1.2 * 1024 * 1024;
-    const MAX_IMAGE_PIXELS = 600000;
-    const MAX_IMAGE_DIMENSION = 1000;
     const PHOTO_LABELS = { signage:'ป้ายชื่อหน่วยงาน / จุดติดตั้ง', before1:'ก่อนติดตั้ง 1', after1:'หลังติดตั้ง 1', before2:'ก่อนติดตั้ง 2', after2:'หลังติดตั้ง 2', before3:'ก่อนติดตั้ง 3', after3:'หลังติดตั้ง 3', before4:'ก่อนติดตั้ง 4', after4:'หลังติดตั้ง 4' };
     const GROUPS = { before:{ title:'ก่อนติดตั้ง', note:'สภาพหน้างานก่อนเริ่มงาน', types:['before1','before2','before3','before4'] }, after:{ title:'หลังติดตั้ง', note:'ผลงานหลังทำงานเสร็จ', types:['after1','after2','after3','after4'] } };
     let jobs = [], currentJob = null, currentProgress = { filledTypes:[], missingTypes:[] }, previewUrls = {}, previews = {}, uploadStates = {}, pendingFiles = [], activeType = '', activeGroupKey = '', activeMode = 'group', uploading = false, canceledUploads = {};
@@ -347,21 +344,85 @@
     function showPending(files) { pendingFiles = files; const root = document.getElementById('pendingGrid'); root.innerHTML = ''; document.getElementById('pendingName').textContent = files.length === 1 ? files[0].name : 'เลือกแล้ว ' + files.length + ' รูป'; document.getElementById('uploadNote').textContent = 'กำลังบันทึกอัตโนมัติ...'; document.getElementById('pending').classList.add('open'); document.getElementById('saveButton').disabled = true; files.forEach(function(file) { const img = document.createElement('img'); root.appendChild(img); readFileAsDataUrl(file).then(function(url) { img.src = url; }); }); }
     function saveSelectedPhotos() { if (!pendingFiles.length || uploading) return; savePendingPhotos(pendingFiles); }
     async function savePendingPhotos(files) { if (!currentJob) return; const jobNo = currentJob.jobNo, location = currentJob.location, mode = activeMode, groupKey = activeGroupKey, type = activeType; document.getElementById('saveButton').disabled = true; document.getElementById('uploadNote').textContent = 'กำลังเตรียมรูป...'; try { if (mode === 'single') { const originalData = await readFileAsDataUrl(files[0]); previews[type] = originalData; if (!isFilled(type)) currentProgress.filledTypes.push(type); closeModal(); renderStage(); setStatus('แสดงรูปแล้ว กำลังอัปโหลดพื้นหลัง...',false,true); uploadPreparedPhoto(jobNo, location, type, files[0], originalData); } else { const empty = GROUPS[groupKey].types.filter(function(slotType) { return !isFilled(slotType); }); closeModal(); for (let i=0;i<files.length;i++) { const slotType = empty[i], originalData = await readFileAsDataUrl(files[i]); previews[slotType] = originalData; if (!isFilled(slotType)) currentProgress.filledTypes.push(slotType); renderStage(); uploadPreparedPhoto(jobNo, location, slotType, files[i], originalData); } setStatus('แสดงรูปแล้ว กำลังอัปโหลดพื้นหลัง...',false,true); } } catch (error) { document.getElementById('saveButton').disabled = false; document.getElementById('saveButton').style.display = 'block'; document.getElementById('saveButton').textContent = 'ลองอีกครั้ง'; document.getElementById('uploadNote').textContent = 'เตรียมรูปไม่สำเร็จ กดลองอีกครั้ง'; renderStage(); setStatus('เตรียมรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
-    async function uploadPreparedPhoto(jobNo, location, type, file, originalData) { const key = uploadKey(jobNo,type); delete canceledUploads[key]; uploadStates[type] = 'pending'; previews[type] = originalData; renderStage(); try { const data = await compressImage(originalData, type); await uploadOneForJob(jobNo,location,type,data,file.name,originalData); if (canceledUploads[key]) { await deleteImageForJob(jobNo,location,type); delete previews[type]; delete uploadStates[type]; renderStage(); return; } uploadStates[type] = 'success'; renderStage(); setStatus('บันทึกรูปอัตโนมัติเรียบร้อยแล้ว',false,true); window.setTimeout(function() { if (uploadStates[type] === 'success') { delete uploadStates[type]; renderStage(); } }, 1800); } catch (error) { uploadStates[type] = 'failed'; renderStage(); if (!canceledUploads[key]) setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
+    async function uploadPreparedPhoto(jobNo, location, type, file, originalData) { const key = uploadKey(jobNo,type); delete canceledUploads[key]; uploadStates[type] = 'pending'; previews[type] = originalData; renderStage(); try { await uploadOneForJob(jobNo,location,type,originalData,file.name); if (canceledUploads[key]) { await deleteImageForJob(jobNo,location,type); delete previews[type]; delete uploadStates[type]; renderStage(); return; } uploadStates[type] = 'success'; renderStage(); setStatus('บันทึกรูปอัตโนมัติเรียบร้อยแล้ว',false,true); window.setTimeout(function() { if (uploadStates[type] === 'success') { delete uploadStates[type]; renderStage(); } }, 1800); } catch (error) { uploadStates[type] = 'failed'; renderStage(); if (!canceledUploads[key]) setStatus('บันทึกรูปไม่สำเร็จ: ' + errorMessage(error),true); } }
     function uploadKey(jobNo,type) { return String(jobNo || '') + '::' + String(type || ''); }
     function uploadOneForJob(jobNo,location,type,data,filename,originalData) { return new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadImageToSheet(jobNo,location,type,data,filename,todayString(),originalData); }); }
     function uploadOne(type,data,filename,originalData) { return uploadOneForJob(currentJob.jobNo,currentJob.location,type,data,filename,originalData); }
     function deleteImageForJob(jobNo,location,type) { return new Promise(function(resolve,reject) { google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).deleteImageFromSheet(jobNo,location,type,todayString()); }); }
     function deletePhoto() { if (!currentJob || !activeType || uploading) return; const deletingType = activeType; canceledUploads[uploadKey(currentJob.jobNo,deletingType)] = true; uploading = true; document.getElementById('deleteButton').disabled = true; renderStage(); google.script.run.withSuccessHandler(function(result) { currentProgress.filledTypes = result.filledTypes || currentProgress.filledTypes.filter(function(type) { return type !== deletingType; }); delete previews[deletingType]; delete previewUrls[deletingType]; uploading = false; closeModal(); renderStage(); setStatus(result.message,false,true); }).withFailureHandler(function(error) { uploading = false; document.getElementById('deleteButton').disabled = false; renderStage(); setStatus('ลบรูปไม่สำเร็จ: ' + errorMessage(error),true); }).deleteImageFromSheet(currentJob.jobNo,currentJob.location,deletingType,todayString()); }
     function readFileAsDataUrl(file) { return new Promise(function(resolve,reject) { const reader = new FileReader(); reader.onload = function(e) { resolve(e.target.result); }; reader.onerror = reject; reader.readAsDataURL(file); }); }
-    function estimateBytes(data) { const comma = String(data || '').indexOf(','); return comma < 0 ? Infinity : Math.ceil((data.length - comma - 1) * .75); }
-    function prepareUpload(file) { return readFileAsDataUrl(file).then(compressImage); }
-    function compressImage(dataUrl, type) { return new Promise(function(resolve,reject) { const img = new Image(); img.onload = function() { const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height; let sx = 0, sy = 0, sw = w, sh = h; const longest = Math.max(sw,sh), pixels = Math.max(1,sw*sh), scale = Math.min(1,MAX_IMAGE_DIMENSION/longest,Math.sqrt(MAX_IMAGE_PIXELS/pixels)), canvas = document.createElement('canvas'); let s=scale, q=.68, out=''; for (let i=0;i<14;i++) { canvas.width=Math.max(1,Math.floor(sw*s)); canvas.height=Math.max(1,Math.floor(sh*s)); const ctx=canvas.getContext('2d',{alpha:false}); ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,sx,sy,sw,sh,0,0,canvas.width,canvas.height); out=canvas.toDataURL('image/jpeg',q); if (estimateBytes(out)<=MAX_UPLOAD_BYTES && canvas.width*canvas.height<=MAX_IMAGE_PIXELS) break; if(q>.42) q-=.08; else s*=.72; } if(estimateBytes(out)>MAX_UPLOAD_BYTES || canvas.width*canvas.height>MAX_IMAGE_PIXELS) { reject(new Error('ภาพยังใหญ่เกินข้อจำกัดของชีต')); return; } resolve(out); }; img.onerror=reject; img.src=dataUrl; }); }
-    function openPrintTemplate() { if (!currentJob) return; renderPrintTemplate(); document.getElementById('printPreview').classList.add('open'); }
-    function closePrintPreview() { document.getElementById('printPreview').classList.remove('open'); }
-    function printNow() { const source = document.getElementById('printPage'); if (!source) return; const popup = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200'); if (!popup) { window.print(); return; } const styles = Array.from(document.querySelectorAll('style')).map(function(style) { return style.textContent; }).join('\n'); const title = document.getElementById('printToolbarTitle').textContent || 'Photo Report'; popup.document.open(); popup.document.write('<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + escapeHtml(title) + '</title><style>' + styles + '\n@page{size:A4 portrait;margin:0}html,body{width:210mm!important;height:297mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}.print-page{display:block!important;width:210mm!important;height:297mm!important;min-height:297mm!important;margin:0!important;padding:4mm 7mm!important;overflow:hidden!important;box-shadow:none!important;page-break-after:avoid!important;break-after:avoid-page!important}</style></head><body><article class="print-page">' + source.innerHTML + '</article></body></html>'); popup.document.close(); popup.onload = function() { window.setTimeout(function() { popup.focus(); popup.print(); }, 250); }; popup.onafterprint = function() { window.setTimeout(function() { popup.close(); }, 100); }; }
-    function printImage(type,label) { const url=previews[type] || previewUrls[type]; return '<div class="print-image-box">' + (url ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(label) + '">' : '<span class="print-empty">ยังไม่มีรูป<br>' + escapeHtml(label) + '</span>') + '</div>'; }
-    function renderPrintTemplate() { const job=currentJob, date=todayString(), location=job.location || 'ไม่ระบุสถานที่'; document.getElementById('printToolbarTitle').textContent='Template A4 · ' + job.jobNo; document.getElementById('printPage').innerHTML='<p class="print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p><h1 class="print-document-title">ภาพถ่ายการติดตั้งอุปกรณ์</h1><div class="print-meta"><div class="print-meta-box"><span class="print-meta-label">เลข Job: </span><span class="print-meta-value">' + escapeHtml(job.jobNo) + '</span></div><div class="print-meta-box"><span class="print-meta-label">สถานที่ติดตั้ง: </span><span class="print-meta-value">' + escapeHtml(location) + '</span></div><div class="print-meta-box"><span class="print-meta-label">วันที่: </span><span class="print-meta-value">' + formatDate(date) + '</span></div></div><div class="print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="print-signage">' + printImage('signage','ป้ายจุดติดตั้ง') + '<div></div></div>' + pair('before1','after1',1) + pair('before2','after2',2) + pair('before3','after3',3) + pair('before4','after4',4); }
+    let printImages = {}, printReady = false, printRequest = 0, printDate = '';
+    function openPrintTemplate() {
+      if (!currentJob) return;
+      if (Object.keys(uploadStates).some(function(type) { return uploadStates[type] === 'pending' || uploadStates[type] === 'failed'; })) {
+        setStatus('กรุณารอให้อัปโหลดรูปสำเร็จครบก่อนเปิดใบงาน', true);
+        return;
+      }
+      const jobNo = currentJob.jobNo, request = ++printRequest;
+      printReady = false;
+      printImages = {};
+      document.getElementById('printNowButton').disabled = true;
+      document.getElementById('printToolbarTitle').textContent = 'กำลังโหลดรูปสำหรับ ' + jobNo + '...';
+      document.getElementById('printPage').textContent = 'กำลังโหลดรูปจาก Drive...';
+      document.getElementById('printPreview').classList.add('open');
+      google.script.run.withSuccessHandler(function(result) {
+        if (request !== printRequest || !currentJob || currentJob.jobNo !== jobNo) return;
+        printDate = result.date || '';
+        Promise.all((result.imageTypes || []).map(function(type) {
+          return new Promise(function(resolve, reject) {
+            google.script.run.withSuccessHandler(function(dataUrl) { resolve({type:type, dataUrl:dataUrl}); }).withFailureHandler(reject).getPhotoPrintImage(jobNo, type);
+          });
+        })).then(function(images) {
+          if (request !== printRequest || !currentJob || currentJob.jobNo !== jobNo) return;
+          printImages = {};
+          images.forEach(function(image) { printImages[image.type] = image.dataUrl; });
+          renderPrintTemplate();
+          return waitForPrintImages(document.getElementById('printPage')).then(function() {
+            if (request !== printRequest || !currentJob || currentJob.jobNo !== jobNo) return;
+            printReady = true;
+            document.getElementById('printNowButton').disabled = false;
+          });
+        }).catch(function(error) { if (request === printRequest) showPrintError(error); });
+      }).withFailureHandler(function(error) { if (request === printRequest) showPrintError(error); }).getPhotoPrintImages(jobNo);
+    }
+    function showPrintError(error) {
+      printReady = false;
+      document.getElementById('printNowButton').disabled = true;
+      document.getElementById('printPage').textContent = 'โหลดรูปสำหรับพิมพ์ไม่สำเร็จ: ' + errorMessage(error);
+      setStatus('โหลดรูปสำหรับพิมพ์ไม่สำเร็จ: ' + errorMessage(error), true);
+    }
+    function closePrintPreview() { ++printRequest; printReady = false; document.getElementById('printPreview').classList.remove('open'); }
+    function waitForPrintImages(root) {
+      return Promise.all(Array.from(root.querySelectorAll('img')).map(function(img) {
+        return new Promise(function(resolve, reject) {
+          if (img.complete) { if (img.naturalWidth > 0) resolve(); else reject(new Error('รูปสำหรับพิมพ์โหลดไม่สำเร็จ')); return; }
+          const timer = window.setTimeout(function() { cleanup(); reject(new Error('โหลดรูปสำหรับพิมพ์นานเกินไป กรุณาลองใหม่')); }, 30000);
+          function cleanup() { window.clearTimeout(timer); img.removeEventListener('load', loaded); img.removeEventListener('error', failed); }
+          function loaded() { cleanup(); resolve(); }
+          function failed() { cleanup(); reject(new Error('รูปสำหรับพิมพ์โหลดไม่สำเร็จ')); }
+          img.addEventListener('load', loaded);
+          img.addEventListener('error', failed);
+        });
+      }));
+    }
+    function printNow() {
+      if (!printReady) return;
+      const source = document.getElementById('printPage');
+      const popup = window.open('', '_blank', 'width=900,height=1200');
+      if (!popup) { window.print(); return; }
+      popup.opener = null;
+      const styles = Array.from(document.querySelectorAll('style')).map(function(style) { return style.textContent; }).join('\n');
+      const title = document.getElementById('printToolbarTitle').textContent || 'Photo Report';
+      popup.document.open();
+      popup.document.write('<!doctype html><html lang="th"><head><meta charset="utf-8"><title>' + escapeHtml(title) + '</title><style>' + styles + '\n@page{size:A4 portrait;margin:0}html,body{width:210mm!important;height:297mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}.print-page{display:block!important;width:210mm!important;height:297mm!important;min-height:297mm!important;margin:0!important;padding:4mm 7mm!important;overflow:hidden!important;box-shadow:none!important;page-break-after:avoid!important;break-after:avoid-page!important}</style></head><body><article class="print-page">' + source.innerHTML + '</article></body></html>');
+      popup.document.close();
+      popup.onafterprint = function() { popup.close(); };
+      waitForPrintImages(popup.document).then(function() {
+        if (!popup.closed) { popup.focus(); popup.print(); }
+      }).catch(function(error) { popup.close(); setStatus(errorMessage(error), true); });
+    }
+    function printImage(type,label) { const url=printImages[type]; return '<div class="print-image-box">' + (url ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(label) + '">' : '<span class="print-empty">ยังไม่มีรูป<br>' + escapeHtml(label) + '</span>') + '</div>'; }
+    function renderPrintTemplate() { const job=currentJob, date=printDate || todayString(), location=job.location || 'ไม่ระบุสถานที่'; document.getElementById('printToolbarTitle').textContent='Template A4 · ' + job.jobNo; document.getElementById('printPage').innerHTML='<p class="print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p><h1 class="print-document-title">ภาพถ่ายการติดตั้งอุปกรณ์</h1><div class="print-meta"><div class="print-meta-box"><span class="print-meta-label">เลข Job: </span><span class="print-meta-value">' + escapeHtml(job.jobNo) + '</span></div><div class="print-meta-box"><span class="print-meta-label">สถานที่ติดตั้ง: </span><span class="print-meta-value">' + escapeHtml(location) + '</span></div><div class="print-meta-box"><span class="print-meta-label">วันที่: </span><span class="print-meta-value">' + formatDate(date) + '</span></div></div><div class="print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="print-signage">' + printImage('signage','ป้ายจุดติดตั้ง') + '<div></div></div>' + pair('before1','after1',1) + pair('before2','after2',2) + pair('before3','after3',3) + pair('before4','after4',4); }
     function pair(before,after,index) { return '<div class="print-pair-head"><div class="print-before-head">ก่อนติดตั้ง ' + index + '</div><div class="print-after-head">หลังติดตั้ง ' + index + '</div></div><div class="print-pair">' + printImage(before,'ก่อนติดตั้ง ' + index) + printImage(after,'หลังติดตั้ง ' + index) + '</div>'; }
     function portalUrlFromCurrentPage() { const url = new URL(window.location.href); url.search = ''; url.hash = ''; url.searchParams.set('page','portal'); return url.toString(); }
     function openPortal() { const link = document.getElementById('portalLink'); const url = link && link.href; if (!url || url === '#' || url === window.location.href) return; try { if (window.top === window.self) { window.location.assign(url); } else { window.top.location.href = url; } } catch (error) { window.open(url, '_blank', 'noopener,noreferrer'); } }
