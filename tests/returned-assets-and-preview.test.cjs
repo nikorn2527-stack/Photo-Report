@@ -12,7 +12,7 @@ test('returned assets use old inventory numbers only, deduplicate per type, and 
  const {context}=page();
  const rows=[{jobNo:'JOB-1',oldComSn:' COM-001 ',oldUpsSn:'UPS-01',building:'A'},{jobNo:'JOB-2',oldComSn:'com-001',oldUpsSn:'UPS-02',building:'B'},{jobNo:'JOB-3',oldComSn:'COM-002',oldUpsSn:'',building:'A'},{jobNo:'JOB-4',aioSn:'NEW-COM-999',upsSn:'NEW-UPS-999',building:'A'}];
  const before=JSON.stringify(rows),report=context.buildReturnAssetReportData(rows,'2026-10-21T00:00:00Z');
- assert.equal(report.comCount,2);assert.equal(report.upsCount,2);assert.equal(report.both,2);assert.equal(report.recorded,3);
+ assert.equal(report.comCount,2);assert.equal(report.upsCount,2);assert.equal(report.recorded,3);
  assert.equal(report.missingCom,1);assert.equal(report.missingUps,2);assert.equal(report.duplicates.length,1);
  assert.equal(report.duplicates[0].type,'คอมพิวเตอร์');assert.equal(report.duplicates[0].jobs.length,2);
  assert.equal(JSON.stringify(rows),before);
@@ -62,7 +62,7 @@ test('blank means no returned machine, while ไม่มี and ไม่มี
   const state=context.classifyReturnedAsset(value);assert.equal(state.received,true);assert.equal(state.noNumber,true);assert.equal(state.number,'');
  }
  assert.equal(context.classifyReturnedAsset('00123').number,'00123');
- assert.equal(context.returnAssetLabel(''),'ไม่มีเครื่องกลับ');
+ assert.equal(context.returnAssetLabel(''),'');
  assert.equal(context.returnAssetLabel('ไม่มี'),'มีเครื่องกลับ แต่ไม่มีเลขครุภัณฑ์');
 });
 test('anonymous returned machines are counted per row, separately from unique numbered machines and duplicate warnings',()=>{
@@ -71,7 +71,7 @@ test('anonymous returned machines are counted per row, separately from unique nu
  const report=context.buildReturnAssetReportData(rows);
  assert.equal(report.comCount,3);assert.equal(report.comWithNumber,1);assert.equal(report.comWithoutNumber,2);
  assert.equal(report.upsCount,4);assert.equal(report.upsWithNumber,2);assert.equal(report.upsWithoutNumber,2);
- assert.equal(report.missingCom,2);assert.equal(report.missingUps,2);assert.equal(report.both,3);assert.equal(report.recorded,5);
+ assert.equal(report.missingCom,2);assert.equal(report.missingUps,2);assert.equal(report.recorded,5);
  assert.equal(report.groups[0].com,3);assert.equal(report.groups[0].ups,4);assert.equal(report.groups[0].comWithoutNumber,2);
  assert.equal(report.duplicates.length,1);assert.equal(report.duplicates[0].number,'00123');
 });
@@ -80,22 +80,23 @@ test('dashboard and PDF explain all three return states and include unnumbered r
  vm.runInContext("portalData={assetRows:rows,loadedAt:'2026-10-21T00:00:00Z'}",p.context);
  p.context.renderReturnAssetDashboard();const report=p.context.getReturnAssetReport(),html=p.context.returnAssetReportHtml(report);
  assert.ok(p.document.getElementById('returnAssetKpis').innerHTML.includes('คอมรับคืนทั้งหมด'));
- assert.ok(p.document.getElementById('returnAssetMachineBody').innerHTML.includes('ไม่มีเครื่องกลับ'));
- assert.ok(html.includes('มีเครื่องกลับ แต่ไม่มีเลขครุภัณฑ์'));assert.ok(html.includes('ไม่มีคอมกลับ'));
+ assert.ok(!p.document.getElementById('returnAssetMachineBody').innerHTML.includes('ไม่มีเครื่องกลับ'));
+ assert.ok(p.document.getElementById('returnAssetMachineBody').innerHTML.includes('<td></td>'));
+ assert.ok(html.includes('มีเครื่องกลับ แต่ไม่มีเลขครุภัณฑ์'));assert.ok(!html.includes('ไม่มีคอมกลับ'));
  assert.equal(report.comCount,1);assert.equal(report.upsCount,1);assert.equal(report.duplicates.length,0);
 });
 
 test('monitor-only returns appear in the report independently from PC and UPS',()=>{
  const {context}=page(),report=context.buildReturnAssetReportData([{jobNo:'JOB-MON',oldMonitorSn:'MON-001',oldComSn:'',oldUpsSn:''}]);
- assert.equal(report.monitorCount,1);assert.equal(report.comCount,0);assert.equal(report.upsCount,0);assert.equal(report.recorded,1);assert.equal(report.allThree,0);
+ assert.equal(report.monitorCount,1);assert.equal(report.comCount,0);assert.equal(report.upsCount,0);assert.equal(report.recorded,1);
  assert.equal(report.rows[0].monitorNo,'MON-001');assert.ok(context.returnAssetReportHtml(report).includes('MON-001'));
 });
 test('PC, monitor and UPS totals independently handle numbered and unnumbered returns',()=>{
  const {context}=page(),report=context.buildReturnAssetReportData([{jobNo:'1',oldComSn:'PC1',oldMonitorSn:'M1',oldUpsSn:'U1'},{jobNo:'2',oldMonitorSn:'ไม่มี'},{jobNo:'3',oldComSn:'ไม่มีเลข',oldMonitorSn:'ไม่มีเลข',oldUpsSn:'ไม่มี'},{jobNo:'4',oldComSn:'PC1',oldMonitorSn:'M1'},{jobNo:'5',oldUpsSn:'U1'}]);
  assert.equal(report.comCount,2);assert.equal(report.monitorCount,3);assert.equal(report.upsCount,2);
  assert.equal(report.monitorWithNumber,1);assert.equal(report.monitorWithoutNumber,2);assert.equal(report.missingMonitor,1);
- assert.equal(report.allThree,2);assert.equal(report.duplicates.length,3);
- assert.equal(report.groups[0].monitor,3);assert.equal(report.groups[0].allThree,2);
+ assert.equal(report.duplicates.length,3);
+ assert.equal(report.groups[0].monitor,3);
  assert.ok(report.duplicates.some(item=>item.type==='จอมอนิเตอร์'&&item.number==='M1'));
 });
 
@@ -113,7 +114,7 @@ test('a returned monitor identifies a PC, including monitors returned without an
 test('confirmed rule classifies computers without returned monitors as AIO, including unnumbered computers',()=>{
  const {context}=page();
  for(const computer of ['COM-001','ไม่มี','ไม่มีเลข'])assert.equal(context.returnedMachineType({oldComSn:computer,oldMonitorSn:''}),'AIO');
- assert.equal(context.returnedMachineType({oldComSn:'',oldMonitorSn:'',oldUpsSn:'UPS-001'}),'ไม่มีคอมกลับ');
+ assert.equal(context.returnedMachineType({oldComSn:'',oldMonitorSn:'',oldUpsSn:'UPS-001'}),'');
  const report=context.buildReturnAssetReportData([{jobNo:'JOB-AIO',oldComSn:'ไม่มีเลข',oldMonitorSn:''}]);
  assert.equal(report.rows[0].machineType,'AIO');assert.ok(context.returnAssetReportHtml(report).includes('<td>AIO</td>'));
 });
@@ -147,3 +148,18 @@ test('late loading from the previous report cannot overwrite the next report',as
  assert.ok(!p.document.getElementById('workPrintPage').innerHTML.includes('stale-job-one-image'));
  assert.equal(p.document.getElementById('workPrintButton').disabled,false);
 });
+
+ test('blank returns stay empty and unequal component counts have no complete-set KPI in dashboard or PDF',()=>{
+ const p=page(),rows=[{jobNo:'PC',oldComSn:'PC-1',oldMonitorSn:'MON-1'},{jobNo:'MON',oldMonitorSn:'ไม่มีเลข'},{jobNo:'UPS',oldUpsSn:'UPS-1'},{jobNo:'EMPTY'}];
+ p.context.rows=rows;vm.runInContext("portalData={assetRows:rows,loadedAt:'2026-10-22T00:00:00Z'}",p.context);p.context.renderReturnAssetDashboard();
+ const report=p.context.getReturnAssetReport(),html=p.context.returnAssetReportHtml(report);
+ assert.equal(report.comCount,1);assert.equal(report.monitorCount,2);assert.equal(report.upsCount,1);assert.equal(report.recorded,3);
+ assert.equal(p.context.returnSnCell({oldComSn:''}),'');assert.equal(p.context.returnedMachineType({oldUpsSn:'UPS-1'}),'');
+ assert.ok(p.context.returnAssetMachineRows(report).includes('<td>PC</td><td>PC-1</td><td>MON-1</td><td></td>'));
+ for(const output of [html,p.document.getElementById('returnAssetKpis').innerHTML,p.context.returnAssetAreaHeaders(),p.context.returnAssetAreaRows(report)]) {
+  assert.doesNotMatch(output,/คืนครบ|รับครบ|ไม่มีเครื่องกลับ|ไม่มีคอมกลับ/);
+ }
+ assert.equal((p.context.returnAssetAreaHeaders().match(/<th>/g)||[]).length,10);
+ assert.equal((p.context.returnAssetAreaRows(report).match(/<td>/g)||[]).length,10);
+ assert.ok(html.includes('มีเครื่องกลับ แต่ไม่มีเลขครุภัณฑ์'));assert.ok(!html.includes('<td>EMPTY</td>'));
+ });
