@@ -551,7 +551,7 @@
       function returnedMachineType(row) {
         const monitor=classifyReturnedAsset(row.oldMonitorSn),computer=classifyReturnedAsset(row.oldComSn);
         if (monitor.received) return computer.received ? 'PC' : 'PC (รับคืนเฉพาะจอ)';
-        return computer.received ? 'ยังไม่ระบุ PC/AIO' : 'ไม่มีคอมกลับ';
+        return computer.received ? 'AIO' : 'ไม่มีคอมกลับ';
       }
       const RETURN_ASSET_TYPES=[{key:'com',field:'oldComSn',label:'คอม',duplicateLabel:'คอมพิวเตอร์'},{key:'monitor',field:'oldMonitorSn',label:'จอ',duplicateLabel:'จอมอนิเตอร์'},{key:'ups',field:'oldUpsSn',label:'UPS',duplicateLabel:'UPS'}];
       function buildReturnAssetReportData(rows,updatedAt) {
@@ -610,7 +610,7 @@
         return [['คอมรับคืนทั้งหมด',report.comCount],['คอมมีเครื่องแต่ไม่มีเลข',report.comWithoutNumber],['จอรับคืนทั้งหมด',report.monitorCount],['จอมีเครื่องแต่ไม่มีเลข',report.monitorWithoutNumber],['UPS รับคืนทั้งหมด',report.upsCount],['UPS มีเครื่องแต่ไม่มีเลข',report.upsWithoutNumber],['รายการที่คืนครบ PC / จอ / UPS',report.allThree],['มีของกลับ / รายการทั้งหมด',report.recorded+'/'+report.total]];
       }
       function returnAssetRules(report) {
-        return 'มีจอรับคืน (รวม “ไม่มี/ไม่มีเลข”) = PC ไม่ใช่ AIO; ไม่มีจอยังไม่สรุปว่าเป็น AIO แยกคอม / จอ / UPS: ช่องว่าง = ไม่มีของกลับ; “ไม่มี” หรือ “ไม่มีเลข” = มีของกลับแต่ไม่มีเลขครุภัณฑ์ '+RETURN_ASSET_TYPES.map(function(type) { const missing='missing'+type.key[0].toUpperCase()+type.key.slice(1);return type.label+'ที่มีเลขไม่ซ้ำ '+report[type.key+'WithNumber']+' + ไม่มีเลข '+report[type.key+'WithoutNumber']+'; ไม่มี'+type.label+'กลับ '+report[missing]+' รายการ'; }).join(' · ')+' รายการไม่มีเลขนับแยกตามแถวและประเภท ไม่ใช้คำว่า “ไม่มี/ไม่มีเลข” ตรวจเลขซ้ำ';
+        return 'มีจอรับคืน (รวม “ไม่มี/ไม่มีเลข”) = PC ไม่ใช่ AIO; มีคอมกลับแต่ช่องจอว่าง = AIO แยกคอม / จอ / UPS: ช่องว่าง = ไม่มีของกลับ; “ไม่มี” หรือ “ไม่มีเลข” = มีของกลับแต่ไม่มีเลขครุภัณฑ์ '+RETURN_ASSET_TYPES.map(function(type) { const missing='missing'+type.key[0].toUpperCase()+type.key.slice(1);return type.label+'ที่มีเลขไม่ซ้ำ '+report[type.key+'WithNumber']+' + ไม่มีเลข '+report[type.key+'WithoutNumber']+'; ไม่มี'+type.label+'กลับ '+report[missing]+' รายการ'; }).join(' · ')+' รายการไม่มีเลขนับแยกตามแถวและประเภท ไม่ใช้คำว่า “ไม่มี/ไม่มีเลข” ตรวจเลขซ้ำ';
       }
       function renderReturnAssetDashboard() {
         const report=getReturnAssetReport();

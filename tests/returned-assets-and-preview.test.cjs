@@ -104,7 +104,16 @@ test('a returned monitor identifies a PC, including monitors returned without an
  for(const monitor of ['MON-001','ไม่มี','ไม่มีเลข'])assert.equal(context.returnedMachineType({oldComSn:'COM-001',oldMonitorSn:monitor}),'PC');
  assert.equal(context.returnedMachineType({oldComSn:'',oldMonitorSn:'MON-001'}),'PC (รับคืนเฉพาะจอ)');
  assert.equal(context.returnedMachineType({type:'AIO',oldComSn:'COM-001',oldMonitorSn:'MON-001'}),'PC');
- assert.equal(context.returnedMachineType({oldComSn:'COM-001',oldMonitorSn:''}),'ยังไม่ระบุ PC/AIO');
+ assert.equal(context.returnedMachineType({oldComSn:'COM-001',oldMonitorSn:''}),'AIO');
  const report=context.buildReturnAssetReportData([{jobNo:'JOB-PC',oldComSn:'COM-001',oldMonitorSn:'ไม่มีเลข'}]);
  assert.equal(report.rows[0].machineType,'PC');assert.ok(context.returnAssetMachineRows(report).includes('<td>PC</td>'));
+});
+
+
+test('confirmed rule classifies computers without returned monitors as AIO, including unnumbered computers',()=>{
+ const {context}=page();
+ for(const computer of ['COM-001','ไม่มี','ไม่มีเลข'])assert.equal(context.returnedMachineType({oldComSn:computer,oldMonitorSn:''}),'AIO');
+ assert.equal(context.returnedMachineType({oldComSn:'',oldMonitorSn:'',oldUpsSn:'UPS-001'}),'ไม่มีคอมกลับ');
+ const report=context.buildReturnAssetReportData([{jobNo:'JOB-AIO',oldComSn:'ไม่มีเลข',oldMonitorSn:''}]);
+ assert.equal(report.rows[0].machineType,'AIO');assert.ok(context.returnAssetReportHtml(report).includes('<td>AIO</td>'));
 });
