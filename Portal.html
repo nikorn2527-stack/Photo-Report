@@ -293,7 +293,7 @@
             <div class="completion-head"><div><h3 id="executiveTitle" class="panel-title">สรุปติดตั้งและรับคืนสำหรับผู้บริหาร</h3><p id="executiveMeta" class="view-note"></p></div><div class="executive-photo-actions"><button type="button" class="button button-primary" onclick="openExecutivePhotoReport(true)">ชุดเอกสารส่งผู้บริหาร</button><button type="button" class="button button-outline" onclick="printExecutiveReport()">พิมพ์เฉพาะสรุป</button><button type="button" class="button button-outline" onclick="openExecutivePhotoReport()">รายงานภาพคอมรายหน่วยงาน</button></div></div>
             <div id="executiveKpis" class="issue-kpis"></div>
             <div id="executiveBrief"></div>
-            <p class="plan-note">ยอดรับคืนนับตาม Job รวมเครื่องไม่มีเลข · PC คือคอมพร้อมจอ โดยยอดจอและ UPS แสดงแยก · ติดตั้งเพิ่มคือไม่มีของเดิมรับคืน</p>
+            <p class="plan-note">ยอดรับคืนนับตาม Job รวมเครื่องไม่มีเลข · PC คือคอมพร้อมจอ โดยยอดจอและ UPS แสดงแยก · ติดตั้งเพิ่มสำเร็จคือสถานะติดตั้งเสร็จและไม่มีของเดิมรับคืน</p>
             <div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr id="executiveHeaders"></tr></thead><tbody id="executiveDepartmentBody"></tbody></table></div>
             <details id="executiveDetails" style="margin-top:14px"><summary id="executiveDetailsTitle" style="cursor:pointer;min-height:44px">ดูรายละเอียดตรวจสอบ</summary>
               <div id="executiveDuplicateNotes"></div><div id="executiveReturnNotes"></div>
@@ -612,11 +612,10 @@
         select.value=dashboardDepartment;
       }
       function changeDashboardDepartment(value) { dashboardDepartment=value;renderDashboard(); }
-      function executiveCounts(rows,workByRow,workByJob) {
-        const result={total:rows.length,completed:0,pendingReview:0,issues:0,aio:0,pc:0,monitor:0,ups:0,comWithoutNumber:0,monitorWithoutNumber:0,upsWithoutNumber:0,additional:0,monitorOnly:0};
+      function executiveCounts(rows,workRows) {
+        const completion=buildCompletionReportData(rows,workRows);
+        const result={total:completion.total,completed:completion.completed,remaining:completion.remaining,percent:completion.percent,workComplete:completion.workComplete,pendingReview:completion.completed-completion.workComplete,issues:0,aio:0,pc:0,monitor:0,ups:0,comWithoutNumber:0,monitorWithoutNumber:0,upsWithoutNumber:0,additional:0,monitorOnly:0};
         rows.forEach(function(row) {
-          const work=workByRow.get(String(row.rowNumber))||workByJob.get(String(row.jobNo||'').trim().toLowerCase());
-          if (row.installStatus==='ติดตั้งเสร็จ') { result.completed++;if (!work || work.workStatus!=='งานจบ') result.pendingReview++; }
           if (installationNeedsReason(row.installStatus)) result.issues++;
           const com=classifyReturnedAsset(row.oldComSn),monitor=classifyReturnedAsset(row.oldMonitorSn),ups=classifyReturnedAsset(row.oldUpsSn);
           if(com.received)result[monitor.received?'pc':'aio']++;
@@ -626,9 +625,8 @@
           if(monitor.noNumber)result.monitorWithoutNumber++;
           if(ups.noNumber)result.upsWithoutNumber++;
           if(!com.received&&monitor.received)result.monitorOnly++;
-          if(!com.received&&!monitor.received&&!ups.received)result.additional++;
+          if(row.installStatus==='ติดตั้งเสร็จ'&&!com.received&&!monitor.received&&!ups.received)result.additional++;
         });
-        result.remaining=result.total-result.completed;result.percent=result.total?Math.round(result.completed/result.total*100):0;
         return result;
       }
       function buildExecutiveReportData(rows,workRows,updatedAt,department) {
@@ -636,12 +634,12 @@
         (workRows||[]).forEach(function(row) { if(row.rowNumber!==undefined&&row.rowNumber!==null)workByRow.set(String(row.rowNumber),row);if(row.jobNo)workByJob.set(String(row.jobNo).trim().toLowerCase(),row); });
         (rows||[]).forEach(function(row) {
           const name=departmentName(row);if(!departments.has(name))departments.set(name,[]);departments.get(name).push(row);
-          const work=workByRow.get(String(row.rowNumber))||workByJob.get(String(row.jobNo||'').trim().toLowerCase());
+          const work=row.rowNumber!==undefined&&row.rowNumber!==null?workByRow.get(String(row.rowNumber)):workByJob.get(String(row.jobNo||'').trim().toLowerCase());
           if(!classifyReturnedAsset(row.oldComSn).received&&classifyReturnedAsset(row.oldMonitorSn).received)returnNotes.push({jobNo:row.jobNo||'',department:name,kind:'รับคืนเฉพาะจอ — กรุณาตรวจสอบ',detail:'มีข้อมูลจอเดิม แต่ช่องคอมเดิมว่าง กรุณาตรวจข้อมูล Job นี้'});
           const pending=row.installStatus==='ติดตั้งเสร็จ'&&(!work||work.workStatus!=='งานจบ'),issue=installationNeedsReason(row.installStatus);
           if (pending||issue) attention.push({jobNo:row.jobNo||'',department:name,kind:pending?'ติดตั้งเสร็จ / รอตรวจงาน':row.installStatus,detail:pending?(work&&work.blockers&&work.blockers.length?work.blockers.join(' · '):'รอตรวจข้อมูลติดตามงาน'):(row.installReason||'ยังไม่ระบุปัญหา')});
         });
-        const groups=Array.from(departments.entries()).map(function(entry) { return Object.assign({department:entry[0]},executiveCounts(entry[1],workByRow,workByJob)); }).sort(function(a,b) { return a.department.localeCompare(b.department,'th',{numeric:true}); });
+        const groups=Array.from(departments.entries()).map(function(entry) { return Object.assign({department:entry[0]},executiveCounts(entry[1],workRows)); }).sort(function(a,b) { return a.department.localeCompare(b.department,'th',{numeric:true}); });
         attention.sort(function(a,b) { return a.department.localeCompare(b.department,'th',{numeric:true})||a.jobNo.localeCompare(b.jobNo,'th',{numeric:true}); });
         const returns=buildReturnAssetReportData(rows);
         const duplicates=returns.duplicates.map(function(item) {
@@ -649,7 +647,7 @@
           const entries=(rows||[]).filter(function(row){return classifyReturnedAsset(row[type.field]).number.toUpperCase()===item.number.toUpperCase();}).map(function(row){return (row.jobNo||'แถว '+row.rowNumber)+' ('+departmentName(row)+')';});
           return Object.assign({},item,{entries:entries});
         });
-        return {totals:executiveCounts(rows||[],workByRow,workByJob),groups:groups,attention:attention,returnNotes:returnNotes,duplicates:duplicates,updatedAt:updatedAt||'',department:department||'ทุกหน่วยงาน'};
+        return {totals:executiveCounts(rows||[],workRows),groups:groups,attention:attention,returnNotes:returnNotes,duplicates:duplicates,updatedAt:updatedAt||'',department:department||'ทุกหน่วยงาน'};
       }
       function getExecutiveReport() { return buildExecutiveReportData(getDashboardAssetRows(),portalData.jobWorkRows,portalData.loadedAt,dashboardDepartment); }
       function executiveKpis(report) {
@@ -658,9 +656,9 @@
       }
       function executiveBriefHtml(report) {
         const t=report.totals;
-        return '<p><strong>รับคืน:</strong> AIO '+t.aio+' เครื่อง · PC '+t.pc+' เครื่อง · จอ '+t.monitor+' จอ · UPS '+t.ups+' เครื่อง<br><strong>ติดตั้งเพิ่ม:</strong> '+t.additional+' งาน (ไม่มีของเดิมรับคืน)</p><p class="plan-note">รับคืนไม่มีเลขครุภัณฑ์: คอม '+t.comWithoutNumber+' · จอ '+t.monitorWithoutNumber+' · UPS '+t.upsWithoutNumber+' (รวมในยอดรับคืนแล้ว)</p><p><strong>ต้องติดตาม:</strong> ติดปัญหา '+t.issues+' งาน · ติดตั้งเสร็จแต่รอตรวจงาน '+t.pendingReview+' งาน · เลขครุภัณฑ์ซ้ำ '+report.duplicates.length+' เลข'+(t.monitorOnly?' · รับคืนเฉพาะจอ '+t.monitorOnly+' รายการ (กรุณาตรวจสอบ)':'')+'</p>';
+        return '<p><strong>รับคืน:</strong> AIO '+t.aio+' เครื่อง · PC '+t.pc+' เครื่อง · จอ '+t.monitor+' จอ · UPS '+t.ups+' เครื่อง<br><strong>ติดตั้งเพิ่มสำเร็จ:</strong> '+t.additional+' งาน (ไม่มีของเดิมรับคืน)</p><p class="plan-note">รับคืนไม่มีเลขครุภัณฑ์: คอม '+t.comWithoutNumber+' · จอ '+t.monitorWithoutNumber+' · UPS '+t.upsWithoutNumber+' (รวมในยอดรับคืนแล้ว)</p><p><strong>ต้องติดตาม:</strong> ติดปัญหา '+t.issues+' งาน · ติดตั้งเสร็จแต่รอตรวจงาน '+t.pendingReview+' งาน · เลขครุภัณฑ์ซ้ำ '+report.duplicates.length+' เลข'+(t.monitorOnly?' · รับคืนเฉพาะจอ '+t.monitorOnly+' รายการ (กรุณาตรวจสอบ)':'')+'</p>';
       }
-      function executiveHeaders() { return ['หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','AIO คืน','PC คืน','จอคืน','UPS คืน','ติดตั้งเพิ่ม'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
+      function executiveHeaders() { return ['หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','AIO คืน','PC คืน','จอคืน','UPS คืน','ติดตั้งเพิ่มสำเร็จ'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
       function executiveDepartmentRows(report) {
         return report.groups.map(function(row) { return '<tr><td>'+escapeHtml(row.department)+'</td>'+['total','completed','remaining','percent','aio','pc','monitor','ups','additional'].map(function(key) { return '<td>'+row[key]+(key==='percent'?'%':'')+'</td>'; }).join('')+'</tr>'; }).join('')||'<tr><td colspan="10" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
       }
@@ -694,7 +692,7 @@
       function executiveReportHtml(report,includeDetails) {
         const base=completionReportHtml({total:0,completed:0,remaining:0,percent:0,workComplete:0,areas:[],rows:[]}),start=base.indexOf('<body>');
         const details=includeDetails?'<section style="break-before:page"><h2>รายละเอียดประกอบการตรวจสอบ</h2>'+executiveDuplicateNotesHtml(report)+executiveReturnNotesHtml(report,true)+'<h2>งานที่ต้องติดตาม / ประสาน</h2><table><thead><tr><th>Job</th><th>หน่วยงาน</th><th>เรื่องที่ต้องติดตาม</th><th>รายละเอียด</th></tr></thead><tbody>'+executiveAttentionRows(report,true)+'</tbody></table></section>':'';
-        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table><p class="note">รับคืนนับตาม Job รวมเครื่องไม่มีเลข · PC = คอมพร้อมจอ โดยจอและ UPS แสดงแยก · ติดตั้งเพิ่ม = ไม่มีของเดิมรับคืน · รอตรวจงาน = ต้องตรวจส่งมอบ อุปกรณ์ หรือภาพ · เลขซ้ำแจ้งแยก ไม่หักยอดรับคืน</p>'+details+'</body></html>';
+        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table><p class="note">รับคืนนับตาม Job รวมเครื่องไม่มีเลข · PC = คอมพร้อมจอ โดยจอและ UPS แสดงแยก · ติดตั้งเพิ่มสำเร็จ = ติดตั้งเสร็จและไม่มีของเดิมรับคืน · รอตรวจงาน = ต้องตรวจส่งมอบ อุปกรณ์ หรือภาพ · เลขซ้ำแจ้งแยก ไม่หักยอดรับคืน</p>'+details+'</body></html>';
       }
       function printExecutiveReport() {
         if(!portalData.loadedAt){setStatus('กรุณารอโหลดข้อมูลก่อนพิมพ์',true);return;}

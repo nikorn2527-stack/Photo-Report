@@ -8,7 +8,7 @@ const rows=[
  {rowNumber:7,jobNo:'JOB-4',department:'เภสัช',installStatus:'รอดำเนินการ',oldUpsSn:'UPS-1'},
  {rowNumber:8,jobNo:'JOB-5',installStatus:'ติดตั้งเสร็จ'}
 ];
-const work=[{rowNumber:4,jobNo:'JOB-1',workStatus:'งานจบ'},{jobNo:'JOB-2',workStatus:'ยังไม่จบ',blockers:['ขาดรูปป้ายหน่วยงาน']}];
+const work=[{rowNumber:4,jobNo:'JOB-1',workStatus:'งานจบ'},{rowNumber:5,jobNo:'JOB-2',workStatus:'ยังไม่จบ',blockers:['ขาดรูปป้ายหน่วยงาน']}];
 test('executive summary groups by trimmed department across floors, including unnamed departments',()=>{
  const {context}=page(),before=JSON.stringify(rows),report=context.buildExecutiveReportData(rows,work,'2026-10-22T00:00:00Z');
  assert.equal(report.groups.length,3);const finance=report.groups.find(r=>r.department==='การเงิน');assert.equal(finance.total,2);assert.equal(finance.completed,2);assert.equal(finance.percent,100);assert.equal(finance.pendingReview,1);
@@ -48,7 +48,7 @@ test('monitor-only returns appear as notes in screen/PDF without increasing comp
  assert.equal(p.context.executiveReturnNotesHtml(p.context.buildExecutiveReportData([{oldComSn:'C',oldMonitorSn:'M'}],[]),false),'');
 });
 test('blank fields classify additional installations; UPS-only returns do not and repeated numbers cannot break paired-PC totals',()=>{
- const {context}=page(),report=context.buildExecutiveReportData([{jobNo:'ADD',oldComSn:' ',oldMonitorSn:null,oldUpsSn:''},{jobNo:'UPS',oldUpsSn:'ไม่มีเลข'},{jobNo:'PC1',oldComSn:'COM',oldMonitorSn:'MON'},{jobNo:'PC2',oldComSn:'COM',oldMonitorSn:'MON'},{jobNo:'AIO',oldComSn:'ไม่มีเลข'},{jobNo:'MON',oldMonitorSn:'MON'}],[]);
+ const {context}=page(),report=context.buildExecutiveReportData([{jobNo:'ADD',installStatus:'ติดตั้งเสร็จ',oldComSn:' ',oldMonitorSn:null,oldUpsSn:''},{jobNo:'UPS',oldUpsSn:'ไม่มีเลข'},{jobNo:'PC1',oldComSn:'COM',oldMonitorSn:'MON'},{jobNo:'PC2',oldComSn:'COM',oldMonitorSn:'MON'},{jobNo:'AIO',oldComSn:'ไม่มีเลข'},{jobNo:'MON',oldMonitorSn:'MON'}],[]);
  assert.equal(report.totals.additional,1);assert.equal(report.totals.pc,2);assert.equal(report.totals.aio,1);assert.equal(report.totals.monitor,3);assert.equal(report.totals.monitor,report.totals.pc+report.totals.monitorOnly);assert.equal(report.totals.ups,1);
  for(const key of ['pc','aio','monitor','ups','additional'])assert.equal(report.totals[key],report.groups.reduce((n,row)=>n+row[key],0));
  assert.ok(context.executiveReportHtml(report).includes('ติดตั้งเพิ่ม'));
@@ -66,4 +66,19 @@ test('executive view has four headline metrics and a compact print summary with 
  assert.ok(summary.includes('PC 2 เครื่อง'));assert.ok(summary.includes('จอ 3 จอ'));assert.ok(summary.includes('เลขครุภัณฑ์ซ้ำ 2 เลข'));assert.ok(summary.includes('รับคืนเฉพาะจอ 1 รายการ'));
  assert.ok(!summary.includes('PRIVATE-JOB-A'));assert.ok(details.includes('PRIVATE-JOB-A'));assert.ok(details.includes('รายละเอียดประกอบการตรวจสอบ'));
  assert.equal((context.executiveHeaders().match(/<th>/g)||[]).length,10);
+});
+
+test('executive and submission figures use the reference completion report: 156 total, 126 completed, 30 remaining, 81%, 80 fully complete',()=>{
+ const {context}=page(),rows=Array.from({length:156},(_,i)=>({rowNumber:i+4,jobNo:'JOB-'+i,department:i%2?'A':'B',installStatus:i<126?'ติดตั้งเสร็จ':'รอดำเนินการ',oldComSn:i<100?'COM-'+i:'',oldMonitorSn:i<60?'MON-'+i:'',oldUpsSn:i<90?'UPS-'+i:''})),work=rows.map((r,i)=>({rowNumber:r.rowNumber,jobNo:r.jobNo,workStatus:i<80?'งานจบ':'ยังไม่จบ'}));
+ for(const selected of [rows,rows.filter(r=>r.department==='A'),rows.filter(r=>r.department==='B')]){
+  const old=context.buildCompletionReportData(selected,work),report=context.buildExecutiveReportData(selected,work);
+  for(const key of ['total','completed','remaining','percent','workComplete'])assert.equal(report.totals[key],old[key]);
+  assert.equal(report.totals.pendingReview,old.completed-old.workComplete);
+ }
+ const report=context.buildExecutiveReportData(rows,work);assert.equal(report.totals.total,156);assert.equal(report.totals.completed,126);assert.equal(report.totals.remaining,30);assert.equal(report.totals.percent,81);assert.equal(report.totals.workComplete,80);assert.equal(report.totals.pendingReview,46);assert.equal(report.totals.additional,26);assert.equal(report.totals.pc,60);assert.equal(report.totals.aio,40);assert.equal(report.totals.monitor,60);assert.equal(report.totals.ups,90);
+ assert.ok(context.executiveSubmissionSummaryHtml(report,false).includes('81%'));
+});
+test('blank return fields on pending, blocked or incompletely installed jobs never count as completed additional installations',()=>{
+ const {context}=page(),report=context.buildExecutiveReportData([{installStatus:'รอดำเนินการ'},{installStatus:'ติดตั้งไม่ได้'},{installStatus:'ติดตั้งแล้วแต่ไม่เสร็จ'},{installStatus:'ติดตั้งเสร็จ'},{installStatus:'ติดตั้งเสร็จ',oldUpsSn:'ไม่มีเลข'}],[]);
+ assert.equal(report.totals.additional,1);assert.equal(report.totals.completed,2);assert.equal(report.totals.remaining,3);assert.equal(report.totals.ups,1);assert.ok(context.executiveBriefHtml(report).includes('ติดตั้งเพิ่มสำเร็จ:'));
 });
