@@ -85,6 +85,8 @@ const CONFIG = Object.freeze({
   INSTALL_STATUS_HEADER: 'สถานะการติดตั้ง',
   INSTALL_REASON_COLUMN: 34,
   INSTALL_REASON_HEADER: 'เหตุผลติดตั้งไม่ได้/ไม่ทัน',
+  OLD_MONITOR_SN_COLUMN: 36,
+  OLD_MONITOR_SN_HEADER: 'เลขครุภัณฑ์จอมอนิเตอร์',
   INSTALL_STATUS_DEFAULT: 'รอดำเนินการ',
   INSTALL_STATUS_OPTIONS: Object.freeze([
     'รอดำเนินการ',
@@ -673,6 +675,8 @@ function saveAssetMasterPortalRow(rowNumber, data) {
     data.oldUpsSn || ''
   ]]);
 
+  saveReturnedMonitor_(sheet, targetRow, data);
+
   // ถ้าเป็นแถวใหม่ ให้คัดลอกสูตรวันคงเหลือและการแจ้งเตือนจากแถวก่อนหน้า
   if (!sheet.getRange(targetRow, CONFIG.REMAINING_COLUMN).getFormula()) {
     if (targetRow > CONFIG.HEADER_ROW) {
@@ -693,10 +697,15 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   };
 }
 
+// คงค่า AJ เดิมไว้เมื่อ client รุ่นเก่าไม่ได้ส่งช่องจอมา
+function saveReturnedMonitor_(sheet, targetRow, data) {
+  if (Object.prototype.hasOwnProperty.call(data, 'oldMonitorSn')) sheet.getRange(targetRow, CONFIG.OLD_MONITOR_SN_COLUMN).setValue(data.oldMonitorSn || '');
+}
+
 function getAssetPortalRows_(sheet) {
   const lastRow = Math.max(sheet.getLastRow(), CONFIG.HEADER_ROW - 1);
   if (lastRow < CONFIG.HEADER_ROW) return [];
-  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, CONFIG.INSTALL_REASON_COLUMN).getValues();
+  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, Math.max(CONFIG.INSTALL_REASON_COLUMN, CONFIG.OLD_MONITOR_SN_COLUMN)).getValues();
   return raw.map(function(row, index) {
     return {
       rowNumber: CONFIG.HEADER_ROW + index,
@@ -731,6 +740,7 @@ function getAssetPortalRows_(sheet) {
       alert: toPortalValue_(row[CONFIG.ALERT_COLUMN - 1]),
       oldComSn: toPortalValue_(row[CONFIG.OLD_COM_SN_COLUMN - 1]),
       oldUpsSn: toPortalValue_(row[CONFIG.OLD_UPS_SN_COLUMN - 1]),
+      oldMonitorSn: toPortalValue_(row[CONFIG.OLD_MONITOR_SN_COLUMN - 1]),
       prepStatus: toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) || CONFIG.PREP_STATUS_DEFAULT,
       ipAddress: toPortalValue_(row[CONFIG.IP_COLUMN - 1]),
       problemDetail: toPortalValue_(row[CONFIG.PROBLEM_COLUMN - 1]),
@@ -743,7 +753,7 @@ function getAssetPortalRows_(sheet) {
 }
 
 function ensurePreparationStatusColumn_(sheet) {
-  const requiredColumns = Math.max(CONFIG.PREP_STATUS_COLUMN, CONFIG.IP_COLUMN, CONFIG.PROBLEM_COLUMN, CONFIG.INSTALL_STATUS_COLUMN, CONFIG.INSTALL_REASON_COLUMN);
+  const requiredColumns = Math.max(CONFIG.PREP_STATUS_COLUMN, CONFIG.IP_COLUMN, CONFIG.PROBLEM_COLUMN, CONFIG.INSTALL_STATUS_COLUMN, CONFIG.INSTALL_REASON_COLUMN, CONFIG.OLD_MONITOR_SN_COLUMN);
   const currentColumns = sheet.getMaxColumns();
   if (currentColumns < requiredColumns) sheet.insertColumnsAfter(currentColumns, requiredColumns - currentColumns);
   const prepHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.PREP_STATUS_COLUMN);
@@ -754,6 +764,10 @@ function ensurePreparationStatusColumn_(sheet) {
   if (!problemHeaderCell.getDisplayValue()) problemHeaderCell.setValue(CONFIG.PROBLEM_HEADER);
   const installStatusHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.INSTALL_STATUS_COLUMN);
   if (!installStatusHeaderCell.getDisplayValue()) installStatusHeaderCell.setValue(CONFIG.INSTALL_STATUS_HEADER);
+  const monitorHeader = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.OLD_MONITOR_SN_COLUMN);
+  const monitorTitle = monitorHeader.getDisplayValue();
+  if (monitorTitle && monitorTitle !== 'S/N จอเดิม' && monitorTitle !== CONFIG.OLD_MONITOR_SN_HEADER) throw new Error('คอลัมน์ AJ มีข้อมูลอื่นอยู่ กรุณาตรวจหัวคอลัมน์ก่อนใช้ช่องรับคืนจอ');
+  if (!monitorTitle || monitorTitle === 'S/N จอเดิม') monitorHeader.setValue(CONFIG.OLD_MONITOR_SN_HEADER);
   const installReasonHeaderCell = sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.INSTALL_REASON_COLUMN);
   if (!installReasonHeaderCell.getDisplayValue()) installReasonHeaderCell.setValue(CONFIG.INSTALL_REASON_HEADER);
 }

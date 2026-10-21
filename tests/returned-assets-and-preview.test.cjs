@@ -84,3 +84,17 @@ test('dashboard and PDF explain all three return states and include unnumbered r
  assert.ok(html.includes('มีเครื่องกลับ แต่ไม่มีเลขครุภัณฑ์'));assert.ok(html.includes('ไม่มีคอมกลับ'));
  assert.equal(report.comCount,1);assert.equal(report.upsCount,1);assert.equal(report.duplicates.length,0);
 });
+
+test('monitor-only returns appear in the report independently from PC and UPS',()=>{
+ const {context}=page(),report=context.buildReturnAssetReportData([{jobNo:'JOB-MON',oldMonitorSn:'MON-001',oldComSn:'',oldUpsSn:''}]);
+ assert.equal(report.monitorCount,1);assert.equal(report.comCount,0);assert.equal(report.upsCount,0);assert.equal(report.recorded,1);assert.equal(report.allThree,0);
+ assert.equal(report.rows[0].monitorNo,'MON-001');assert.ok(context.returnAssetReportHtml(report).includes('MON-001'));
+});
+test('PC, monitor and UPS totals independently handle numbered and unnumbered returns',()=>{
+ const {context}=page(),report=context.buildReturnAssetReportData([{jobNo:'1',oldComSn:'PC1',oldMonitorSn:'M1',oldUpsSn:'U1'},{jobNo:'2',oldMonitorSn:'ไม่มี'},{jobNo:'3',oldComSn:'ไม่มีเลข',oldMonitorSn:'ไม่มีเลข',oldUpsSn:'ไม่มี'},{jobNo:'4',oldComSn:'PC1',oldMonitorSn:'M1'},{jobNo:'5',oldUpsSn:'U1'}]);
+ assert.equal(report.comCount,2);assert.equal(report.monitorCount,3);assert.equal(report.upsCount,2);
+ assert.equal(report.monitorWithNumber,1);assert.equal(report.monitorWithoutNumber,2);assert.equal(report.missingMonitor,1);
+ assert.equal(report.allThree,2);assert.equal(report.duplicates.length,3);
+ assert.equal(report.groups[0].monitor,3);assert.equal(report.groups[0].allThree,2);
+ assert.ok(report.duplicates.some(item=>item.type==='จอมอนิเตอร์'&&item.number==='M1'));
+});
