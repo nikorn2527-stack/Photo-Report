@@ -47,6 +47,15 @@
       .return-sn { display:block; margin-top:2px; color:var(--text); font-weight:800; }
       .ip-cell { min-width:125px; white-space:nowrap; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
       .dashboard-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:14px; }
+      .completion-dashboard { margin-top:14px; }
+      .completion-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+      .completion-tables { display:grid; gap:14px; }
+      .completion-tables > div { min-width:0; }
+      .completion-table-scroll { max-height:380px; overflow:auto; }
+      .completion-table { min-width:680px; width:100%; }
+      .completion-table th { position:sticky; top:0; background:#edf4ff; z-index:1; }
+      .completion-table .complete { color:#137333; font-weight:800; }
+      .completion-progress { margin:0 0 14px; }
       .issue-dashboard { margin-top:14px; }
       .issue-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
       .issue-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; margin:12px 0; }
@@ -234,6 +243,16 @@
             <section class="panel"><h3 class="panel-title">สถานะเตรียมเครื่อง</h3><div id="prepStatusChart"></div></section>
             <section class="panel"><h3 class="panel-title">ตัวชี้วัดอุปกรณ์</h3><div id="equipmentMetrics"></div></section>
           </div>
+          <section class="panel completion-dashboard" aria-labelledby="completionTitle">
+            <div class="completion-head"><div><h3 id="completionTitle" class="panel-title">รายงานเครื่องที่ติดตั้งเสร็จ</h3><p class="view-note">ความคืบหน้าสำหรับผู้บริหาร นับตามสถานะการติดตั้ง “ติดตั้งเสร็จ”</p></div><button type="button" class="button button-primary" onclick="printCompletionReport()">พิมพ์ / บันทึก PDF ความคืบหน้า</button></div>
+            <div id="completionKpis" class="issue-kpis"></div>
+            <div id="completionProgress" class="completion-progress"></div>
+            <p id="completionMeta" class="plan-note"></p>
+            <div class="completion-tables">
+              <div><h4 class="panel-title">สรุปตามตึก / ชั้น / แผนก</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>ตึก</th><th>ชั้น</th><th>แผนก</th><th>ทั้งหมด</th><th>ติดตั้งเสร็จ</th><th>คงเหลือ</th><th>ความคืบหน้า</th></tr></thead><tbody id="completionAreaBody"></tbody></table></div></div>
+              <div><h4 class="panel-title">รายการเครื่องที่ติดตั้งเสร็จ</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>Job</th><th>สถานที่ติดตั้ง</th><th>รุ่นเครื่อง</th><th>S/N เครื่อง</th><th>เลข IP</th><th>ความครบถ้วนของงาน</th></tr></thead><tbody id="completionMachineBody"></tbody></table></div></div>
+            </div>
+          </section>
           <section class="panel issue-dashboard">
             <div class="issue-head"><div><h3 class="panel-title">ปัญหาหน้างานที่ทำให้ติดตั้งยังไม่เสร็จ</h3><p class="view-note">สรุปความคืบหน้า สาเหตุ และรายการที่ทีมบริการต้องช่วยประสาน</p></div><button type="button" class="button button-outline" onclick="printIssueReport()">พิมพ์รายงานสรุป</button></div>
             <div id="issueKpis" class="issue-kpis"></div>
@@ -389,6 +408,7 @@
         setStatus('กำลังโหลดข้อมูลจาก IT_Rental.xlsx / Google Sheet...');
         google.script.run.withSuccessHandler(function(data) {
           portalData = data || portalData;
+          portalData.loadedAt = new Date().toISOString();
           portalData.jobWorkRows = portalData.jobWorkRows || [];
           setPhotoReportLink();
           renderDashboard();
@@ -492,6 +512,73 @@
         document.getElementById('equipmentMetrics').innerHTML =           '<div class="status-line"><span>มี UPS + สายไฟ</span><span class="bar"><span style="width:' + percent(d.upsBundle, total) + '%"></span></span><strong>' + (d.upsBundle || 0) + '</strong></div>' +
           '<div class="status-line"><span>แจ้งเตือนสัญญา</span><span class="bar"><span style="width:' + percent(d.expiring, total) + '%"></span></span><strong>' + (d.expiring || 0) + '</strong></div>';
         renderIssueDashboard();
+        renderCompletionDashboard();
+      }
+
+      function buildCompletionReportData(assetRows, workRows, updatedAt) {
+        const groups = new Map(), workByRow = new Map(), workByJob = new Map();
+        (workRows || []).forEach(function(row) {
+          if (row.rowNumber !== undefined && row.rowNumber !== null) workByRow.set(String(row.rowNumber), row);
+          if (row.jobNo) workByJob.set(String(row.jobNo).trim().toLowerCase(), row);
+        });
+        const completed = [];
+        (assetRows || []).forEach(function(row) {
+          const location = [row.building, row.floor, row.department].map(function(value) { return String(value || '').trim() || 'ไม่ระบุ'; });
+          const key = JSON.stringify(location);
+          if (!groups.has(key)) groups.set(key, {building:location[0], floor:location[1], department:location[2], total:0, completed:0});
+          const group = groups.get(key);
+          group.total++;
+          if (row.installStatus !== 'ติดตั้งเสร็จ') return;
+          group.completed++;
+          const work = row.rowNumber !== undefined && row.rowNumber !== null ? workByRow.get(String(row.rowNumber)) : workByJob.get(String(row.jobNo || '').trim().toLowerCase());
+          completed.push({jobNo:row.jobNo || '-', building:location[0], floor:location[1], department:location[2], room:row.room || '', brand:row.brand || '-', aioSn:row.aioSn || '-', ipAddress:row.ipAddress || '-', workComplete:!!work && work.workStatus === 'งานจบ'});
+        });
+        const compare = function(a,b) { return String(a).localeCompare(String(b),'th',{numeric:true}); };
+        const areas = Array.from(groups.values()).map(function(group) {
+          group.remaining = group.total - group.completed;
+          group.percent = group.total ? Math.round(group.completed / group.total * 100) : 0;
+          return group;
+        }).sort(function(a,b) { return compare(a.building,b.building) || compare(a.floor,b.floor) || compare(a.department,b.department); });
+        completed.sort(function(a,b) { return compare(a.building,b.building) || compare(a.floor,b.floor) || compare(a.department,b.department) || compare(a.jobNo,b.jobNo); });
+        const total = (assetRows || []).length;
+        return {total:total, completed:completed.length, remaining:total-completed.length, percent:total ? Math.round(completed.length/total*100) : 0, workComplete:completed.filter(function(row) { return row.workComplete; }).length, areas:areas, rows:completed, updatedAt:updatedAt || ''};
+      }
+      function getCompletionReport() { return buildCompletionReportData(portalData.assetRows, portalData.jobWorkRows, portalData.loadedAt); }
+      function completionTimestamp(value) {
+        return value ? new Date(value).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}) : 'ยังไม่ได้โหลดข้อมูล';
+      }
+      function completionAreaRows(report) {
+        return report.areas.map(function(row) {
+          return '<tr><td>' + escapeHtml(row.building) + '</td><td>' + escapeHtml(row.floor) + '</td><td>' + escapeHtml(row.department) + '</td><td>' + row.total + '</td><td class="complete">' + row.completed + '</td><td>' + row.remaining + '</td><td>' + row.percent + '%</td></tr>';
+        }).join('') || '<tr><td colspan="7" class="issue-empty">ยังไม่มีข้อมูลเครื่อง</td></tr>';
+      }
+      function completionMachineRows(report) {
+        return report.rows.map(function(row) {
+          return '<tr><td>' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join(' | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + escapeHtml(row.ipAddress) + '</td><td>' + (row.workComplete ? 'งานจบครบ' : 'ติดตั้งเสร็จ / รอตรวจความครบถ้วน') + '</td></tr>';
+        }).join('') || '<tr><td colspan="6" class="issue-empty">ยังไม่มีเครื่องที่ติดตั้งเสร็จ</td></tr>';
+      }
+      function renderCompletionDashboard() {
+        const report = getCompletionReport();
+        document.getElementById('completionKpis').innerHTML = [['เครื่องทั้งหมด',report.total],['ติดตั้งเสร็จ',report.completed],['คงเหลือ',report.remaining],['ความคืบหน้า',report.percent+'%']].map(function(item) { return '<div class="issue-kpi"><span class="card-label">'+item[0]+'</span><strong>'+item[1]+'</strong></div>'; }).join('');
+        document.getElementById('completionProgress').innerHTML = '<div class="plan-progress-track" role="progressbar" aria-label="ความคืบหน้าติดตั้ง" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+report.percent+'"><span style="width:'+report.percent+'%"></span></div>';
+        document.getElementById('completionMeta').textContent = 'ดึงข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt)+' · งานจบครบ '+report.workComplete+' จาก '+report.completed+' เครื่องที่ติดตั้งเสร็จ (ส่งมอบ อุปกรณ์เสริม และรูปหลักครบตามเกณฑ์ติดตามงาน)';
+        document.getElementById('completionAreaBody').innerHTML = completionAreaRows(report);
+        document.getElementById('completionMachineBody').innerHTML = completionMachineRows(report);
+      }
+      function completionReportHtml(report) {
+        return '<!doctype html><html lang="th"><head><meta charset="utf-8"><title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title><style>@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#202124;font-size:11px}h1{font-size:20px;text-align:center}h2{font-size:15px;margin-top:22px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.summary div{padding:10px;border:1px solid #c7d7eb}.summary strong{display:block;font-size:24px;color:#137333}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{padding:7px;border:1px solid #777;text-align:left;overflow-wrap:anywhere}th{background:#edf4ff}thead{display:table-header-group}tr{break-inside:avoid}.complete{color:#137333;font-weight:bold}.note{color:#555}.progress{height:10px;background:#e5eaf0}.progress span{display:block;height:100%;background:#16834b;print-color-adjust:exact}</style></head><body><h1>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที | ดึงข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(report.updatedAt))+'</p><div class="summary"><div>เครื่องทั้งหมด<strong>'+report.total+'</strong></div><div>ติดตั้งเสร็จ<strong>'+report.completed+'</strong></div><div>คงเหลือ<strong>'+report.remaining+'</strong></div><div>ความคืบหน้า<strong>'+report.percent+'%</strong></div></div><div class="progress"><span style="width:'+report.percent+'%"></span></div><p class="note">นับเครื่องที่สถานะการติดตั้งเป็น “ติดตั้งเสร็จ” เทียบกับรายการทั้งหมดใน Asset_Master; คงเหลือคือเครื่องที่ยังไม่อยู่ในสถานะนี้ งานจบครบ '+report.workComplete+' จาก '+report.completed+' เครื่องที่ติดตั้งเสร็จ ตามเกณฑ์ส่งมอบ อุปกรณ์เสริม และรูปหลักครบ ไม่ใช้สถานะเตรียมเครื่องแทนผลติดตั้ง</p><h2>สรุปตามตึก / ชั้น / แผนก</h2><table><thead><tr><th>ตึก</th><th>ชั้น</th><th>แผนก</th><th>ทั้งหมด</th><th>ติดตั้งเสร็จ</th><th>คงเหลือ</th><th>ความคืบหน้า</th></tr></thead><tbody>'+completionAreaRows(report)+'</tbody></table><h2>รายการเครื่องที่ติดตั้งเสร็จ</h2><table><thead><tr><th>Job</th><th>สถานที่ติดตั้ง</th><th>รุ่นเครื่อง</th><th>S/N เครื่อง</th><th>เลข IP</th><th>ความครบถ้วนของงาน</th></tr></thead><tbody>'+completionMachineRows(report)+'</tbody></table></body></html>';
+      }
+      function printCompletionReport() {
+        if (!portalData.loadedAt) { setStatus('กรุณารอโหลดข้อมูลล่าสุดก่อนพิมพ์รายงาน',true); return; }
+        const popup = window.open('', '_blank', 'width=1100,height=800');
+        if (!popup) { setStatus('เบราว์เซอร์บล็อกหน้ารายงาน กรุณาอนุญาต Pop-up',true); return; }
+        popup.opener = null;
+        popup.document.open();
+        popup.document.write(completionReportHtml(getCompletionReport()));
+        popup.document.close();
+        Promise.resolve(popup.document.fonts ? popup.document.fonts.ready : undefined).then(function() {
+          if (!popup.closed) { popup.focus(); popup.print(); }
+        });
       }
 
       function installationNeedsReason(status) { return INSTALL_BLOCKED_STATUSES.indexOf(status) !== -1; }
