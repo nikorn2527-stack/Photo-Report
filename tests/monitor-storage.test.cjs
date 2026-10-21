@@ -17,3 +17,13 @@ test('monitor header restoration leaves adjacent legacy Hub and no-return column
  context.ensurePreparationStatusColumn_(sheet);assert.equal(headers.get(36),'เลขครุภัณฑ์จอมอนิเตอร์');assert.equal(headers.get(35),'S/N Hub USB');assert.equal(headers.get(37),'ไม่มีเครื่องเดิมให้นำกลับ');
  headers.set(36,'Unrelated user column');assert.throws(()=>context.ensurePreparationStatusColumn_(sheet),/AJ/);assert.equal(headers.get(36),'Unrelated user column');
 });
+
+test('existing AK no-old-equipment checkbox is read without writing or inserting columns',()=>{
+ const context=app(),row=Array(40).fill('');row[0]='JOB-1';row[36]='true';
+ const sheet={getLastRow:()=>4,getMaxColumns:()=>40,getRange(start,col,count,width){if(start===3){assert.equal(col,37);return {getDisplayValue:()=> 'ไม่มีเครื่องเดิมให้นำกลับ'};}assert.equal(width,37);return {getValues:()=>[row]};}};
+ assert.equal(context.getAssetPortalRows_(sheet)[0].noOldEquipment,true);row[36]='false';assert.equal(context.getAssetPortalRows_(sheet)[0].noOldEquipment,false);
+});
+test('an unrelated AK column is not interpreted as a no-return flag',()=>{
+ const context=app(),row=Array(40).fill('');row[0]='JOB-1';row[36]=true;
+ const sheet={getLastRow:()=>4,getMaxColumns:()=>40,getRange(start,col,count,width){if(start===3)return {getDisplayValue:()=> 'ข้อมูลอื่น'};assert.equal(width,36);return {getValues:()=>[row]};}};assert.equal(context.getAssetPortalRows_(sheet)[0].noOldEquipment,null);
+});

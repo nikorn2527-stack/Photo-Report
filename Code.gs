@@ -87,6 +87,8 @@ const CONFIG = Object.freeze({
   INSTALL_REASON_HEADER: 'เหตุผลติดตั้งไม่ได้/ไม่ทัน',
   OLD_MONITOR_SN_COLUMN: 36,
   OLD_MONITOR_SN_HEADER: 'เลขครุภัณฑ์จอมอนิเตอร์',
+  NO_OLD_EQUIPMENT_COLUMN: 37,
+  NO_OLD_EQUIPMENT_HEADER: 'ไม่มีเครื่องเดิมให้นำกลับ',
   INSTALL_STATUS_DEFAULT: 'รอดำเนินการ',
   INSTALL_STATUS_OPTIONS: Object.freeze([
     'รอดำเนินการ',
@@ -705,7 +707,8 @@ function saveReturnedMonitor_(sheet, targetRow, data) {
 function getAssetPortalRows_(sheet) {
   const lastRow = Math.max(sheet.getLastRow(), CONFIG.HEADER_ROW - 1);
   if (lastRow < CONFIG.HEADER_ROW) return [];
-  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, Math.max(CONFIG.INSTALL_REASON_COLUMN, CONFIG.OLD_MONITOR_SN_COLUMN)).getValues();
+  const hasNoOldEquipment = typeof sheet.getMaxColumns === 'function' && sheet.getMaxColumns() >= CONFIG.NO_OLD_EQUIPMENT_COLUMN && String(sheet.getRange(CONFIG.HEADER_ROW - 1, CONFIG.NO_OLD_EQUIPMENT_COLUMN).getDisplayValue()).trim() === CONFIG.NO_OLD_EQUIPMENT_HEADER;
+  const raw = sheet.getRange(CONFIG.HEADER_ROW, 1, lastRow - CONFIG.HEADER_ROW + 1, Math.max(CONFIG.INSTALL_REASON_COLUMN, CONFIG.OLD_MONITOR_SN_COLUMN, hasNoOldEquipment ? CONFIG.NO_OLD_EQUIPMENT_COLUMN : 0)).getValues();
   return raw.map(function(row, index) {
     return {
       rowNumber: CONFIG.HEADER_ROW + index,
@@ -741,6 +744,7 @@ function getAssetPortalRows_(sheet) {
       oldComSn: toPortalValue_(row[CONFIG.OLD_COM_SN_COLUMN - 1]),
       oldUpsSn: toPortalValue_(row[CONFIG.OLD_UPS_SN_COLUMN - 1]),
       oldMonitorSn: toPortalValue_(row[CONFIG.OLD_MONITOR_SN_COLUMN - 1]),
+      noOldEquipment: hasNoOldEquipment ? toBoolean_(row[CONFIG.NO_OLD_EQUIPMENT_COLUMN - 1]) : null,
       prepStatus: toPortalValue_(row[CONFIG.PREP_STATUS_COLUMN - 1]) || CONFIG.PREP_STATUS_DEFAULT,
       ipAddress: toPortalValue_(row[CONFIG.IP_COLUMN - 1]),
       problemDetail: toPortalValue_(row[CONFIG.PROBLEM_COLUMN - 1]),
