@@ -19,6 +19,8 @@ function browser() {
   let success, failure, printed = 0;
   const page = { imgs: [], innerHTML: '<img>', querySelectorAll() { return this.imgs; }, addEventListener() {} };
   elements.set('printPage', page);
+  elements.set('includePrintDetails', {checked:true});
+  elements.set('printDocument', {querySelectorAll:() => page.imgs, get innerHTML() { return '<article class="print-page">'+page.innerHTML+'</article>'+(elements.get('printDetails')?.innerHTML || ''); }});
   const document = {
     getElementById(id) {
       if (!elements.has(id)) elements.set(id, { disabled: false, textContent: '', classList: { add() {}, remove() {} }, addEventListener() {} });
@@ -72,4 +74,18 @@ test('a popup prints only after its own images have loaded', async () => {
   b.window.open = () => popup; vm.runInContext('printReady = true', b.context);
   b.context.printNow(); assert.equal(printed, 0); assert.equal(popup.opener, null);
   photo.emit('load'); await new Promise(resolve => setImmediate(resolve)); assert.equal(printed, 1);
+});
+
+
+test('appendices contain full-size original images and job labels, and can be disabled', () => {
+  const b = browser();
+  vm.runInContext("currentJob = {jobNo:'JOB-001',location:'Room <1>'}; printImages = {before1:'data:image/jpeg;base64,AQID', after2:'data:image/jpeg;base64,BAUG'}", b.context);
+  b.context.renderPrintDetails();
+  const details = b.document.getElementById('printDetails').innerHTML;
+  assert.equal((details.match(/class="print-detail-page"/g) || []).length, 2);
+  assert.ok(details.includes('JOB-001')); assert.ok(details.includes('Room &lt;1&gt;'));
+  assert.ok(details.includes('data:image/jpeg;base64,AQID'));
+  b.document.getElementById('includePrintDetails').checked = false;
+  b.context.renderPrintDetails();
+  assert.equal(b.document.getElementById('printDetails').innerHTML, '');
 });
