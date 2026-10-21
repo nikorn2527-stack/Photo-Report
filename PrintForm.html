@@ -103,7 +103,7 @@
       <div id="toolbarNote" class="toolbar-note">เลือกขนาดกระดาษและแนวกระดาษก่อนพิมพ์</div>
     </div>
     <div class="toolbar-actions">
-      <button id="backButton" class="secondary" type="button" onclick="backToAssetMaster()">← กลับ Asset_Master</button>
+      <button id="backButton" class="secondary" type="button" onclick="backToAssetMaster()">← กลับทะเบียนอุปกรณ์</button>
       <label class="paper-control" for="paperSize">กระดาษ
         <select id="paperSize" onchange="applyPaperSize(this.value)" disabled>
           <option value="a4-portrait">A4 แนวตั้ง</option>
@@ -114,7 +114,7 @@
       <button id="sheetButton" class="secondary" type="button" onclick="openOriginalSheet()" disabled>เปิดชีตเดิม</button>
     </div>
   </div>
-  <div id="status" class="status">กำลังดึงข้อมูลจากฟอร์ม...</div>
+  <div id="status" class="status">กำลังโหลดเอกสาร...</div>
   <main id="printPage" class="print-page"><div class="loading">กำลังเตรียมหน้าพิมพ์...</div></main>
   <script>
     const INITIAL_JOB_NO = <?!= JSON.stringify(jobNo || '') ?>;
@@ -126,10 +126,10 @@
 
     function loadPrintData() {
       if (!INITIAL_JOB_NO) {
-        showError('ไม่พบเลข Job สำหรับสร้างเอกสาร');
+        showError('ไม่พบเลขงานสำหรับสร้างเอกสาร');
         return;
       }
-      const label = INITIAL_FORM_TYPE === 'delivery' ? 'ใบส่ง' : 'ใบรับ';
+      const label = INITIAL_FORM_TYPE === 'delivery' ? 'ใบส่งมอบ' : 'ใบรับคืน';
       setStatus('กำลังเตรียม ' + label + ' สำหรับ ' + INITIAL_JOB_NO + '...');
       google.script.run
         .withSuccessHandler(function(data) {
@@ -141,7 +141,7 @@
           document.getElementById('paperSize').disabled = false;
           document.getElementById('toolbarTitle').textContent = data.formName + ' — ' + data.jobNo;
           applyPaperSize(document.getElementById('paperSize').value);
-          setStatus('เตรียมเอกสารเรียบร้อยแล้ว เลือกกระดาษแล้วกด “พิมพ์เอกสาร”');
+          setStatus('เลือกขนาดกระดาษ แล้วกด “พิมพ์เอกสาร”');
         })
         .withFailureHandler(function(error) {
           showError('เตรียมเอกสารไม่สำเร็จ: ' + errorMessage(error));
@@ -191,8 +191,8 @@
       const isA5Landscape = value === 'a5-landscape';
       document.getElementById('printPage').classList.toggle('paper-a5-landscape', isA5Landscape);
       document.getElementById('toolbarNote').textContent = isA5Landscape
-        ? 'หน้าพิมพ์โดยตรงจาก Asset_Master — A5 แนวนอน'
-        : 'หน้าพิมพ์โดยตรงจาก Asset_Master — A4 แนวตั้ง';
+        ? 'A5 แนวนอน'
+        : 'A4 แนวตั้ง';
       let style = document.getElementById('selectedPageStyle');
       if (!style) {
         style = document.createElement('style');

@@ -268,8 +268,8 @@ function getAssetMasterRows() {
 function saveAssetMasterRow(rowNumber, asset) {
   asset = asset || {};
   const jobNo = String(asset.jobNo || '').trim();
-  if (!jobNo) throw new Error('กรุณากรอกเลข Job');
-  if (jobNo.indexOf('JOB-') !== 0) throw new Error('เลข Job ต้องขึ้นต้นด้วย JOB-');
+  if (!jobNo) throw new Error('กรุณากรอกเลขงาน');
+  if (jobNo.indexOf('JOB-') !== 0) throw new Error('เลขงานต้องขึ้นต้นด้วย JOB-');
 
   const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
   if (!sheet) throw new Error('ไม่พบชีต ' + CONFIG.ASSET_MASTER_SHEET_NAME);
@@ -282,7 +282,7 @@ function saveAssetMasterRow(rowNumber, asset) {
   const duplicate = getAssetMasterRows().some(function(item) {
     return item.rowNumber !== targetRow && item.jobNo.toLowerCase() === jobNo.toLowerCase();
   });
-  if (duplicate) throw new Error('มีเลข Job นี้อยู่แล้ว: ' + jobNo);
+  if (duplicate) throw new Error('มีเลขงานนี้อยู่แล้ว: ' + jobNo);
 
   sheet.getRange(targetRow, 1).setValue(jobNo);
   sheet.getRange(targetRow, 4, 1, 4).setValues([[
@@ -304,7 +304,7 @@ function saveAssetMasterRow(rowNumber, asset) {
  * คืนสถานะงานของ Job ที่เลือก เพื่อให้หลายคนช่วยเติมรูปได้
  */
 function getJobProgress(jobNo) {
-  if (!jobNo) throw new Error('ไม่พบเลข Job');
+  if (!jobNo) throw new Error('ไม่พบเลขงาน');
 
   const sheetName = buildJobSheetName_(jobNo);
   const sheet = getSpreadsheet_().getSheetByName(sheetName);
@@ -336,7 +336,7 @@ function getJobProgress(jobNo) {
 
 /** ส่งภาพให้หน้าพิมพ์ผ่านสิทธิ์ Apps Script โดยไม่ต้องแชร์ไฟล์ Drive เป็นสาธารณะ */
 function getPhotoPrintImages(jobNo) {
-  if (!jobNo) throw new Error('กรุณาเลือก Job ก่อนพิมพ์');
+  if (!jobNo) throw new Error('กรุณาเลือกงานก่อนพิมพ์');
   const progress = getJobProgress(jobNo);
   return { imageTypes: progress.filledTypes, date: progress.date, location: progress.location };
 }
@@ -414,7 +414,7 @@ function getPhotoPreviewUrls_(jobNo, activeTypes) {
  * บันทึกสถานที่และวันที่ของ Job ในตารางกลาง โดยไม่สร้างแท็บรายงาน
  */
 function saveJobProgress(jobNo, location, installDate) {
-  if (!jobNo) throw new Error('กรุณาเลือก Job ก่อนบันทึก');
+  if (!jobNo) throw new Error('กรุณาเลือกงานก่อนบันทึก');
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
@@ -452,7 +452,7 @@ function getJobReportInfo(jobNo) {
 function prepareJobForm(jobNo, formType) {
   const requestedJob = String(jobNo || '').trim();
   const type = String(formType || '').trim().toLowerCase();
-  if (!requestedJob) throw new Error('กรุณาเลือก Job ก่อนเปิดเอกสาร');
+  if (!requestedJob) throw new Error('กรุณาเลือกงานก่อนเปิดเอกสาร');
   if (['delivery', 'return'].indexOf(type) === -1) throw new Error('ไม่รู้จักประเภทเอกสาร');
 
   const spreadsheet = getSpreadsheet_();
@@ -605,8 +605,8 @@ function getWorkbookPortalData() {
 function saveAssetMasterPortalRow(rowNumber, data) {
   data = data || {};
   const jobNo = String(data.jobNo || '').trim().toUpperCase();
-  if (!jobNo) throw new Error('กรุณากรอกเลข Job');
-  if (jobNo.indexOf('JOB-') !== 0) throw new Error('เลข Job ต้องขึ้นต้นด้วย JOB-');
+  if (!jobNo) throw new Error('กรุณากรอกเลขงาน');
+  if (jobNo.indexOf('JOB-') !== 0) throw new Error('เลขงานต้องขึ้นต้นด้วย JOB-');
 
   const sheet = getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME);
   if (!sheet) throw new Error('ไม่พบชีต Asset_Master');
@@ -621,7 +621,7 @@ function saveAssetMasterPortalRow(rowNumber, data) {
   if (existing.some(function(item) {
     return item.rowNumber !== targetRow && String(item.jobNo).toLowerCase() === jobNo.toLowerCase();
   })) {
-    throw new Error('มีเลข Job นี้อยู่แล้ว: ' + jobNo);
+    throw new Error('มีเลขงานนี้อยู่แล้ว: ' + jobNo);
   }
   const existingRow = existing.find(function(item) { return item.rowNumber === targetRow; });
   const assetType = String((data.assetType !== undefined && String(data.assetType).trim()) ? data.assetType : ((data.type !== undefined && String(data.type).trim()) ? data.type : ((existingRow && existingRow.type) || ''))).trim();
@@ -845,7 +845,7 @@ function updateAssetStatus(rowNumber, assetStatus) {
   try {
     sheet.getRange(targetRow, CONFIG.ASSET_STATUS_COLUMN).setValue(status);
     SpreadsheetApp.flush();
-    return { message: 'อัปเดตสถานะชุดใน Asset_Master แล้ว', rowNumber: targetRow, status: status };
+    return { message: 'บันทึกสถานะอุปกรณ์แล้ว', rowNumber: targetRow, status: status };
   } finally {
     lock.releaseLock();
   }
@@ -864,7 +864,7 @@ function updateAssetAccessoryBundleStatus(rowNumber, value) {
     // UPS + สายไฟเป็นสถานะรวม เก็บในคอลัมน์ R เท่านั้น
     sheet.getRange(targetRow, 18).setValue(checked);
     SpreadsheetApp.flush();
-    return { message: (checked ? 'ติ๊กส่ง UPS + สายไฟ ใน Asset_Master แล้ว' : 'ยกเลิกสถานะส่ง UPS + สายไฟ ใน Asset_Master แล้ว'), rowNumber: targetRow, value: checked };
+    return { message: (checked ? 'บันทึกส่งมอบ UPS และสายไฟแล้ว' : 'ยกเลิกส่งมอบ UPS และสายไฟแล้ว'), rowNumber: targetRow, value: checked };
   } finally {
     lock.releaseLock();
   }
@@ -899,7 +899,7 @@ function updateAssetAccessoryStatus(rowNumber, fieldName, value) {
   try {
     sheet.getRange(targetRow, column).setValue(checked);
     SpreadsheetApp.flush();
-    return { message: (checked ? 'ติ๊กส่ง ' : 'ยกเลิกสถานะส่ง ') + labels[field] + ' ใน Asset_Master แล้ว', rowNumber: targetRow, fieldName: field, value: checked };
+    return { message: (checked ? 'บันทึกส่งมอบ ' : 'ยกเลิกส่งมอบ ') + labels[field] + ' แล้ว', rowNumber: targetRow, fieldName: field, value: checked };
   } finally {
     lock.releaseLock();
   }
@@ -1069,7 +1069,7 @@ function createJobPdf(jobNo) {
 
 function createJobPdfLocked_(jobNo) {
   if (!jobNo) {
-    throw new Error('กรุณาเลือก Job ก่อนสั่งพิมพ์');
+    throw new Error('กรุณาเลือกงานก่อนสั่งพิมพ์');
   }
 
   const sheet = preparePhotoReportSheet_(jobNo);
@@ -1114,7 +1114,7 @@ function createJobPdfLocked_(jobNo) {
   upsertPdfIndex_(jobNo, sheet, file, filledTypes.length, status);
 
   return {
-    message: 'อ่านจากชีต ' + sheet.getName() + ' แล้วสร้าง PDF A4 ใหม่ใน Drive สำหรับ ' + jobNo + ' (' + filledTypes.length + '/' + CONFIG.IMAGE_TYPES.length + ' รูป, ' + status + ')',
+    message: 'สร้าง PDF ของ ' + jobNo + ' แล้ว' + ' (' + filledTypes.length + '/' + CONFIG.IMAGE_TYPES.length + ' รูป, ' + status + ')',
     fileId: file.getId(),
     fileUrl: file.getUrl(),
     filename: filename,
@@ -1134,7 +1134,7 @@ function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFile
   lock.waitLock(30000);
   try {
     if (CONFIG.IMAGE_TYPES.indexOf(imageType) === -1) throw new Error('ไม่พบประเภทรูป');
-    if (!jobNo || !base64Data) throw new Error('กรุณาเลือก Job และไฟล์รูปภาพ');
+    if (!jobNo || !base64Data) throw new Error('กรุณาเลือกงานและไฟล์รูปภาพ');
     if (uploadId && !/^[a-zA-Z0-9_-]{10,80}$/.test(String(uploadId))) throw new Error('รหัสอัปโหลดไม่ถูกต้อง');
     // รูปต้นฉบับอยู่ใน Drive เท่านั้น ไม่สร้างแท็บหรือฝังภาพในชีตขณะอัปโหลด
     const originalBlob = dataUrlToImageBlob_(originalBase64Data || base64Data, originalFilename);
@@ -1157,7 +1157,7 @@ function uploadImageToSheet(jobNo, location, imageType, base64Data, originalFile
     const replaced = trashPhotoFilesForSlot_(jobNo, imageType, savedFile.getId());
     if (replaced.error) throw new Error('บันทึกรูปใหม่แล้ว แต่ย้ายรูปเดิมลงถังขยะไม่สำเร็จ: ' + replaced.error);
     SpreadsheetApp.flush();
-    return 'บันทึกรูปภาพเรียบร้อยแล้ว: ' + imageType;
+    return 'บันทึกรูปแล้ว';
   } finally {
     lock.releaseLock();
   }
@@ -1172,7 +1172,7 @@ function deleteImageFromSheet(jobNo, location, imageType, installDate) {
   try {
     const targetCell = CONFIG.IMAGE_CELL_MAP[imageType];
     if (!targetCell) throw new Error('ไม่พบตำแหน่งสำหรับประเภทรูป: ' + imageType);
-    if (!jobNo) throw new Error('กรุณาเลือก Job ก่อนลบรูป');
+    if (!jobNo) throw new Error('กรุณาเลือกงานก่อนลบรูป');
     const driveResult = trashPhotoFilesForSlot_(jobNo, imageType);
     if (driveResult.error) throw new Error('ย้ายไฟล์ต้นฉบับใน Drive ลงถังขยะไม่สำเร็จ: ' + driveResult.error);
     // รองรับงานเก่าโดยลบเฉพาะรูปช่องที่ผู้ใช้เลือก ไม่ลบแท็บรายงานเดิม
@@ -1280,7 +1280,7 @@ function findLatestPdfFile_(jobNo) {
 }
 
 function getLatestJobPdf(jobNo) {
-  if (!jobNo) throw new Error('กรุณาเลือก Job ก่อนเปิด PDF');
+  if (!jobNo) throw new Error('กรุณาเลือกงานก่อนเปิด PDF');
   const spreadsheet = getSpreadsheet_();
   const sourceSheet = spreadsheet.getSheetByName(buildJobSheetName_(jobNo));
   const sourceSheetName = sourceSheet ? sourceSheet.getName() : buildJobSheetName_(jobNo);

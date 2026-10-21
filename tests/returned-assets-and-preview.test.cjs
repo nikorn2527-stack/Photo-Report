@@ -63,7 +63,7 @@ test('blank means no returned machine, while ไม่มี and ไม่มี
  }
  assert.equal(context.classifyReturnedAsset('00123').number,'00123');
  assert.equal(context.returnAssetLabel(''),'');
- assert.equal(context.returnAssetLabel('ไม่มี'),'มีเครื่องกลับ แต่ไม่มีเลขครุภัณฑ์');
+ assert.equal(context.returnAssetLabel('ไม่มี'),'รับคืน ไม่มีเลขครุภัณฑ์');
 });
 test('anonymous returned machines are counted per row, separately from unique numbered machines and duplicate warnings',()=>{
  const {context}=page();
@@ -82,7 +82,7 @@ test('dashboard and PDF explain all three return states and include unnumbered r
  assert.ok(p.document.getElementById('returnAssetKpis').innerHTML.includes('คอมรับคืนทั้งหมด'));
  assert.ok(!p.document.getElementById('returnAssetMachineBody').innerHTML.includes('ไม่มีเครื่องกลับ'));
  assert.ok(p.document.getElementById('returnAssetMachineBody').innerHTML.includes('<td></td>'));
- assert.ok(html.includes('มีเครื่องกลับ แต่ไม่มีเลขครุภัณฑ์'));assert.ok(!html.includes('ไม่มีคอมกลับ'));
+ assert.ok(html.includes('รับคืน ไม่มีเลขครุภัณฑ์'));assert.ok(!html.includes('ไม่มีคอมกลับ'));
  assert.equal(report.comCount,1);assert.equal(report.upsCount,1);assert.equal(report.duplicates.length,0);
 });
 
@@ -161,5 +161,5 @@ test('late loading from the previous report cannot overwrite the next report',as
  }
  assert.equal((p.context.returnAssetAreaHeaders().match(/<th>/g)||[]).length,10);
  assert.equal((p.context.returnAssetAreaRows(report).match(/<td>/g)||[]).length,10);
- assert.ok(html.includes('มีเครื่องกลับ แต่ไม่มีเลขครุภัณฑ์'));assert.ok(!html.includes('<td>EMPTY</td>'));
+ assert.ok(html.includes('รับคืน ไม่มีเลขครุภัณฑ์'));assert.ok(!html.includes('<td>EMPTY</td>'));
  });

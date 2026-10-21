@@ -13,7 +13,7 @@ test('executive summary groups by trimmed department across floors, including un
  const {context}=page(),before=JSON.stringify(rows),report=context.buildExecutiveReportData(rows,work,'2026-10-22T00:00:00Z');
  assert.equal(report.groups.length,3);const finance=report.groups.find(r=>r.department==='การเงิน');assert.equal(finance.total,2);assert.equal(finance.completed,2);assert.equal(finance.percent,100);assert.equal(finance.pendingReview,1);
  assert.equal(report.totals.total,5);assert.equal(report.totals.completed,3);assert.equal(report.totals.remaining,2);assert.equal(report.totals.percent,60);assert.equal(report.totals.pendingReview,2);assert.equal(report.totals.issues,1);
- assert.equal(report.attention.length,3);assert.ok(report.attention.some(r=>r.jobNo==='JOB-2'&&r.detail==='ขาดรูปป้ายหน่วยงาน'));assert.ok(report.attention.some(r=>r.jobNo==='JOB-5'&&r.detail==='รอตรวจข้อมูลติดตามงาน'));
+ assert.equal(report.attention.length,3);assert.ok(report.attention.some(r=>r.jobNo==='JOB-2'&&r.detail==='ขาดรูปป้ายหน่วยงาน'));assert.ok(report.attention.some(r=>r.jobNo==='JOB-5'&&r.detail==='ยังไม่มีข้อมูลติดตามงาน'));
  assert.equal(JSON.stringify(rows),before);
 });
 test('returned AIO, PC, monitors and UPS are independent; blank returns never create pending tasks',()=>{
@@ -51,7 +51,7 @@ test('blank fields classify additional installations; UPS-only returns do not an
  const {context}=page(),report=context.buildExecutiveReportData([{jobNo:'ADD',installStatus:'ติดตั้งเสร็จ',oldComSn:' ',oldMonitorSn:null,oldUpsSn:''},{jobNo:'UPS',oldUpsSn:'ไม่มีเลข'},{jobNo:'PC1',oldComSn:'COM',oldMonitorSn:'MON'},{jobNo:'PC2',oldComSn:'COM',oldMonitorSn:'MON'},{jobNo:'AIO',oldComSn:'ไม่มีเลข'},{jobNo:'MON',oldMonitorSn:'MON'}],[]);
  assert.equal(report.totals.additional,1);assert.equal(report.totals.pc,2);assert.equal(report.totals.aio,1);assert.equal(report.totals.monitor,3);assert.equal(report.totals.monitor,report.totals.pc+report.totals.monitorOnly);assert.equal(report.totals.ups,1);
  for(const key of ['pc','aio','monitor','ups','additional'])assert.equal(report.totals[key],report.groups.reduce((n,row)=>n+row[key],0));
- assert.ok(context.executiveReportHtml(report).includes('ติดตั้งเพิ่ม'));
+ assert.ok(context.executiveReportHtml(report).includes('ยังไม่มีข้อมูลรับคืน'));
 });
 
 test('duplicate warnings list the asset number, every affected job and department separately from received totals',()=>{
@@ -80,5 +80,5 @@ test('executive and submission figures use the reference completion report: 156 
 });
 test('blank return fields on pending, blocked or incompletely installed jobs never count as completed additional installations',()=>{
  const {context}=page(),report=context.buildExecutiveReportData([{installStatus:'รอดำเนินการ'},{installStatus:'ติดตั้งไม่ได้'},{installStatus:'ติดตั้งแล้วแต่ไม่เสร็จ'},{installStatus:'ติดตั้งเสร็จ'},{installStatus:'ติดตั้งเสร็จ',oldUpsSn:'ไม่มีเลข'}],[]);
- assert.equal(report.totals.additional,1);assert.equal(report.totals.completed,2);assert.equal(report.totals.remaining,3);assert.equal(report.totals.ups,1);assert.ok(context.executiveBriefHtml(report).includes('ติดตั้งเพิ่มสำเร็จ:'));
+ assert.equal(report.totals.additional,1);assert.equal(report.totals.completed,2);assert.equal(report.totals.remaining,3);assert.equal(report.totals.ups,1);assert.ok(context.executiveBriefHtml(report).includes('ยังไม่มีข้อมูลรับคืน:'));
 });

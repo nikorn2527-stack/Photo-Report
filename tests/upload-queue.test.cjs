@@ -69,6 +69,6 @@ test('unsupported browser storage is disclosed and leaving with unfinished work 
 test('offline queue waits for connectivity without claiming an upload is complete',async()=>{
  const p=page(),calls=[];p.context.navigator.onLine=false;p.context.uploadOneForJob=(...args)=>{calls.push(args);return Promise.resolve('saved');};
  await p.context.initializeUploadQueue();await p.context.enqueueOriginalUpload('JOB-001','Room','before3',p.file);await tick();
- assert.equal(calls.length,0);assert.ok(p.document.getElementById('uploadSummaryTitle').textContent.includes('ออฟไลน์'));
+ assert.equal(calls.length,0);assert.ok(p.document.getElementById('uploadSummaryTitle').textContent.includes('ไม่มีอินเทอร์เน็ต'));
  p.context.navigator.onLine=true;await p.context.retryPendingUploads();await tick();assert.equal(calls.length,1);assert.equal(p.context.isFilled('before3'),true);
 });

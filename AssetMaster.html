@@ -117,26 +117,26 @@
     </style>
   </head>
   <body>
-    <noscript><div style="margin:12px;padding:12px;border:1px solid #b3261e;border-radius:8px;background:#fff3f2;color:#b3261e">กรุณาเปิดใช้งาน JavaScript เพื่อใช้งานหน้าจัดการ Asset_Master</div></noscript>
+    <noscript><div style="margin:12px;padding:12px;border:1px solid #b3261e;border-radius:8px;background:#fff3f2;color:#b3261e">กรุณาเปิดใช้งาน JavaScript เพื่อใช้งานหน้าทะเบียนอุปกรณ์</div></noscript>
     <main class="app">
       <section class="page">
         <header class="header">
           <a id="reportPageLink" class="back-link is-disabled" href="#" target="_top">← กลับหน้า Photo Report</a>
-          <h1 class="title">จัดการ Asset_Master</h1>
+          <h1 class="title">ทะเบียนอุปกรณ์</h1>
           <p class="subtitle">ตารางข้อมูล Job สำหรับค้นหา แก้ไข และเปิดชีตเพื่อพิมพ์</p>
         </header>
 
         <section class="sheet-access" aria-label="ลิงก์แก้ไข Google Sheet">
           <p class="sheet-access-title">แก้ไขข้อมูลใน Google Sheet โดยตรง</p>
           <div class="sheet-access-actions">
-            <a id="assetSheetLink" class="sheet-access-link primary is-disabled" href="#" rel="noopener" onclick="return openSheetLinkWithCode('assetSheetLink', event)">เปิด Asset_Master</a>
+            <a id="assetSheetLink" class="sheet-access-link primary is-disabled" href="#" rel="noopener" onclick="return openSheetLinkWithCode('assetSheetLink', event)">เปิดทะเบียนในชีต</a>
             <a id="reportSheetLink" class="sheet-access-link is-disabled" href="#" rel="noopener" onclick="return openSheetLinkWithCode('reportSheetLink', event)">เปิด Photo_Report</a>
           </div>
           <p class="sheet-access-note">ต้องลงชื่อเข้าใช้ Google ด้วยบัญชีที่มีสิทธิ์แก้ไขไฟล์นี้</p>
         </section>
 
         <div class="toolbar">
-          <input id="search" class="search" type="search" placeholder="ค้นหา Job, อาคาร, แผนก หรือห้อง" oninput="filterRows()">
+          <input id="search" class="search" type="search" placeholder="ค้นหาเลขงาน อาคาร หน่วยงาน หรือห้อง" oninput="filterRows()">
           <button type="button" class="button button-add" onclick="openForm()">+ เพิ่ม Job</button>
           <button type="button" class="button button-refresh" onclick="loadRows()">รีเฟรช</button>
         </div>
@@ -146,10 +146,10 @@
           <table>
             <thead>
               <tr>
-                <th>เลข Job</th>
+                <th>เลขงาน</th>
                 <th>อาคาร</th>
                 <th>ชั้น</th>
-                <th>แผนก</th>
+                <th>หน่วยงาน</th>
                 <th>ห้อง</th>
                 <th>การทำงาน</th>
               </tr>
@@ -165,12 +165,12 @@
     <div id="formModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="formTitle">
       <section class="modal">
         <div class="sheet-handle" aria-hidden="true"></div>
-        <h2 id="formTitle" class="modal-title">เพิ่มข้อมูล Job</h2>
-        <p class="modal-note">กรอกข้อมูลแล้วกดบันทึก ระบบจะเขียนลงชีต Asset_Master</p>
+        <h2 id="formTitle" class="modal-title">เพิ่มงาน</h2>
+        <p class="modal-note">กรอกข้อมูลแล้วกดบันทึก</p>
         <input id="rowNumber" type="hidden">
         <div class="form-grid">
           <div class="form-field">
-            <label for="jobNo">เลข Job</label>
+            <label for="jobNo">เลขงาน</label>
             <input id="jobNo" type="text" placeholder="เช่น JOB-001" autocapitalize="characters">
           </div>
           <div class="form-field">
@@ -182,8 +182,8 @@
             <input id="floor" type="text" placeholder="ชั้น">
           </div>
           <div class="form-field">
-            <label for="department">แผนก</label>
-            <input id="department" type="text" placeholder="แผนก">
+            <label for="department">หน่วยงาน</label>
+            <input id="department" type="text" placeholder="หน่วยงาน">
           </div>
           <div class="form-field">
             <label for="room">ห้อง</label>
@@ -240,7 +240,7 @@
 
       function loadRows() {
         hideSheetLink();
-        setStatus('กำลังโหลดข้อมูล Asset_Master...');
+        setStatus('กำลังโหลดทะเบียนอุปกรณ์...');
         google.script.run
           .withSuccessHandler(function(data) {
             rows = data || [];
@@ -314,7 +314,7 @@
 
       function openForm(item) {
         item = item || {};
-        document.getElementById('formTitle').textContent = item.rowNumber ? 'แก้ไขข้อมูล Job' : 'เพิ่มข้อมูล Job';
+        document.getElementById('formTitle').textContent = item.rowNumber ? 'แก้ไขข้อมูล Job' : 'เพิ่มงาน';
         document.getElementById('rowNumber').value = item.rowNumber || '';
         document.getElementById('jobNo').value = item.jobNo || '';
         document.getElementById('building').value = item.building || '';
@@ -335,7 +335,7 @@
       function saveRow() {
         const jobNo = document.getElementById('jobNo').value.trim().toUpperCase();
         if (!jobNo) {
-          setStatus('กรุณากรอกเลข Job', true);
+          setStatus('กรุณากรอกเลขงาน', true);
           return;
         }
 
