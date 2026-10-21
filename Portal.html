@@ -282,8 +282,10 @@
           <section class="panel completion-dashboard" aria-labelledby="executiveTitle">
             <div class="completion-head"><div><h3 id="executiveTitle" class="panel-title">สรุปติดตั้งและรับคืนสำหรับผู้บริหาร</h3><p id="executiveMeta" class="view-note"></p></div><div class="executive-photo-actions"><button type="button" class="button button-primary" onclick="printExecutiveReport()">พิมพ์สรุปผู้บริหาร</button><button type="button" class="button button-outline" onclick="openExecutivePhotoReport()">รายงานภาพคอมรายหน่วยงาน</button></div></div>
             <div id="executiveKpis" class="issue-kpis"></div>
-            <p class="plan-note">ยอดรับคืนแยก AIO / PC / จอ / UPS ตามข้อมูลที่กรอก ช่องว่างไม่นับรับคืนและไม่ถือเป็นงานค้าง รายการติดตั้งเสร็จที่รอตรวจงานใช้เกณฑ์ส่งมอบ อุปกรณ์เสริม และรูปหลักในหน้าติดตามงาน</p>
+            <p class="plan-note">ยอดรับคืนนับตามรายการ Job: คอมและจอในแถวเดียวกัน = PC; คอมอย่างเดียว = AIO; UPS นับแยก ช่องรับคืนว่างทั้ง 3 ช่อง = ติดตั้งเพิ่ม (ดูสถานะติดตั้งแยกต่างหาก) รายการติดตั้งเสร็จที่รอตรวจงานใช้เกณฑ์ส่งมอบ อุปกรณ์เสริม และรูปหลักในหน้าติดตามงาน</p>
             <div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr id="executiveHeaders"></tr></thead><tbody id="executiveDepartmentBody"></tbody></table></div>
+            <div id="executiveDuplicateNotes"></div>
+            <div id="executiveReturnNotes"></div>
             <h4 class="panel-title" style="margin-top:18px">งานที่ต้องติดตาม / ประสาน</h4>
             <div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>Job</th><th>หน่วยงาน</th><th>เรื่องที่ต้องติดตาม</th><th>รายละเอียด</th><th>เปิดงาน</th></tr></thead><tbody id="executiveAttentionBody"></tbody></table></div>
           </section>
@@ -304,7 +306,7 @@
             </div>
           </section>
           <section class="panel completion-dashboard" aria-labelledby="returnAssetTitle">
-            <div class="completion-head"><div><h3 id="returnAssetTitle" class="panel-title">รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h3><p class="view-note">แยกรับคืน PC / จอ / UPS ตามช่องเลขครุภัณฑ์เดิมทั้งสามประเภท</p></div><button type="button" class="button button-outline" onclick="printReturnAssetReport()">พิมพ์ / บันทึก PDF รับคืน</button></div>
+            <div class="completion-head"><div><h3 id="returnAssetTitle" class="panel-title">รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h3><p class="view-note">ทะเบียนเลขครุภัณฑ์: ยอดเลขจริงไม่ซ้ำรวมรายการไม่มีเลข แยกจากยอดรับคืนตาม Job ในสรุปผู้บริหาร</p></div><button type="button" class="button button-outline" onclick="printReturnAssetReport()">พิมพ์ / บันทึก PDF รับคืน</button></div>
             <div id="returnAssetKpis" class="issue-kpis"></div><p id="returnAssetMeta" class="plan-note"></p><p id="returnAssetDuplicates" class="plan-note"></p>
             <div class="completion-tables"><div><h4 class="panel-title">สรุปตามพื้นที่</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>ตึก</th><th>ชั้น</th><th>แผนก</th><th>รายการทั้งหมด</th><th>คอมรับคืน</th><th>คอมไม่มีเลข</th><th>จอรับคืน</th><th>จอไม่มีเลข</th><th>UPS รับคืน</th><th>UPS ไม่มีเลข</th></tr></thead><tbody id="returnAssetAreaBody"></tbody></table></div></div><div><h4 class="panel-title">รายการเลขครุภัณฑ์ที่บันทึกการรับคืน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>Job</th><th>สถานที่</th><th>ประเภทเครื่องเดิม</th><th>เลขครุภัณฑ์คอมเดิม</th><th>เลขครุภัณฑ์จอเดิม</th><th>เลขครุภัณฑ์ UPS เดิม</th></tr></thead><tbody id="returnAssetMachineBody"></tbody></table></div></div></div>
           </section>
@@ -598,46 +600,52 @@
       }
       function changeDashboardDepartment(value) { dashboardDepartment=value;renderDashboard(); }
       function executiveCounts(rows,workByRow,workByJob) {
-        const result={total:rows.length,completed:0,pendingReview:0,issues:0,aio:0,pc:0},computers=new Map();
-        rows.forEach(function(row,index) {
+        const result={total:rows.length,completed:0,pendingReview:0,issues:0,aio:0,pc:0,monitor:0,ups:0,comWithoutNumber:0,monitorWithoutNumber:0,upsWithoutNumber:0,additional:0,monitorOnly:0};
+        rows.forEach(function(row) {
           const work=workByRow.get(String(row.rowNumber))||workByJob.get(String(row.jobNo||'').trim().toLowerCase());
           if (row.installStatus==='ติดตั้งเสร็จ') { result.completed++;if (!work || work.workStatus!=='งานจบ') result.pendingReview++; }
           if (installationNeedsReason(row.installStatus)) result.issues++;
-          const com=classifyReturnedAsset(row.oldComSn);
-          if (com.received) {
-            const key=com.noNumber ? 'row:'+index : 'number:'+com.number.toUpperCase();
-            const pc=classifyReturnedAsset(row.oldMonitorSn).received;
-            computers.set(key,pc || computers.get(key)===true);
-          }
+          const com=classifyReturnedAsset(row.oldComSn),monitor=classifyReturnedAsset(row.oldMonitorSn),ups=classifyReturnedAsset(row.oldUpsSn);
+          if(com.received)result[monitor.received?'pc':'aio']++;
+          if(monitor.received)result.monitor++;
+          if(ups.received)result.ups++;
+          if(com.noNumber)result.comWithoutNumber++;
+          if(monitor.noNumber)result.monitorWithoutNumber++;
+          if(ups.noNumber)result.upsWithoutNumber++;
+          if(!com.received&&monitor.received)result.monitorOnly++;
+          if(!com.received&&!monitor.received&&!ups.received)result.additional++;
         });
-        computers.forEach(function(pc) { result[pc?'pc':'aio']++; });
-        const returns=buildReturnAssetReportData(rows);
         result.remaining=result.total-result.completed;result.percent=result.total?Math.round(result.completed/result.total*100):0;
-        result.comWithoutNumber=returns.comWithoutNumber;result.monitor=returns.monitorCount;result.monitorWithoutNumber=returns.monitorWithoutNumber;result.ups=returns.upsCount;result.upsWithoutNumber=returns.upsWithoutNumber;
         return result;
       }
       function buildExecutiveReportData(rows,workRows,updatedAt,department) {
-        const workByRow=new Map(),workByJob=new Map(),departments=new Map(),attention=[];
+        const workByRow=new Map(),workByJob=new Map(),departments=new Map(),attention=[],returnNotes=[];
         (workRows||[]).forEach(function(row) { if(row.rowNumber!==undefined&&row.rowNumber!==null)workByRow.set(String(row.rowNumber),row);if(row.jobNo)workByJob.set(String(row.jobNo).trim().toLowerCase(),row); });
         (rows||[]).forEach(function(row) {
           const name=departmentName(row);if(!departments.has(name))departments.set(name,[]);departments.get(name).push(row);
           const work=workByRow.get(String(row.rowNumber))||workByJob.get(String(row.jobNo||'').trim().toLowerCase());
+          if(!classifyReturnedAsset(row.oldComSn).received&&classifyReturnedAsset(row.oldMonitorSn).received)returnNotes.push({jobNo:row.jobNo||'',department:name,kind:'รับคืนเฉพาะจอ — กรุณาตรวจสอบ',detail:'มีข้อมูลจอเดิม แต่ช่องคอมเดิมว่าง กรุณาตรวจข้อมูล Job นี้'});
           const pending=row.installStatus==='ติดตั้งเสร็จ'&&(!work||work.workStatus!=='งานจบ'),issue=installationNeedsReason(row.installStatus);
           if (pending||issue) attention.push({jobNo:row.jobNo||'',department:name,kind:pending?'ติดตั้งเสร็จ / รอตรวจงาน':row.installStatus,detail:pending?(work&&work.blockers&&work.blockers.length?work.blockers.join(' · '):'รอตรวจข้อมูลติดตามงาน'):(row.installReason||'ยังไม่ระบุปัญหา')});
         });
         const groups=Array.from(departments.entries()).map(function(entry) { return Object.assign({department:entry[0]},executiveCounts(entry[1],workByRow,workByJob)); }).sort(function(a,b) { return a.department.localeCompare(b.department,'th',{numeric:true}); });
         attention.sort(function(a,b) { return a.department.localeCompare(b.department,'th',{numeric:true})||a.jobNo.localeCompare(b.jobNo,'th',{numeric:true}); });
         const returns=buildReturnAssetReportData(rows);
-        return {totals:executiveCounts(rows||[],workByRow,workByJob),groups:groups,attention:attention,duplicates:returns.duplicates,updatedAt:updatedAt||'',department:department||'ทุกหน่วยงาน'};
+        const duplicates=returns.duplicates.map(function(item) {
+          const type=RETURN_ASSET_TYPES.find(function(type){return type.duplicateLabel===item.type;});
+          const entries=(rows||[]).filter(function(row){return classifyReturnedAsset(row[type.field]).number.toUpperCase()===item.number.toUpperCase();}).map(function(row){return (row.jobNo||'แถว '+row.rowNumber)+' ('+departmentName(row)+')';});
+          return Object.assign({},item,{entries:entries});
+        });
+        return {totals:executiveCounts(rows||[],workByRow,workByJob),groups:groups,attention:attention,returnNotes:returnNotes,duplicates:duplicates,updatedAt:updatedAt||'',department:department||'ทุกหน่วยงาน'};
       }
       function getExecutiveReport() { return buildExecutiveReportData(getDashboardAssetRows(),portalData.jobWorkRows,portalData.loadedAt,dashboardDepartment); }
       function executiveKpis(report) {
         const t=report.totals;
-        return [['งานทั้งหมด',t.total],['ติดตั้งเสร็จ',t.completed],['คงเหลือ',t.remaining],['ความคืบหน้า',t.percent+'%'],['ติดตั้งเสร็จ / รอตรวจงาน',t.pendingReview],['งานติดปัญหา',t.issues],['AIO รับคืน',t.aio],['PC รับคืน',t.pc],['จอรับคืน',t.monitor],['UPS รับคืน',t.ups],['คอมรับคืนไม่มีเลข',t.comWithoutNumber],['จอรับคืนไม่มีเลข',t.monitorWithoutNumber],['UPS รับคืนไม่มีเลข',t.upsWithoutNumber]];
+        return [['งานทั้งหมด',t.total],['ติดตั้งเสร็จ',t.completed],['คงเหลือ',t.remaining],['ความคืบหน้า',t.percent+'%'],['ติดตั้งเสร็จ / รอตรวจงาน',t.pendingReview],['งานติดปัญหา',t.issues],['AIO รับคืน',t.aio],['PC รับคืน',t.pc],['จอรับคืน',t.monitor],['UPS รับคืน',t.ups],['คอมรับคืนไม่มีเลข',t.comWithoutNumber],['จอรับคืนไม่มีเลข',t.monitorWithoutNumber],['UPS รับคืนไม่มีเลข',t.upsWithoutNumber],['ติดตั้งเพิ่ม (ไม่รับคืน)',t.additional]];
       }
-      function executiveHeaders() { return ['หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','รอตรวจงาน','ติดปัญหา','AIO คืน','PC คืน','จอคืน','UPS คืน'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
+      function executiveHeaders() { return ['หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','รอตรวจงาน','ติดปัญหา','AIO คืน','PC คืน','จอคืน','UPS คืน','ติดตั้งเพิ่ม'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
       function executiveDepartmentRows(report) {
-        return report.groups.map(function(row) { return '<tr><td>'+escapeHtml(row.department)+'</td>'+['total','completed','remaining','percent','pendingReview','issues','aio','pc','monitor','ups'].map(function(key) { return '<td>'+row[key]+(key==='percent'?'%':'')+'</td>'; }).join('')+'</tr>'; }).join('')||'<tr><td colspan="11" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
+        return report.groups.map(function(row) { return '<tr><td>'+escapeHtml(row.department)+'</td>'+['total','completed','remaining','percent','pendingReview','issues','aio','pc','monitor','ups','additional'].map(function(key) { return '<td>'+row[key]+(key==='percent'?'%':'')+'</td>'; }).join('')+'</tr>'; }).join('')||'<tr><td colspan="12" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
       }
       function executiveAttentionRows(report,printable) {
         return report.attention.map(function(row) { return '<tr><td>'+escapeHtml(row.jobNo||'-')+'</td><td>'+escapeHtml(row.department)+'</td><td>'+escapeHtml(row.kind)+'</td><td>'+escapeHtml(row.detail)+'</td>'+(printable?'':'<td>'+(row.jobNo?'<button type="button" class="button button-outline" data-job="'+escapeHtml(row.jobNo)+'" onclick="openExecutiveWork(this)">ดูงาน</button>':'')+'</td>')+'</tr>'; }).join('')||'<tr><td colspan="'+(printable?4:5)+'" class="issue-empty">ไม่มีงานที่ต้องติดตาม / ประสาน</td></tr>';
@@ -645,18 +653,28 @@
       function openExecutiveWork(button) {
         document.getElementById('workSearch').value=button.getAttribute('data-job');document.getElementById('workStatusFilter').value='';renderWorkTable();showView('work');
       }
+      function executiveDuplicateNotesHtml(report) {
+        if(!report.duplicates.length)return '';
+        return '<h4 class="panel-title">เลขครุภัณฑ์ซ้ำที่ต้องตรวจสอบ ('+report.duplicates.length+' เลข)</h4><p class="plan-note">แจ้งเพื่อให้ตรวจข้อมูล ไม่หักออกจากยอดรับคืนตาม Job และไม่แก้เลขให้อัตโนมัติ</p><div class="table-wrap"><table class="completion-table"><thead><tr><th>ประเภท</th><th>เลขครุภัณฑ์ซ้ำ</th><th>Job / หน่วยงานที่เกี่ยวข้อง</th></tr></thead><tbody>'+report.duplicates.map(function(row){return '<tr><td>'+escapeHtml(row.type)+'</td><td>'+escapeHtml(row.number)+'</td><td>'+escapeHtml(row.entries.join(' · '))+'</td></tr>';}).join('')+'</tbody></table></div>';
+      }
+      function executiveReturnNotesHtml(report,printable) {
+        if(!(report.returnNotes||[]).length)return '';
+        return '<h4 class="panel-title">หมายเหตุการรับคืน ('+report.returnNotes.length+' รายการ)</h4><div class="table-wrap"><table class="completion-table"><thead><tr><th>Job</th><th>หน่วยงาน</th><th>หมายเหตุ</th><th>รายละเอียด</th>'+(printable?'':'<th>เปิดงาน</th>')+'</tr></thead><tbody>'+executiveAttentionRows({attention:report.returnNotes},printable)+'</tbody></table></div>';
+      }
       function executiveNote(report) {
-        return 'หน่วยงาน: '+report.department+' · ดึงข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt)+' · ยอดรับคืนนับเลขไม่ซ้ำแยกประเภท รวมเครื่องไม่มีเลขตามแถว หากเลขซ้ำข้ามหน่วยงาน ผลรวมรายหน่วยงานอาจสูงกว่ายอดรวม'+(report.duplicates.length?' · พบเลขครุภัณฑ์ซ้ำ '+report.duplicates.length+' เลข โปรดตรวจรายงานรับคืน':'');
+        return 'หน่วยงาน: '+report.department+' · ดึงข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt)+' · ยอดผู้บริหารนับตามรายการ Job จับคู่คอมและจอในแถวเดียวกัน เลขซ้ำแจ้งแยกเพื่อให้ตรวจสอบ ไม่หักออกจากยอดรายการ'+(report.duplicates.length?' · พบเลขครุภัณฑ์ซ้ำ '+report.duplicates.length+' เลข โปรดตรวจรายงานรับคืน':'');
       }
       function renderExecutiveDashboard() {
         const report=getExecutiveReport();
         document.getElementById('executiveMeta').textContent=executiveNote(report);
         document.getElementById('executiveKpis').innerHTML=executiveKpis(report).map(function(item) { return '<div class="issue-kpi"><span class="card-label">'+item[0]+'</span><strong>'+item[1]+'</strong></div>'; }).join('');
+        document.getElementById('executiveDuplicateNotes').innerHTML=executiveDuplicateNotesHtml(report);
+        document.getElementById('executiveReturnNotes').innerHTML=executiveReturnNotesHtml(report,false);
         document.getElementById('executiveHeaders').innerHTML=executiveHeaders();document.getElementById('executiveDepartmentBody').innerHTML=executiveDepartmentRows(report);document.getElementById('executiveAttentionBody').innerHTML=executiveAttentionRows(report,false);
       }
       function executiveReportHtml(report) {
         const base=completionReportHtml({total:0,completed:0,remaining:0,percent:0,workComplete:0,areas:[],rows:[]}),start=base.indexOf('<body>');
-        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div><p>ช่องว่างไม่นับรับคืนและไม่ถือเป็นงานค้าง “ไม่มี / ไม่มีเลข” นับว่ามีอุปกรณ์รับคืนแต่ไม่มีเลขครุภัณฑ์ มีคอมและจอ = PC; มีคอมและช่องจอว่าง = AIO จอและ UPS นับแยกตามข้อมูลที่กรอก รอตรวจงาน = ติดตั้งเสร็จแต่ยังไม่ผ่านเกณฑ์ส่งมอบ อุปกรณ์เสริม และรูปหลัก หรือยังไม่มีข้อมูลติดตามงาน เลขคอมซ้ำที่ระบุประเภทต่างกันนับเป็น PC หากพบจอในรายการใดรายการหนึ่ง</p><h2>สรุปตามหน่วยงาน</h2><table><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table><h2>งานที่ต้องติดตาม / ประสาน</h2><table><thead><tr><th>Job</th><th>หน่วยงาน</th><th>เรื่องที่ต้องติดตาม</th><th>รายละเอียด</th></tr></thead><tbody>'+executiveAttentionRows(report,true)+'</tbody></table></body></html>';
+        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div><p>ช่องว่างไม่นับรับคืนและไม่ถือเป็นงานค้าง “ไม่มี / ไม่มีเลข” นับว่ามีอุปกรณ์รับคืนแต่ไม่มีเลขครุภัณฑ์ มีคอมและจอ = PC; มีคอมและช่องจอว่าง = AIO จอและ UPS นับแยกตามข้อมูลที่กรอก รอตรวจงาน = ติดตั้งเสร็จแต่ยังไม่ผ่านเกณฑ์ส่งมอบ อุปกรณ์เสริม และรูปหลัก หรือยังไม่มีข้อมูลติดตามงาน จับคู่คอมกับจอเฉพาะใน Job เดียวกัน ช่องรับคืนว่างทั้ง 3 ช่อง = ติดตั้งเพิ่ม โดยดูผลติดตั้งสำเร็จจากสถานะติดตั้งแยกต่างหาก ยอดรับคืนนับตามรายการ Job เลขซ้ำแจ้งให้ตรวจสอบแยกจากยอดรายการ</p><h2>สรุปตามหน่วยงาน</h2><table><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table>'+executiveDuplicateNotesHtml(report)+executiveReturnNotesHtml(report,true)+'<h2>งานที่ต้องติดตาม / ประสาน</h2><table><thead><tr><th>Job</th><th>หน่วยงาน</th><th>เรื่องที่ต้องติดตาม</th><th>รายละเอียด</th></tr></thead><tbody>'+executiveAttentionRows(report,true)+'</tbody></table></body></html>';
       }
       function printExecutiveReport() {
         if(!portalData.loadedAt){setStatus('กรุณารอโหลดข้อมูลก่อนพิมพ์',true);return;}
@@ -746,7 +764,7 @@
       }
       function returnedMachineType(row) {
         const monitor=classifyReturnedAsset(row.oldMonitorSn),computer=classifyReturnedAsset(row.oldComSn);
-        if (monitor.received) return computer.received ? 'PC' : 'PC (รับคืนเฉพาะจอ)';
+        if (monitor.received) return computer.received ? 'PC' : 'รับคืนเฉพาะจอ — กรุณาตรวจสอบ';
         return computer.received ? 'AIO' : '';
       }
       const RETURN_ASSET_TYPES=[{key:'com',field:'oldComSn',label:'คอม',duplicateLabel:'คอมพิวเตอร์'},{key:'monitor',field:'oldMonitorSn',label:'จอ',duplicateLabel:'จอมอนิเตอร์'},{key:'ups',field:'oldUpsSn',label:'UPS',duplicateLabel:'UPS'}];
@@ -804,7 +822,7 @@
         return [['คอมรับคืนทั้งหมด',report.comCount],['คอมมีเครื่องแต่ไม่มีเลข',report.comWithoutNumber],['จอรับคืนทั้งหมด',report.monitorCount],['จอมีเครื่องแต่ไม่มีเลข',report.monitorWithoutNumber],['UPS รับคืนทั้งหมด',report.upsCount],['UPS มีเครื่องแต่ไม่มีเลข',report.upsWithoutNumber],['มีของกลับ / รายการทั้งหมด',report.recorded+'/'+report.total]];
       }
       function returnAssetRules(report) {
-        return 'มีจอรับคืน (รวม “ไม่มี/ไม่มีเลข”) = PC ไม่ใช่ AIO; มีคอมกลับแต่ช่องจอว่าง = AIO แยกคอม / จอ / UPS: ช่องว่าง = ไม่มีของกลับและแสดงว่าง; “ไม่มี” หรือ “ไม่มีเลข” = มีของกลับแต่ไม่มีเลขครุภัณฑ์ '+RETURN_ASSET_TYPES.map(function(type) { return type.label+'ที่มีเลขไม่ซ้ำ '+report[type.key+'WithNumber']+' + ไม่มีเลข '+report[type.key+'WithoutNumber']; }).join(' · ')+' ยอดคอม / จอ / UPS นับแยกตามข้อมูลที่กรอก รายการไม่มีเลขนับแยกตามแถวและประเภท ไม่ใช้คำว่า “ไม่มี/ไม่มีเลข” ตรวจเลขซ้ำ';
+        return 'มีคอมและจอใน Job เดียวกัน = PC; มีเฉพาะจอให้ตรวจข้อมูล; มีคอมกลับแต่ช่องจอว่าง = AIO แยกคอม / จอ / UPS: ช่องว่าง = ไม่มีของกลับและแสดงว่าง; “ไม่มี” หรือ “ไม่มีเลข” = มีของกลับแต่ไม่มีเลขครุภัณฑ์ '+RETURN_ASSET_TYPES.map(function(type) { return type.label+'ที่มีเลขไม่ซ้ำ '+report[type.key+'WithNumber']+' + ไม่มีเลข '+report[type.key+'WithoutNumber']; }).join(' · ')+' ยอดคอม / จอ / UPS นับแยกตามข้อมูลที่กรอก รายการไม่มีเลขนับแยกตามแถวและประเภท ไม่ใช้คำว่า “ไม่มี/ไม่มีเลข” ตรวจเลขซ้ำ';
       }
       function renderReturnAssetDashboard() {
         const report=getReturnAssetReport();

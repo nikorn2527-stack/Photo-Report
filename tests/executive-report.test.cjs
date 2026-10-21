@@ -22,10 +22,10 @@ test('returned AIO, PC, monitors and UPS are independent; blank returns never cr
  assert.ok(!report.attention.some(r=>r.jobNo==='JOB-1'||r.jobNo==='JOB-4'));
  const only=context.buildExecutiveReportData([{jobNo:'OK',installStatus:'ติดตั้งเสร็จ'}],[{jobNo:'OK',workStatus:'งานจบ'}]);assert.equal(only.attention.length,0);assert.equal(only.totals.ups,0);
 });
-test('duplicate computer numbers count once, PC takes precedence, and anonymous returns count by row',()=>{
+test('executive totals count rows and pair components within each job while flagging duplicate numbers separately',()=>{
  const {context}=page(),report=context.buildExecutiveReportData([{department:'A',oldComSn:'COM-1'},{department:'B',oldComSn:'com-1',oldMonitorSn:'MON-1'},{department:'B',oldComSn:'ไม่มี'},{department:'B',oldComSn:'ไม่มีเลข',oldMonitorSn:'ไม่มี'}],[]);
- assert.equal(report.totals.pc,2);assert.equal(report.totals.aio,1);assert.equal(report.totals.comWithoutNumber,2);assert.equal(report.duplicates.length,1);
- assert.equal(report.groups.reduce((n,r)=>n+r.pc+r.aio,0),4);assert.ok(context.executiveNote(report).includes('ผลรวมรายหน่วยงานอาจสูงกว่ายอดรวม'));
+ assert.equal(report.totals.pc,2);assert.equal(report.totals.aio,2);assert.equal(report.totals.comWithoutNumber,2);assert.equal(report.duplicates.length,1);
+ assert.equal(report.groups.reduce((n,r)=>n+r.pc+r.aio,0),4);assert.ok(context.executiveNote(report).includes('เลขซ้ำแจ้งแยก'));
 });
 test('department filter scopes the complete dashboard and its reports without filtering the work table or source rows',()=>{
  const p=page();p.context.rows=rows;p.context.work=work;vm.runInContext("portalData={assetRows:rows,jobWorkRows:work,loadedAt:'2026-10-22T00:00:00Z'}",p.context);
@@ -39,4 +39,23 @@ test('printable summary preserves selected department, escapes spreadsheet input
  const {context}=page(),report=context.buildExecutiveReportData([{department:'<script>unit</script>',jobNo:'<img>',installStatus:'ติดตั้งไม่ได้',installReason:'<b>reason</b>',windowsKey:'SECRET'}],[],'2026-10-22T00:00:00Z','<script>unit</script>'),html=context.executiveReportHtml(report);
  assert.ok(html.includes('&lt;script&gt;unit&lt;/script&gt;'));assert.ok(html.includes('&lt;img&gt;'));assert.ok(html.includes('&lt;b&gt;reason&lt;/b&gt;'));assert.ok(!html.includes('<script>'));assert.ok(!html.includes('SECRET'));assert.ok(!html.includes('onclick='));assert.ok(!html.includes('คืนครบ'));
  const empty=context.buildExecutiveReportData([],[]);assert.equal(empty.totals.percent,0);assert.ok(context.executiveReportHtml(empty).includes('ยังไม่มีข้อมูลหน่วยงาน'));assert.ok(!context.executiveReportHtml(empty).includes('NaN'));
+});
+
+test('monitor-only returns appear as notes in screen/PDF without increasing computer totals or blocked-job counts',()=>{
+ const p=page(),rows=[{jobNo:'MON-ONLY',department:'A',oldMonitorSn:'ไม่มีเลข',oldUpsSn:'UPS-1',installStatus:'ติดตั้งเสร็จ'}],work=[{jobNo:'MON-ONLY',workStatus:'งานจบ'}];
+ const report=p.context.buildExecutiveReportData(rows,work);assert.equal(report.totals.pc,0);assert.equal(report.totals.aio,0);assert.equal(report.totals.monitor,1);assert.equal(report.totals.monitorOnly,1);assert.equal(report.totals.additional,0);assert.equal(report.totals.issues,0);assert.equal(report.attention.length,0);assert.equal(report.returnNotes.length,1);
+ for(const html of [p.context.executiveReturnNotesHtml(report,false),p.context.executiveReportHtml(report)]){assert.ok(html.includes('รับคืนเฉพาะจอ — กรุณาตรวจสอบ'));assert.ok(html.includes('MON-ONLY'));}
+ assert.equal(p.context.executiveReturnNotesHtml(p.context.buildExecutiveReportData([{oldComSn:'C',oldMonitorSn:'M'}],[]),false),'');
+});
+test('blank fields classify additional installations; UPS-only returns do not and repeated numbers cannot break paired-PC totals',()=>{
+ const {context}=page(),report=context.buildExecutiveReportData([{jobNo:'ADD',oldComSn:' ',oldMonitorSn:null,oldUpsSn:''},{jobNo:'UPS',oldUpsSn:'ไม่มีเลข'},{jobNo:'PC1',oldComSn:'COM',oldMonitorSn:'MON'},{jobNo:'PC2',oldComSn:'COM',oldMonitorSn:'MON'},{jobNo:'AIO',oldComSn:'ไม่มีเลข'},{jobNo:'MON',oldMonitorSn:'MON'}],[]);
+ assert.equal(report.totals.additional,1);assert.equal(report.totals.pc,2);assert.equal(report.totals.aio,1);assert.equal(report.totals.monitor,3);assert.equal(report.totals.monitor,report.totals.pc+report.totals.monitorOnly);assert.equal(report.totals.ups,1);
+ for(const key of ['pc','aio','monitor','ups','additional'])assert.equal(report.totals[key],report.groups.reduce((n,row)=>n+row[key],0));
+ assert.ok(context.executiveReportHtml(report).includes('ติดตั้งเพิ่ม'));
+});
+
+test('duplicate warnings list the asset number, every affected job and department separately from received totals',()=>{
+ const {context}=page(),report=context.buildExecutiveReportData([{jobNo:'JOB-A',department:'<unit A>',oldComSn:'C-1',oldMonitorSn:'M-1'},{jobNo:'JOB-B',department:'unit B',oldComSn:'C-1',oldMonitorSn:'M-1'}],[]);
+ assert.equal(report.totals.pc,2);assert.equal(report.totals.monitor,2);assert.equal(report.duplicates.length,2);
+ const html=context.executiveDuplicateNotesHtml(report);for(const text of ['C-1','M-1','JOB-A','JOB-B','&lt;unit A&gt;','unit B'])assert.ok(html.includes(text));assert.ok(!html.includes('<unit A>'));assert.ok(context.executiveReportHtml(report).includes('เลขครุภัณฑ์ซ้ำที่ต้องตรวจสอบ (2 เลข)'));assert.equal(report.returnNotes.length,0);
 });
