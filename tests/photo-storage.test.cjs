@@ -208,3 +208,16 @@ test('A4 fetches full phone originals over 2 MB without thumbnail conversion', (
   assert.deepEqual(Buffer.from(result.split(',')[1], 'base64'), original);
   assert.equal(h.requests.length, 0);
 });
+
+test('sheet report compacts each side while keeping persisted source slots and URLs unchanged', () => {
+  const h = harness();
+  h.upload('JOB-001','before2',h.dataUrl([2]));
+  h.upload('JOB-001','before4',h.dataUrl([4]));
+  h.upload('JOB-001','after3',h.dataUrl([3]));
+  const before = JSON.stringify(h.sheets.get('Photo_File_Index').data);
+  h.context.getJobReportInfo('JOB-001');
+  const images = Object.fromEntries(h.report.images.map(image=>[image.getAnchorCell().getA1Notation(), image.blob.getBytes()[0]]));
+  assert.deepEqual(images, {A15:2, A22:4, E15:3});
+  assert.equal(JSON.stringify(h.sheets.get('Photo_File_Index').data),before);
+  assert.deepEqual([...h.context.getJobProgress('JOB-001').filledTypes],['before2','after3','before4']);
+});

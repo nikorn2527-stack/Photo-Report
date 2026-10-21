@@ -89,3 +89,41 @@ test('appendices contain full-size original images and job labels, and can be di
   b.context.renderPrintDetails();
   assert.equal(b.document.getElementById('printDetails').innerHTML, '');
 });
+
+test('sparse uploads produce consecutive report numbers without modifying upload slots', () => {
+  const b = browser();
+  vm.runInContext("currentJob={jobNo:'JOB-001',location:'Room'};printImages={before2:'data:image/jpeg;base64,Ag==',before4:'data:image/jpeg;base64,BA==',after3:'data:image/jpeg;base64,Aw=='};currentProgress={filledTypes:['before2','before4','after3']}", b.context);
+  b.context.renderPrintTemplate(); b.context.renderPrintDetails();
+  const html = b.page.innerHTML, details = b.document.getElementById('printDetails').innerHTML;
+  assert.equal((html.match(/class="print-photo-card"/g) || []).length, 3);
+  assert.ok(html.indexOf('data-photo-type="before2"') < html.indexOf('data-photo-type="before4"'));
+  assert.ok(html.includes('ก่อนติดตั้ง 1')); assert.ok(html.includes('ก่อนติดตั้ง 2'));
+  assert.ok(html.includes('หลังติดตั้ง 1')); assert.ok(!html.includes('หลังติดตั้ง 3'));
+  assert.ok(!html.includes('ยังไม่มีรูป')); assert.ok(!html.includes('print-signage'));
+  assert.ok(details.includes('ก่อนติดตั้ง 2')); assert.ok(!details.includes('ก่อนติดตั้ง 4'));
+  assert.deepEqual([...vm.runInContext('currentProgress.filledTypes', b.context)], ['before2','before4','after3']);
+  assert.deepEqual(Object.keys(vm.runInContext('printImages', b.context)), ['before2','before4','after3']);
+});
+
+test('every combination of four slots keeps photos in source order and numbers each side consecutively', () => {
+  const b = browser();
+  for (let beforeMask=0; beforeMask<16; beforeMask++) {
+    for (let afterMask=0; afterMask<16; afterMask++) {
+      const photos={};
+      for (let i=1;i<=4;i++) {
+        if (beforeMask & (1<<(i-1))) photos['before'+i]='before-'+i;
+        if (afterMask & (1<<(i-1))) photos['after'+i]='after-'+i;
+      }
+      b.context.fixturePhotos = photos;
+      vm.runInContext('printImages=fixturePhotos', b.context);
+      const items = b.context.getPrintPhotoItems();
+      for (const group of ['before','after']) {
+        const expected=Object.keys(photos).filter(type=>type.startsWith(group));
+        const selected=items.filter(item=>item.group===group);
+        assert.deepEqual(Array.from(selected,item=>item.type), expected);
+        selected.forEach((item,index)=>assert.equal(item.label,(group==='before'?'ก่อนติดตั้ง ':'หลังติดตั้ง ')+(index+1)));
+      }
+      assert.equal(items.length,Object.keys(photos).length);
+    }
+  }
+});

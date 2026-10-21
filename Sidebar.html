@@ -230,6 +230,10 @@
     .print-image-box { display:flex; width:100%; height:100%; min-width:0; min-height:0; align-items:center; justify-content:center; overflow:hidden; padding:1.5mm; background:#fff; }
     .print-image-box img { display:block; width:100%; height:100%; object-fit:contain; object-position:center; background:#fff; }
     .print-empty { color:#9aa0a6; font-size:8pt; text-align:center; }
+    .print-photo-columns { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+    .print-photo-card { margin-top:2mm; }
+    .print-photo-card-title { padding:1.5mm; font-size:8pt; font-weight:900; text-align:center; }
+    .print-photo-card .print-image-box { height:38mm; border:1px solid #b8c0ca; border-top:0; }
     .print-pair-head { display:grid; grid-template-columns:1fr 1fr; margin-top:2mm; }
     .print-pair-head div { padding:1.5mm; font-size:8pt; font-weight:900; text-align:center; }
     .print-before-head { color:#8a4b0f; background:#f4d7bb; }
@@ -434,8 +438,8 @@
     function renderPrintDetails() {
       const root = document.getElementById('printDetails');
       if (!document.getElementById('includePrintDetails').checked || !currentJob) { root.innerHTML = ''; return; }
-      root.innerHTML = allTypes().filter(function(type) { return !!printImages[type]; }).map(function(type) {
-        return '<article class="print-detail-page"><h2 class="print-detail-title">ภาพขยาย · ' + escapeHtml(PHOTO_LABELS[type]) + '</h2><p class="print-detail-meta">Job: ' + escapeHtml(currentJob.jobNo) + ' · ' + escapeHtml(currentJob.location || '') + '</p><div class="print-detail-image"><img src="' + escapeHtml(printImages[type]) + '" alt="' + escapeHtml(PHOTO_LABELS[type]) + '"></div></article>';
+      root.innerHTML = getPrintPhotoItems().map(function(item) {
+        return '<article class="print-detail-page"><h2 class="print-detail-title">ภาพขยาย · ' + escapeHtml(item.label) + '</h2><p class="print-detail-meta">Job: ' + escapeHtml(currentJob.jobNo) + ' · ' + escapeHtml(currentJob.location || '') + '</p><div class="print-detail-image"><img src="' + escapeHtml(printImages[item.type]) + '" alt="' + escapeHtml(item.label) + '"></div></article>';
       }).join('');
     }
     function togglePrintDetails() {
@@ -451,8 +455,28 @@
       }).catch(function(error) { if (request === printRequest) showPrintError(error); });
     }
     function printImage(type,label) { const url=printImages[type]; return '<div class="print-image-box">' + (url ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(label) + '">' : '<span class="print-empty">ยังไม่มีรูป<br>' + escapeHtml(label) + '</span>') + '</div>'; }
-    function renderPrintTemplate() { const job=currentJob, date=printDate || todayString(), location=job.location || 'ไม่ระบุสถานที่'; document.getElementById('printToolbarTitle').textContent='Template A4 · ' + job.jobNo; document.getElementById('printPage').innerHTML='<p class="print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p><h1 class="print-document-title">ภาพถ่ายการติดตั้งอุปกรณ์</h1><div class="print-meta"><div class="print-meta-box"><span class="print-meta-label">เลข Job: </span><span class="print-meta-value">' + escapeHtml(job.jobNo) + '</span></div><div class="print-meta-box"><span class="print-meta-label">สถานที่ติดตั้ง: </span><span class="print-meta-value">' + escapeHtml(location) + '</span></div><div class="print-meta-box"><span class="print-meta-label">วันที่: </span><span class="print-meta-value">' + formatDate(date) + '</span></div></div><div class="print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="print-signage">' + printImage('signage','ป้ายจุดติดตั้ง') + '<div></div></div>' + pair('before1','after1',1) + pair('before2','after2',2) + pair('before3','after3',3) + pair('before4','after4',4); }
-    function pair(before,after,index) { return '<div class="print-pair-head"><div class="print-before-head">ก่อนติดตั้ง ' + index + '</div><div class="print-after-head">หลังติดตั้ง ' + index + '</div></div><div class="print-pair">' + printImage(before,'ก่อนติดตั้ง ' + index) + printImage(after,'หลังติดตั้ง ' + index) + '</div>'; }
+    // จัดเฉพาะสำเนาสำหรับรายงาน ไม่เปลี่ยนช่องอัปโหลดหรือข้อมูลของ Job
+    function getPrintPhotoItems() {
+      const items = [];
+      if (printImages.signage) items.push({type:'signage', group:'signage', label:PHOTO_LABELS.signage});
+      ['before','after'].forEach(function(group) {
+        GROUPS[group].types.filter(function(type) { return !!printImages[type]; }).forEach(function(type,index) {
+          items.push({type:type, group:group, label:(group === 'before' ? 'ก่อนติดตั้ง ' : 'หลังติดตั้ง ') + (index + 1)});
+        });
+      });
+      return items;
+    }
+    function printPhotoColumn(group) {
+      return '<div class="print-photo-column">' + getPrintPhotoItems().filter(function(item) { return item.group === group; }).map(function(item) {
+        return '<div class="print-photo-card" data-photo-type="' + item.type + '"><div class="print-photo-card-title print-' + group + '-head">' + escapeHtml(item.label) + '</div>' + printImage(item.type,item.label) + '</div>';
+      }).join('') + '</div>';
+    }
+    function renderPrintTemplate() {
+      const job=currentJob, date=printDate || todayString(), location=job.location || 'ไม่ระบุสถานที่';
+      document.getElementById('printToolbarTitle').textContent='Template A4 · ' + job.jobNo;
+      const signage = printImages.signage ? '<div class="print-section-title">ป้ายชื่อหน่วยงาน / แผนก / จุดติดตั้ง</div><div class="print-signage">' + printImage('signage','ป้ายจุดติดตั้ง') + '</div>' : '';
+      document.getElementById('printPage').innerHTML='<p class="print-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที (PACIFIC PLUS IT LIMITED PARTNERSHIP)</p><h1 class="print-document-title">ภาพถ่ายการติดตั้งอุปกรณ์</h1><div class="print-meta"><div class="print-meta-box"><span class="print-meta-label">เลข Job: </span><span class="print-meta-value">' + escapeHtml(job.jobNo) + '</span></div><div class="print-meta-box"><span class="print-meta-label">สถานที่ติดตั้ง: </span><span class="print-meta-value">' + escapeHtml(location) + '</span></div><div class="print-meta-box"><span class="print-meta-label">วันที่: </span><span class="print-meta-value">' + formatDate(date) + '</span></div></div>' + signage + '<div class="print-photo-columns">' + printPhotoColumn('before') + printPhotoColumn('after') + '</div>';
+    }
     function portalUrlFromCurrentPage() { const url = new URL(window.location.href); url.search = ''; url.hash = ''; url.searchParams.set('page','portal'); return url.toString(); }
     function openPortal() { const link = document.getElementById('portalLink'); const url = link && link.href; if (!url || url === '#' || url === window.location.href) return; try { if (window.top === window.self) { window.location.assign(url); } else { window.top.location.href = url; } } catch (error) { window.open(url, '_blank', 'noopener,noreferrer'); } }
     let sheetUrls = {};

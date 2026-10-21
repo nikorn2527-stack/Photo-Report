@@ -1461,10 +1461,11 @@ function preparePhotoReportSheet_(jobNo) {
   if (!sheet) throw new Error('ไม่พบชีทเทมเพลต ' + CONFIG.TEMPLATE_SHEET_NAME);
   const progress = getJobProgress(jobNo);
   // โหลดรูปให้ครบก่อนแก้เอกสารกลาง หากโหลดไม่ได้ให้คงเอกสารเดิมไว้
-  const images = progress.filledTypes.map(function(type) {
+  const images = getCompactPhotoPositions_(progress.filledTypes).map(function(position) {
+    const type = position.sourceType;
     const id = extractDriveFileId_(progress.previewUrls[type]);
     if (!id) throw new Error('ไม่พบไฟล์ต้นฉบับใน Drive สำหรับ ' + type + ' กรุณาอัปโหลดรูปช่องนี้ใหม่');
-    return { type: type, blob: getPhotoReportBlob_(id) };
+    return { type: position.targetType, blob: getPhotoReportBlob_(id) };
   });
   CONFIG.IMAGE_TYPES.forEach(function(type) {
     const range = sheet.getRange(CONFIG.IMAGE_CELL_MAP[type]);
@@ -1478,6 +1479,20 @@ function preparePhotoReportSheet_(jobNo) {
     insertImageInTemplate_(sheet, image.blob, CONFIG.IMAGE_CELL_MAP[image.type]);
   });
   return sheet;
+}
+
+/** ตำแหน่งสำหรับรายงานเท่านั้น ช่องต้นทางใน Drive/Photo_File_Index ยังคงเดิม */
+function getCompactPhotoPositions_(filledTypes) {
+  const positions = [];
+  if (filledTypes.indexOf('signage') !== -1) positions.push({sourceType:'signage', targetType:'signage'});
+  ['before', 'after'].forEach(function(group) {
+    [1,2,3,4].map(function(index) { return group + index; }).filter(function(type) {
+      return filledTypes.indexOf(type) !== -1;
+    }).forEach(function(type, index) {
+      positions.push({sourceType:type, targetType:group + (index + 1)});
+    });
+  });
+  return positions;
 }
 
 /** Drive ส่ง thumbnailLink ที่มีสิทธิ์อ่านภาพ ไม่ต้องเปิดรูปเป็นสาธารณะ */
