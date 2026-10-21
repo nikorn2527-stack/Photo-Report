@@ -117,3 +117,33 @@ test('confirmed rule classifies computers without returned monitors as AIO, incl
  const report=context.buildReturnAssetReportData([{jobNo:'JOB-AIO',oldComSn:'ไม่มีเลข',oldMonitorSn:''}]);
  assert.equal(report.rows[0].machineType,'AIO');assert.ok(context.returnAssetReportHtml(report).includes('<td>AIO</td>'));
 });
+
+test('report navigation follows filtered jobs, handles endpoints, and preserves per-job image edits',()=>{
+ const p=page();p.document.getElementById('workSearch').value='NAV';p.document.getElementById('workStatusFilter').value='';
+ vm.runInContext("portalData.jobWorkRows=[{jobNo:'JOB-NAV-1',location:'Room'},{jobNo:'JOB-OTHER',location:'Other'},{jobNo:'JOB-NAV-2',location:'Room'},{jobNo:'JOB-NAV-3',location:'Room'}]",p.context);
+ p.context.google={script:{run:{withSuccessHandler(){return {withFailureHandler(){return {getPhotoPrintImages(){}};}};}}}};
+ p.context.openWorkPrintPreview('JOB-NAV-1');
+ assert.equal(p.document.getElementById('workPrintPosition').textContent,'ใบงาน 1 / 3');assert.equal(p.document.getElementById('workPrintPrevious').disabled,true);
+ vm.runInContext("workPhotoAdjustments.set('JOB-NAV-1::before1',{zoom:3,x:10,y:5})",p.context);
+ p.context.navigateWorkPrintPreview(1);assert.equal(vm.runInContext('workPreviewRow.jobNo',p.context),'JOB-NAV-2');
+ p.context.navigateWorkPrintPreview(1);assert.equal(vm.runInContext('workPreviewRow.jobNo',p.context),'JOB-NAV-3');assert.equal(p.document.getElementById('workPrintNext').disabled,true);
+ p.context.navigateWorkPrintPreview(1);assert.equal(vm.runInContext('workPreviewRow.jobNo',p.context),'JOB-NAV-3');
+ p.context.navigateWorkPrintPreview(-1);p.context.navigateWorkPrintPreview(-1);assert.equal(vm.runInContext('workPreviewRow.jobNo',p.context),'JOB-NAV-1');
+ assert.equal(vm.runInContext("workPhotoAdjustments.get('JOB-NAV-1::before1').zoom",p.context),3);
+ assert.equal(p.document.getElementById('workPrintButton').disabled,true);
+});
+test('late loading from the previous report cannot overwrite the next report',async()=>{
+ const p=page(),metadata=[],photos=[];
+ p.document.getElementById('workSearch').value='';p.document.getElementById('workStatusFilter').value='';
+ vm.runInContext("portalData.jobWorkRows=[{jobNo:'JOB-1',location:'First'},{jobNo:'JOB-2',location:'Second'}]",p.context);
+ p.context.google={script:{run:{withSuccessHandler(success){return {withFailureHandler(){return {getPhotoPrintImages(job){metadata.push({job,success});},getPhotoPrintImage(job,type){photos.push({job,type,success});}};}};}}}};
+ p.context.openWorkPrintPreview('JOB-1');metadata[0].success({imageTypes:['before1']});
+ p.context.navigateWorkPrintPreview(1);metadata[1].success({imageTypes:['before1']});
+ photos[1].success('job-two-original');await new Promise(resolve=>setImmediate(resolve));
+ photos[0].success('stale-job-one-image');await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(vm.runInContext('workPreviewRow.jobNo',p.context),'JOB-2');
+ assert.equal(vm.runInContext('workPreviewImages.before1',p.context),'job-two-original');
+ assert.ok(p.document.getElementById('workPrintPage').innerHTML.includes('job-two-original'));
+ assert.ok(!p.document.getElementById('workPrintPage').innerHTML.includes('stale-job-one-image'));
+ assert.equal(p.document.getElementById('workPrintButton').disabled,false);
+});

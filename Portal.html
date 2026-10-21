@@ -101,6 +101,15 @@
       .work-print-shell { width:max-content; min-width:min(100%, 760px); margin:0 auto; }
       .work-print-toolbar { position:sticky; z-index:2; top:0; display:flex; align-items:center; justify-content:space-between; gap:10px; max-width:210mm; margin:0 auto 10px; padding:10px; border:1px solid #c7cbd1; border-radius:12px; background:rgba(255,255,255,.97); box-shadow:0 3px 12px rgba(32,33,36,.18); }
       .work-print-toolbar-title { min-width:0; color:var(--text); font-size:14px; font-weight:900; }
+      .work-print-navigation { display:flex; align-items:center; justify-content:center; gap:6px; flex:0 0 auto; }
+      .work-print-navigation .work-print-action { padding:8px; font-size:12px; }
+      .work-print-navigation .work-print-action:disabled { opacity:.45; cursor:default; }
+      .work-print-position { font-size:12px; font-weight:800; white-space:nowrap; }
+      @media (max-width:640px) {
+        .work-print-toolbar { left:0; margin-left:0!important; margin-right:0!important; max-width:calc(100vw - 12px)!important; }
+        .work-print-navigation { width:100%; }
+        .work-print-navigation .work-print-action { width:auto; flex:1; min-height:44px; }
+      }
       .work-print-toolbar-actions { display:flex; gap:7px; flex:0 0 auto; }
       .work-print-action { min-height:42px; padding:8px 12px; border:1px solid var(--blue); border-radius:9px; background:var(--blue); color:#fff; font:inherit; font-size:13px; font-weight:900; cursor:pointer; }
       .work-print-action.secondary { border-color:#9aa0a6; background:#fff; color:var(--text); }
@@ -394,6 +403,7 @@
       <div class="work-print-shell">
         <div class="work-print-toolbar">
           <strong id="workPrintTitle" class="work-print-toolbar-title">พรีวิวใบงาน A4</strong>
+          <div class="work-print-navigation" aria-label="เลือกใบงาน"><button id="workPrintPrevious" class="work-print-action secondary" type="button" onclick="navigateWorkPrintPreview(-1)" disabled>← ใบงานก่อนหน้า</button><span id="workPrintPosition" class="work-print-position" role="status" aria-live="polite"></span><button id="workPrintNext" class="work-print-action secondary" type="button" onclick="navigateWorkPrintPreview(1)" disabled>ใบงานถัดไป →</button></div>
           <div class="work-print-toolbar-actions"><button class="work-print-action secondary" type="button" onclick="closeWorkPrintPreview()">กลับ</button><button id="workPrintButton" class="work-print-action" type="button" onclick="printWorkPreview()" disabled>สั่งพิมพ์</button></div>
         </div>
         <div id="workPrintStatus" class="work-print-status">กำลังเตรียมพรีวิว...</div>
@@ -847,14 +857,18 @@
         return workStatusBadge(value) + reason;
       }
 
-      function renderWorkTable() {
+      function filteredWorkRows() {
         const query = (document.getElementById('workSearch') || {}).value ? document.getElementById('workSearch').value.trim().toLowerCase() : '';
         const filter = (document.getElementById('workStatusFilter') || {}).value || '';
         const allRows = portalData.jobWorkRows || [];
-        const rows = allRows.filter(function(row) {
+        return allRows.filter(function(row) {
           const text = [row.jobNo, row.location, row.prepStatus, row.installStatus, row.installReason, row.accessoryStatus, row.nextAction, (row.missingPrimary || []).join(' ')].join(' ').toLowerCase();
           return (!query || text.indexOf(query) !== -1) && (!filter || row.workStatus === filter);
         });
+      }
+      function renderWorkTable() {
+        const allRows=portalData.jobWorkRows || [];
+        const rows=filteredWorkRows();
         const completed = allRows.filter(function(row) { return row.workStatus === 'งานจบ'; }).length;
         const pending = allRows.filter(function(row) { return row.workStatus === 'ยังไม่จบ'; }).length;
         const blocked = allRows.filter(function(row) { return row.workStatus === 'ติดปัญหา'; }).length;
@@ -875,6 +889,7 @@
 
       let workPrintRequest=0, workPrintReady=false, workPreviewRow=null, workPreviewImages={}, activeWorkPhotoType='';
       const workPhotoAdjustments=new Map();
+      let workPrintSequence=[];
       const workPhotoTypes=['signage','before1','before2','before3','before4','after1','after2','after3','after4'];
       function workPhotoItems(urls) {
         const items=[];
@@ -897,10 +912,17 @@
           });
         }));
       }
-      function openWorkPrintPreview(jobNo) {
+      function openWorkPrintPreview(jobNo,keepSequence) {
         const row=(portalData.jobWorkRows||[]).find(function(item) { return String(item.jobNo).toLowerCase()===String(jobNo).toLowerCase(); });
         if (!row) { setStatus('ไม่พบข้อมูล Job สำหรับพรีวิว',true);return; }
+        if (!keepSequence) {
+          workPrintSequence=filteredWorkRows().map(function(item) { return item.jobNo; });
+          if (workPrintSequence.indexOf(row.jobNo)===-1) workPrintSequence=(portalData.jobWorkRows||[]).map(function(item) { return item.jobNo; });
+          workPrintSequence=Array.from(new Set(workPrintSequence.filter(Boolean)));
+        }
+        closeWorkPhotoAdjust();
         const request=++workPrintRequest;workPrintReady=false;workPreviewRow=row;workPreviewImages={};
+        updateWorkPrintNavigation();
         document.getElementById('workPrintButton').disabled=true;
         document.getElementById('workPrintTitle').textContent='พรีวิวใบงาน A4 · '+row.jobNo;
         document.getElementById('workPrintStatus').textContent='กำลังโหลดต้นฉบับจาก Drive...';
@@ -930,6 +952,18 @@
             });
           }).catch(failed);
         }).withFailureHandler(failed).getPhotoPrintImages(row.jobNo);
+      }
+      function updateWorkPrintNavigation() {
+        const index=workPreviewRow ? workPrintSequence.indexOf(workPreviewRow.jobNo) : -1;
+        document.getElementById('workPrintPrevious').disabled=index<=0;
+        document.getElementById('workPrintNext').disabled=index<0 || index>=workPrintSequence.length-1;
+        document.getElementById('workPrintPosition').textContent='ใบงาน '+(index+1)+' / '+workPrintSequence.length;
+      }
+      function navigateWorkPrintPreview(direction) {
+        if (!workPreviewRow || (direction!==-1 && direction!==1)) return;
+        const index=workPrintSequence.indexOf(workPreviewRow.jobNo);
+        if (index<0 || index+direction<0 || index+direction>=workPrintSequence.length) return;
+        openWorkPrintPreview(workPrintSequence[index+direction],true);
       }
       function closeWorkPrintPreview() { ++workPrintRequest;workPrintReady=false;closeWorkPhotoAdjust();document.getElementById('workPrintBackdrop').classList.remove('open'); }
       function printWorkPreview() {
