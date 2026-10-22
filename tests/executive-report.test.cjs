@@ -144,9 +144,15 @@ test('refreshing report content preserves selected section tabs and asset search
  p.context.showSectionTab('documents','photos');p.context.renderDocuments();const html=p.document.getElementById('documentGrid').innerHTML;assert.match(html,/id="documents-photos-panel" aria-labelledby="documents-photos-tab">/);assert.match(html,/id="documents-delivery-panel" aria-labelledby="documents-delivery-tab" hidden>/);
 });
 
-test('photo-unit filter keeps every job in a unit with a completed after photo, and leaves project progress unchanged',()=>{
+test('photo-unit filter keeps all jobs when every completed job has after1, and leaves project progress unchanged',()=>{
  const p=page(),assets=[{jobNo:'A1',department:'A',installStatus:'ติดตั้งเสร็จ',oldComSn:'C1'},{jobNo:'A2',department:' A ',installStatus:'รอดำเนินการ'},{jobNo:'B1',department:'B',installStatus:'ติดตั้งเสร็จ'},{jobNo:'C1',department:'C',installStatus:'รอดำเนินการ'}],work=[{jobNo:' a1 ',hasAfterPhoto:true},{jobNo:'A2',hasAfterPhoto:false},{jobNo:'B1',hasAfterPhoto:false},{jobNo:'C1',hasAfterPhoto:true}];
  p.context.assets=assets;p.context.work=work;vm.runInContext('portalData={assetRows:assets,jobWorkRows:work}',p.context);p.document.getElementById('executivePhotosOnly').checked=true;
  const report=p.context.getExecutiveReport();assert.equal(report.totals.total,2);assert.equal(report.totals.completed,1);assert.equal(report.totals.remaining,1);assert.equal(report.totals.com,1);assert.ok(report.groups.every(r=>r.department==='A'));assert.equal(report.photoDepartmentsOnly,true);assert.equal(p.context.getCompletionReport().total,4);
  p.document.getElementById('executivePhotosOnly').checked=false;assert.equal(p.context.getExecutiveReport().totals.total,4);assert.equal(p.context.getExecutiveReport().groups.length,3);
+});
+
+
+test('complete-unit filtering checks only after1; unknown or missing after1 on any completed job excludes the unit',()=>{
+ const {context}=page(),rows=[{jobNo:'A1',department:'A',installStatus:'ติดตั้งเสร็จ'},{jobNo:'A2',department:' A ',installStatus:'ติดตั้งเสร็จ'},{jobNo:'B1',department:'B',installStatus:'ติดตั้งเสร็จ'},{jobNo:'B2',department:'B',installStatus:'รอดำเนินการ'}];
+ const work=[{jobNo:'A1',hasAfterPhoto:true,primaryPhotoComplete:true},{jobNo:'A2',hasAfterPhoto:false,primaryPhotoComplete:false,totalPhotoCount:8},{jobNo:'B1',hasAfterPhoto:true,primaryPhotoComplete:false,totalPhotoCount:1,missingPrimary:['ชื่อหน่วยงาน','ก่อนติดตั้ง']}];assert.deepEqual(Array.from(context.filterExecutivePhotoDepartments(rows,work),r=>r.jobNo),['B1','B2']);assert.equal(context.filterExecutivePhotoDepartments(rows,[]).length,0);
 });
