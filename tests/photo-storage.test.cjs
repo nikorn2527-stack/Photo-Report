@@ -242,3 +242,7 @@ test('executive photos support legacy Drive files and never replace missing afte
   const h=harness();h.upload('JOB-001','after1');h.upload('JOB-002','after2');h.sheets.delete('Photo_File_Index');
   assert.equal(h.context.getExecutivePhotoImage('JOB-001'),'data:image/jpeg;base64,AQID');assert.equal(h.context.getExecutivePhotoImage('JOB-002'),'');assert.equal(h.context.getExecutivePhotoImage('MISSING'),'');assert.throws(()=>h.context.getExecutivePhotoImage(' '),/กรุณาเลือกงาน/);
 });
+
+test('portal work rows expose after1 presence without inferring it from other photos',()=>{
+ const h=harness();h.upload('JOB-1','after1');h.upload('JOB-2','after2');const rows=h.context.buildJobWorkRows_([{jobNo:'JOB-1'},{jobNo:'JOB-2'},{jobNo:'JOB-3'}],h.workbook);assert.equal(rows.find(r=>r.jobNo==='JOB-1').hasAfterPhoto,true);assert.equal(rows.find(r=>r.jobNo==='JOB-2').hasAfterPhoto,false);assert.equal(rows.find(r=>r.jobNo==='JOB-3').hasAfterPhoto,false);
+});

@@ -65,7 +65,7 @@
       .executive-submission-summary .note { font-size:11px; color:#5f6368; }
       table.executive-unit-table{table-layout:auto}table.executive-unit-table th,table.executive-unit-table td{padding:4px;white-space:nowrap;overflow-wrap:normal;font-size:10px}.completion-table th,.completion-table td{white-space:nowrap;overflow-wrap:normal}
       .executive-photo-actions { display:flex; flex-wrap:wrap; gap:8px; }
-      .executive-photo-modal[hidden] { display:none!important; }
+      .executive-photo-page[hidden],.executive-photo-modal[hidden] { display:none!important; }
       .executive-photo-modal { position:fixed; inset:0; z-index:1200; overflow:auto; background:#e5e9ef; padding:12px; }
       .executive-photo-toolbar { position:sticky; top:0; z-index:2; max-width:980px; margin:0 auto 12px; padding:12px; border:1px solid var(--border); border-radius:10px; background:#fff; box-shadow:0 2px 8px #0002; }
       .executive-photo-toolbar button { min-height:44px; }
@@ -301,11 +301,12 @@
 <section class="section-panel" role="tabpanel" id="dashboard-summary-panel" aria-labelledby="dashboard-summary-tab">          <section class="panel completion-dashboard" aria-labelledby="executiveTitle">
             <div class="completion-head"><div><h3 id="executiveTitle" class="panel-title">สรุปติดตั้งและรับคืนสำหรับผู้บริหาร</h3><p id="executiveMeta" class="view-note"></p></div><div class="executive-photo-actions"><button type="button" class="button button-primary" onclick="openExecutivePhotoReport(true)">ชุดเอกสารส่งผู้บริหาร</button><button type="button" class="button button-outline" onclick="printExecutiveReport()">พิมพ์เฉพาะสรุป</button><button type="button" class="button button-outline" onclick="openExecutivePhotoReport()">รายงานภาพคอมรายหน่วยงาน</button></div></div>
             <div class="work-toolbar"><label for="executiveDepartment">พิมพ์หน่วยงาน</label><select id="executiveDepartment" class="filter" onchange="changeDashboardDepartment(this.value)"><option value="">ทุกหน่วยงาน</option></select></div>
+            <label class="plan-note" style="display:block"><input id="executivePhotosOnly" type="checkbox" checked onchange="renderExecutiveDashboard()"> เฉพาะหน่วยงานที่มีรูป</label>
             <div id="executiveKpis" class="issue-kpis"></div>
             <div id="executiveBrief"></div>
 
             <div class="table-wrap completion-table-scroll"><table class="completion-table executive-unit-table"><thead><tr id="executiveHeaders"></tr></thead><tbody id="executiveDepartmentBody"></tbody></table></div>
-            <label class="plan-note" style="display:block;margin-top:10px"><input id="executivePrintDetails" type="checkbox"> แนบรายการรับคืนตามเลขงาน</label>
+            <label class="plan-note" style="display:block;margin-top:10px"><input id="executivePrintDetails" type="checkbox"> แนบรายการรับคืนในชุดเอกสาร</label>
           </section>
 </section>
 <section class="section-panel" role="tabpanel" id="dashboard-equipment-panel" aria-labelledby="dashboard-equipment-tab" hidden>          <div id="summaryCards" class="cards"></div>
@@ -466,7 +467,7 @@
     </div>
 
     <section id="executivePhotoModal" class="executive-photo-modal" role="dialog" aria-modal="true" aria-labelledby="executivePhotoTitle" onkeydown="handleExecutivePhotoKey(event)" hidden>
-      <div class="executive-photo-toolbar"><div class="completion-head"><strong id="executivePhotoTitle">รายงานภาพคอมรายหน่วยงาน</strong><div class="executive-photo-actions"><button id="executivePhotoPrint" class="button button-primary" type="button" onclick="printExecutivePhotoReport()" disabled>พิมพ์ / บันทึก PDF ภาพ</button><button class="button button-outline" type="button" onclick="loadExecutivePhotoReport(true)">โหลดใหม่</button><button id="executivePhotoBack" class="button button-outline" type="button" onclick="closeExecutivePhotoReport()">กลับ</button></div></div>
+      <div class="executive-photo-toolbar"><div class="completion-head"><strong id="executivePhotoTitle">รายงานภาพคอมรายหน่วยงาน</strong><div class="executive-photo-actions"><button id="executiveSummaryPrint" class="button button-outline" type="button" onclick="printExecutivePhotoSummary()" disabled>พิมพ์เฉพาะสรุป</button><button id="executivePhotoPrint" class="button button-primary" type="button" onclick="printExecutivePhotoReport()" disabled>พิมพ์ / บันทึก PDF ภาพ</button><button class="button button-outline" type="button" onclick="loadExecutivePhotoReport(true)">โหลดใหม่</button><button id="executivePhotoBack" class="button button-outline" type="button" onclick="closeExecutivePhotoReport()">กลับ</button></div></div>
         <div class="work-toolbar"><label for="executivePhotoDepartment">หน่วยงาน</label><select id="executivePhotoDepartment" class="filter" onchange="changeExecutivePhotoDepartment(this.value)"><option value="">ทุกหน่วยงาน</option></select></div>
         <p class="executive-photo-status">ภาพเครื่องที่ติดตั้งเสร็จ แยกตามหน่วยงาน หน้าละ 4 เครื่อง</p>
         <p id="executivePhotoStatus" class="executive-photo-status" role="status" aria-live="polite"></p>
@@ -692,7 +693,17 @@
         const returnJobs=(rows||[]).map(function(row){return {jobNo:row.jobNo||'',building:String(row.building||'').trim(),floor:String(row.floor||'').trim(),department:departmentName(row),installStatus:row.installStatus||'',comNo:row.oldComSn,monitorNo:row.oldMonitorSn,upsNo:row.oldUpsSn,noOldEquipment:row.noOldEquipment===true};}).sort(function(a,b){return compareReportLocation(a,b)||a.jobNo.localeCompare(b.jobNo,'th',{numeric:true});});
         return {totals:executiveCounts(rows||[],workRows),groups:groups,returnJobs:returnJobs,attention:attention,returnNotes:returnNotes,duplicates:duplicates,updatedAt:updatedAt||'',department:department||'ทุกหน่วยงาน'};
       }
-      function getExecutiveReport() { return buildExecutiveReportData(getDashboardAssetRows(),portalData.jobWorkRows,portalData.loadedAt,dashboardDepartment); }
+      function filterExecutivePhotoDepartments(rows,workRows) {
+        const photos=new Map((workRows||[]).filter(function(row){return typeof row.hasAfterPhoto==='boolean';}).map(function(row){return [String(row.jobNo||'').trim().toLowerCase(),row.hasAfterPhoto];}));
+        if(!photos.size)return rows.slice();
+        const departments=new Set(rows.filter(function(row){return row.installStatus==='ติดตั้งเสร็จ'&&photos.get(String(row.jobNo||'').trim().toLowerCase())===true;}).map(departmentName));
+        return rows.filter(function(row){return departments.has(departmentName(row));});
+      }
+      function getExecutiveReport() {
+        const onlyPhotos=!!document.getElementById('executivePhotosOnly').checked;
+        const rows=getDashboardAssetRows(),report=buildExecutiveReportData(onlyPhotos?filterExecutivePhotoDepartments(rows,portalData.jobWorkRows):rows,portalData.jobWorkRows,portalData.loadedAt,dashboardDepartment);
+        report.photoDepartmentsOnly=onlyPhotos;return report;
+      }
       function executiveKpis(report) {
         const t=report.totals;
         return [['งานทั้งหมด',t.total],['ติดตั้งเสร็จ',t.completed],['คงเหลือ',t.remaining],['ความคืบหน้า',t.percent+'%']];
@@ -740,7 +751,7 @@
         showSectionTab('asset','list');document.getElementById('assetSearch').value=button.getAttribute('data-job');document.getElementById('statusFilter').value='';document.getElementById('prepStatusFilter').value='';renderAssetTable();showView('asset');
       }
       function executiveNote(report) {
-        return 'หน่วยงาน: '+report.department+' · ข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt);
+        return 'หน่วยงาน: '+report.department+' · ข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt)+(report.photoDepartmentsOnly?' · เฉพาะหน่วยงานที่มีรูป':'');
       }
       function renderExecutiveDashboard() {
         const report=getExecutiveReport(),checks=buildExecutiveReportData(portalData.assetRows||[],portalData.jobWorkRows,portalData.loadedAt);
@@ -757,16 +768,21 @@
       function executiveReportHtml(report,includeDetails) {
         const base=completionReportHtml({total:0,completed:0,remaining:0,percent:0,workComplete:0,areas:[],rows:[]}),start=base.indexOf('<body>');
         const details=includeDetails?'<section style="break-before:page"><h2>รายการรับคืนตามเลขงาน</h2><table><thead><tr>'+executiveReturnJobHeaders()+'</tr></thead><tbody>'+executiveReturnJobRows(report)+'</tbody></table></section>':'';
-        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>').replace('</style>','table.executive-unit-table{table-layout:auto}table.executive-unit-table th,table.executive-unit-table td{padding:4px;white-space:nowrap;overflow-wrap:normal;font-size:10px}.completion-table th,.completion-table td{white-space:nowrap;overflow-wrap:normal}</style>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table>'+details+'</body></html>';
+        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>').replace('</style>','h1{font-size:16px;margin:0 0 6px}h2{font-size:12px;margin:8px 0 4px}body{margin:0;font-size:10px;line-height:1.2}p{margin:4px 0}.summary{margin:8px 0;gap:6px}.summary div{padding:5px}.summary strong{font-size:18px}table.executive-unit-table{table-layout:auto}table.executive-unit-table th,table.executive-unit-table td{padding:2px 4px;white-space:nowrap;overflow-wrap:normal;font-size:10px}.completion-table th,.completion-table td{white-space:nowrap;overflow-wrap:normal}</style>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table>'+details+'</body></html>';
+      }
+      function printExecutiveSummary(report) {
+        if(!report||!report.totals.total){setStatus('ยังไม่มีข้อมูลหน่วยงานที่เลือก',true);return;}
+        const popup=window.open('','_blank','width=1100,height=800');if(!popup){setStatus('กรุณาอนุญาตหน้าต่างป๊อปอัป แล้วลองพิมพ์อีกครั้ง',true);return;}
+        popup.opener=null;popup.document.open();popup.document.write(executiveReportHtml(report,false));popup.document.close();
+        return Promise.resolve(popup.document.fonts?popup.document.fonts.ready:undefined).then(function(){if(!popup.closed){popup.focus();popup.print();}});
       }
       function printExecutiveReport() {
         if(!portalData.loadedAt){setStatus('กรุณารอโหลดข้อมูลก่อนพิมพ์',true);return;}
-        const popup=window.open('','_blank','width=1100,height=800');if(!popup){setStatus('กรุณาอนุญาตหน้าต่างป๊อปอัป แล้วลองพิมพ์อีกครั้ง',true);return;}
-        popup.opener=null;popup.document.open();popup.document.write(executiveReportHtml(getExecutiveReport(),document.getElementById('executivePrintDetails').checked));popup.document.close();
-        Promise.resolve(popup.document.fonts?popup.document.fonts.ready:undefined).then(function(){if(!popup.closed){popup.focus();popup.print();}});
+        return printExecutiveSummary(getExecutiveReport());
       }
+      function printExecutivePhotoSummary() { return printExecutiveSummary(executivePhotoSnapshot); }
 
-      let executivePhotoRequest=0,executivePhotoReady=false,executivePhotoAllSource=[],executivePhotoSource=[],executivePhotoTime='',executivePhotoFocus=null,executivePhotoSubmission=false,executivePhotoSnapshot=null,executivePhotoIncludeDetails=false;
+      let executivePhotoRequest=0,executivePhotoReady=false,executivePhotoAllSource=[],executivePhotoWorkSnapshot=[],executivePhotoOnlyWithPhotos=false,executivePhotoSource=[],executivePhotoTime='',executivePhotoFocus=null,executivePhotoSubmission=false,executivePhotoSnapshot=null,executivePhotoIncludeDetails=false;
       function buildExecutivePhotoPlan(rows) {
         const groups=new Map(),seen=new Set();
         (rows||[]).forEach(function(row) {
@@ -800,14 +816,18 @@
         }).withFailureHandler(reject).getExecutivePhotoImage(job);});
       }
       function changeExecutivePhotoDepartment(value) {
-        executivePhotoSource=executivePhotoAllSource.filter(function(row){return !value||departmentName(row)===value;});
-        executivePhotoSnapshot=buildExecutiveReportData(executivePhotoSource,portalData.jobWorkRows,executivePhotoTime,value);
+        const scoped=executivePhotoAllSource.filter(function(row){return !value||departmentName(row)===value;});
+        executivePhotoSource=executivePhotoOnlyWithPhotos?filterExecutivePhotoDepartments(scoped,executivePhotoWorkSnapshot):scoped;
+        executivePhotoSnapshot=buildExecutiveReportData(executivePhotoSource,executivePhotoWorkSnapshot,executivePhotoTime,value);executivePhotoSnapshot.photoDepartmentsOnly=executivePhotoOnlyWithPhotos;
+        document.getElementById('executiveSummaryPrint').disabled=!executivePhotoSnapshot.totals.total;
         document.getElementById('executivePhotoDepartment').value=value;
         document.getElementById('executivePhotoTitle').textContent=(executivePhotoSubmission?'ชุดเอกสารส่งผู้บริหาร · ':'รายงานภาพคอมรายหน่วยงาน · ')+(value||'ทุกหน่วยงาน');
         return loadExecutivePhotoReport();
       }
       function openExecutivePhotoReport(submission) {
         if(!portalData.loadedAt){setStatus('กรุณารอให้โหลดข้อมูลเสร็จก่อน',true);return;}
+        executivePhotoOnlyWithPhotos=!!document.getElementById('executivePhotosOnly').checked;executivePhotoWorkSnapshot=(portalData.jobWorkRows||[]).map(function(row){return Object.assign({},row);});
+        document.getElementById('executivePhotoPrint').textContent=submission?'พิมพ์พร้อมภาพ':'พิมพ์ภาพ';
         executivePhotoSubmission=!!submission;executivePhotoIncludeDetails=!!document.getElementById('executivePrintDetails').checked;
         executivePhotoFocus=document.activeElement;executivePhotoAllSource=(portalData.assetRows||[]).map(function(row){return Object.assign({},row);});executivePhotoTime=portalData.loadedAt;
         const names=Array.from(new Set(executivePhotoAllSource.map(departmentName))).sort(function(a,b){return a.localeCompare(b,'th',{numeric:true});});
@@ -818,26 +838,38 @@
         const request=++executivePhotoRequest;executivePhotoReady=false;document.getElementById('executivePhotoPrint').disabled=true;
         const pages=buildExecutivePhotoPlan(executivePhotoSource),status=document.getElementById('executivePhotoStatus'),root=document.getElementById('executivePhotoPages'),jobs=[];
         const summary=executivePhotoSubmission?executiveSubmissionSummaryHtml(executivePhotoSnapshot,executivePhotoIncludeDetails):'';
-        root.innerHTML=summary+pages.map(function(page,pageIndex) {
+        root.innerHTML='<div id="executivePhotoSummary">'+summary+'</div>'+pages.map(function(page,pageIndex) {
           const body=page.jobs.map(function(row){const index=jobs.length;jobs.push(row);return '<div class="executive-photo-job" id="executivePhotoJob'+index+'">กำลังโหลด '+escapeHtml(row.jobNo)+'...</div>';}).join('');
-          return '<article class="executive-photo-page"><h2>ภาพเครื่องที่ติดตั้งเสร็จ · '+escapeHtml(page.department)+'</h2><p class="executive-photo-page-note">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที · หลังติดตั้ง 1 · '+page.departmentJobs+' เครื่องในหน่วยงาน · หน้า '+(pageIndex+1)+'/'+pages.length+'</p><p class="executive-photo-page-note">ข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(executivePhotoTime))+'</p><div class="executive-photo-grid">'+body+'</div></article>';
+          return '<article id="executivePhotoPage'+pageIndex+'" class="executive-photo-page"><h2>ภาพเครื่องที่ติดตั้งเสร็จ · '+escapeHtml(page.department)+'</h2><p id="executivePhotoPageNote'+pageIndex+'" class="executive-photo-page-note">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที · หลังติดตั้ง 1 · '+page.departmentJobs+' เครื่องในหน่วยงาน · หน้า '+(pageIndex+1)+'/'+pages.length+'</p><p class="executive-photo-page-note">ข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(executivePhotoTime))+'</p><div class="executive-photo-grid">'+body+'</div></article>';
         }).join('');
+        if(!jobs.length&&executivePhotoOnlyWithPhotos){root.innerHTML='<article class="executive-photo-page"><p>ยังไม่มีหน่วยงานที่มีรูปหลังติดตั้ง</p></article>';document.getElementById('executiveSummaryPrint').disabled=true;status.textContent='ยังไม่มีรูปสำหรับรายงาน';return;}
         if(!jobs.length){executivePhotoReady=!!summary&&executivePhotoSnapshot.totals.total>0;root.innerHTML=summary||'<article class="executive-photo-page"><p>ยังไม่มี Job ติดตั้งเสร็จในหน่วยงานที่เลือก</p></article>';document.getElementById('executivePhotoPrint').disabled=!executivePhotoReady;status.textContent=executivePhotoReady?'ยังไม่มีภาพเครื่องติดตั้งเสร็จ พิมพ์ได้เฉพาะรายงานสรุป':'ไม่มีรายการสำหรับพิมพ์';return;}
-        let next=0,loadedJobs=0,loadedPhotos=0;const missing=[];
+        let next=0,loadedJobs=0,loadedPhotos=0;const missing=[],photoDepartments=new Set();
         status.textContent='กำลังโหลดรูป · 0/'+jobs.length+' เครื่อง';
         try {
           async function worker() {
             while(request===executivePhotoRequest&&next<jobs.length) {
               const index=next++,row=jobs[index];
               const image=await executivePhotoApi(row.jobNo,force);if(request!==executivePhotoRequest)return;
-              if(image)loadedPhotos++;else missing.push(row.jobNo);
+              if(image){loadedPhotos++;photoDepartments.add(departmentName(row));}else missing.push(row.jobNo);
               const target=document.getElementById('executivePhotoJob'+index);target.innerHTML=executivePhotoJobHtml(row,image);await waitForWorkPrintImages(target);if(request!==executivePhotoRequest)return;
               loadedJobs++;status.textContent='โหลดรูปแล้ว '+loadedJobs+'/'+jobs.length+' เครื่อง · '+loadedPhotos+' รูป';
             }
           }
           await Promise.all(Array.from({length:Math.min(4,jobs.length)},function(){return worker();}));if(request!==executivePhotoRequest)return;
+          let visiblePages=pages;
+          if(executivePhotoOnlyWithPhotos){
+            visiblePages=pages.filter(function(page){return photoDepartments.has(page.department);});
+            pages.forEach(function(page,index){const position=visiblePages.indexOf(page);document.getElementById('executivePhotoPage'+index).hidden=position===-1;if(position!==-1)document.getElementById('executivePhotoPageNote'+index).textContent='ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที · หลังติดตั้ง 1 · '+page.departmentJobs+' เครื่องในหน่วยงาน · หน้า '+(position+1)+'/'+visiblePages.length;});
+            if(!visiblePages.length){root.innerHTML='<article class="executive-photo-page"><p>ยังไม่มีหน่วยงานที่มีรูปหลังติดตั้ง</p></article>';document.getElementById('executiveSummaryPrint').disabled=true;status.textContent='ยังไม่มีรูปสำหรับรายงาน';return;}
+            const included=executivePhotoSource.filter(function(row){return photoDepartments.has(departmentName(row));});
+            executivePhotoSnapshot=buildExecutiveReportData(included,executivePhotoWorkSnapshot,executivePhotoTime,document.getElementById('executivePhotoDepartment').value);executivePhotoSnapshot.photoDepartmentsOnly=true;
+            document.getElementById('executiveSummaryPrint').disabled=!executivePhotoSnapshot.totals.total;
+            if(executivePhotoSubmission)document.getElementById('executivePhotoSummary').innerHTML=executiveSubmissionSummaryHtml(executivePhotoSnapshot,executivePhotoIncludeDetails);
+          }
           executivePhotoReady=true;document.getElementById('executivePhotoPrint').disabled=false;
-          status.textContent=(executivePhotoSubmission?'พร้อมพิมพ์สรุปพร้อมภาพแนบ · ':'พร้อมพิมพ์ ')+jobs.length+' เครื่อง · '+loadedPhotos+' รูป · '+pages.length+' หน้า'+(missing.length?' · ยังไม่มีภาพหลังติดตั้ง 1: '+missing.join(', '):'');
+          const visibleJobs=new Set(visiblePages.flatMap(function(page){return page.jobs.map(function(row){return row.jobNo;});})),visibleMissing=missing.filter(function(job){return visibleJobs.has(job);});
+          status.textContent=(executivePhotoSubmission?'พร้อมพิมพ์สรุปพร้อมภาพแนบ · ':'พร้อมพิมพ์ ')+visibleJobs.size+' เครื่อง · '+loadedPhotos+' รูป · '+visiblePages.length+' หน้า'+(visibleMissing.length?' · ยังไม่มีภาพหลังติดตั้ง 1: '+visibleMissing.join(', '):'');
         }catch(error){if(request!==executivePhotoRequest)return;++executivePhotoRequest;executivePhotoReady=false;status.textContent='โหลดรายงานภาพไม่สำเร็จ: '+getErrorMessage(error)+' · กดโหลดใหม่เพื่อลองอีกครั้ง';}
       }
       function handleExecutivePhotoKey(event) {
@@ -846,7 +878,7 @@
         const controls=Array.from(document.getElementById('executivePhotoModal').querySelectorAll('button:not([disabled]),select:not([disabled])')),first=controls[0],last=controls[controls.length-1];
         if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
       }
-      function closeExecutivePhotoReport(){++executivePhotoRequest;executivePhotoReady=false;document.getElementById('executivePhotoPrint').disabled=true;document.getElementById('executivePhotoModal').hidden=true;document.getElementById('executivePhotoPages').innerHTML='';executivePhotoSource=[];executivePhotoAllSource=[];executivePhotoSnapshot=null;executivePhotoSubmission=false;if(executivePhotoFocus&&executivePhotoFocus.isConnected)executivePhotoFocus.focus();}
+      function closeExecutivePhotoReport(){++executivePhotoRequest;executivePhotoReady=false;document.getElementById('executivePhotoPrint').disabled=true;document.getElementById('executivePhotoModal').hidden=true;document.getElementById('executivePhotoPages').innerHTML='';executivePhotoSource=[];executivePhotoAllSource=[];executivePhotoWorkSnapshot=[];executivePhotoSnapshot=null;executivePhotoSubmission=false;if(executivePhotoFocus&&executivePhotoFocus.isConnected)executivePhotoFocus.focus();}
       function executiveSubmissionSummaryHtml(report,includeDetails) {
         const html=executiveReportHtml(report,includeDetails);
         return '<article class="executive-submission-summary executive-photo-page">'+html.slice(html.indexOf('<body>')+6,html.lastIndexOf('</body>')).replace(/<table( class="executive-unit-table")?>([\s\S]*?)<\/table>/g,'<div class="table-wrap"><table$1>$2</table></div>')+'</article>';

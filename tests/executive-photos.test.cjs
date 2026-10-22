@@ -53,3 +53,22 @@ test('photo loading uses at most four RPCs at a time and failures are retried in
  const retry=p.context.loadExecutivePhotoReport();await tick();assert.equal(requests.length,9);assert.equal(requests.filter(r=>r.job==='JOB-1').length,1);assert.equal(requests.filter(r=>r.job==='JOB-2').length,2);
  for(const r of requests.slice(5))r.success('retried-original');await retry;assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);
 });
+
+test('photo-only reports skip units without indexed photos and retain all jobs of a partially photographed unit',async()=>{
+ const p=page(),requests=[];p.context.assets=[{jobNo:'A1',department:'A',installStatus:'ติดตั้งเสร็จ'},{jobNo:'A2',department:'A',installStatus:'ติดตั้งเสร็จ'},{jobNo:'B1',department:'B',installStatus:'ติดตั้งเสร็จ'}];p.context.work=[{jobNo:'A1',hasAfterPhoto:true},{jobNo:'A2',hasAfterPhoto:false},{jobNo:'B1',hasAfterPhoto:false}];vm.runInContext("portalData={assetRows:assets,jobWorkRows:work,loadedAt:'snapshot'}",p.context);p.document.getElementById('executivePhotosOnly').checked=true;api(p,r=>{requests.push(r);r.success(r.job==='A1'?'original':'');});await p.context.openExecutivePhotoReport(true);
+ assert.deepEqual(requests.map(r=>r.job),['A1','A2']);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);assert.equal(vm.runInContext('executivePhotoSnapshot.returnJobs.length',p.context),2);assert.ok(!p.document.getElementById('executivePhotoSummary').innerHTML.includes('B1'));assert.equal(vm.runInContext('executivePhotoSnapshot.totals.total',p.context),2);
+ await p.context.changeExecutivePhotoDepartment('B');assert.equal(requests.length,2);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,true);assert.ok(p.document.getElementById('executivePhotoPages').innerHTML.includes('ยังไม่มีหน่วยงานที่มีรูปหลังติดตั้ง'));
+});
+
+test('photo-only printing verifies returned images, hides empty units and blocks empty reports',async()=>{
+ const p=page();p.context.assets=[{jobNo:'A1',department:'A',installStatus:'ติดตั้งเสร็จ'},{jobNo:'B1',department:'B',installStatus:'ติดตั้งเสร็จ'}];vm.runInContext("portalData={assetRows:assets,jobWorkRows:[],loadedAt:'snapshot'}",p.context);p.document.getElementById('executivePhotosOnly').checked=true;api(p,r=>r.success(r.job==='A1'?'original':''));await p.context.openExecutivePhotoReport(true);
+ assert.equal(p.document.getElementById('executivePhotoPage0').hidden,false);assert.equal(p.document.getElementById('executivePhotoPage1').hidden,true);assert.equal(vm.runInContext('executivePhotoSnapshot.totals.total',p.context),1);assert.ok(!p.document.getElementById('executivePhotoStatus').textContent.includes('B1'));
+ api(p,r=>r.success(''));await p.context.loadExecutivePhotoReport(true);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,true);assert.equal(p.document.getElementById('executivePhotoStatus').textContent,'ยังไม่มีรูปสำหรับรายงาน');
+});
+
+
+test('summary printing works while photos are pending and never includes photo pages or the optional job appendix',async()=>{
+ const p=page();p.context.rows=[{jobNo:'A1',department:'A',installStatus:'ติดตั้งเสร็จ'}];vm.runInContext("portalData={assetRows:rows,jobWorkRows:[{jobNo:'A1',hasAfterPhoto:true}],loadedAt:'snapshot'}",p.context);p.document.getElementById('executivePhotosOnly').checked=true;p.document.getElementById('executivePrintDetails').checked=true;let pending=0;api(p,()=>pending++);p.context.openExecutivePhotoReport(true);assert.equal(pending,1);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,true);assert.equal(p.document.getElementById('executiveSummaryPrint').disabled,false);
+ let contents='',printed=0;p.context.window.open=()=>({document:{open(){},write(html){contents=html;},close(){},fonts:{ready:Promise.resolve()}},focus(){},print(){printed++}});await p.context.printExecutivePhotoSummary();assert.equal(printed,1);assert.ok(contents.includes('หน่วยงาน: ทุกหน่วยงาน'));assert.ok(!contents.includes('รายการรับคืนตามเลขงาน'));assert.ok(!contents.includes('executive-photo-grid'));assert.ok(!contents.includes('<img'));assert.equal(pending,1);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,true);
+ contents='';await p.context.printExecutiveReport();assert.equal(printed,2);assert.ok(!contents.includes('รายการรับคืนตามเลขงาน'));
+});

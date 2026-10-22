@@ -961,6 +961,7 @@ function buildJobWorkRows_(assetRows, spreadsheet) {
       primaryPhotoCount: primaryTypes.length - missingPrimary.length,
       primaryPhotoTotal: primaryTypes.length,
       primaryPhotoComplete: missingPrimary.length === 0,
+      hasAfterPhoto: !!photo.after1,
       totalPhotoCount: filledTypes.length,
       totalPhotoTotal: CONFIG.IMAGE_TYPES.length,
       missingPrimary: missingPrimary.map(function(type) { return primaryLabels[type]; }),
