@@ -128,3 +128,18 @@ test('report tables keep blank counts and sort building, numeric floor, departme
  assert.equal(context.reportTextCell('ไม่ระบุ'),'');assert.equal(context.reportTextCell(' A\nB '),'A B');assert.equal(report.totals.total,3);assert.equal(report.totals.completed,2);assert.equal(JSON.stringify(assets),before);
  const html=context.executiveReportHtml(report);assert.ok(html.includes('white-space:nowrap'));assert.ok(html.includes('<th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th>'));
 });
+
+test('return follow-up links reopen the correct list tab and search the selected job',()=>{
+ const p=page();vm.runInContext('portalData={assetRows:[],jobWorkRows:[]}',p.context);
+ p.context.showSectionTab('asset','checks');p.context.openReturnAssetCheck({getAttribute(){return 'JOB-1'}});
+ assert.equal(p.document.getElementById('asset-list-panel').hidden,false);assert.equal(p.document.getElementById('asset-checks-panel').hidden,true);assert.equal(p.document.getElementById('assetSearch').value,'JOB-1');
+ p.context.showSectionTab('work','issues');p.context.openExecutiveWork({getAttribute(){return 'JOB-1'}});
+ assert.equal(p.document.getElementById('work-jobs-panel').hidden,false);assert.equal(p.document.getElementById('work-issues-panel').hidden,true);assert.equal(p.document.getElementById('workSearch').value,'JOB-1');
+});
+
+test('refreshing report content preserves selected section tabs and asset searches',()=>{
+ const p=page();vm.runInContext('portalData={assetRows:[],jobWorkRows:[]}',p.context);
+ p.context.showSectionTab('dashboard','installation');p.context.renderDashboard();assert.equal(p.document.getElementById('dashboard-installation-panel').hidden,false);assert.equal(p.document.getElementById('dashboard-summary-panel').hidden,true);
+ p.document.getElementById('assetSearch').value='JOB-2';p.context.showSectionTab('asset','checks');p.context.showSectionTab('asset','list');assert.equal(p.document.getElementById('assetSearch').value,'JOB-2');
+ p.context.showSectionTab('documents','photos');p.context.renderDocuments();const html=p.document.getElementById('documentGrid').innerHTML;assert.match(html,/id="documents-photos-panel" aria-labelledby="documents-photos-tab">/);assert.match(html,/id="documents-delivery-panel" aria-labelledby="documents-delivery-tab" hidden>/);
+});

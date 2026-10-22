@@ -19,6 +19,12 @@
       .photo-report-button { border-color:var(--green); color:var(--green-dark); }
       .nav { display:flex; gap:6px; margin:14px 0; padding:4px; overflow-x:auto; border-radius:10px; background:#e5e9ef; }
       .nav button { min-height:42px; padding:8px 14px; border:0; border-radius:8px; background:transparent; color:var(--muted); font:inherit; font-weight:700; white-space:nowrap; cursor:pointer; }
+      .section-tabs{display:flex;gap:6px;overflow-x:auto;position:sticky;top:0;z-index:10;background:#fff;padding:8px 0;margin:0 0 14px;border-bottom:1px solid var(--border)}
+      .section-tabs button{flex:none;min-height:42px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--muted);font:inherit;font-weight:700;white-space:nowrap;cursor:pointer}
+      .section-tabs button[aria-selected="true"]{background:#1f5c99;border-color:#1f5c99;color:#fff}
+      .section-tabs button:focus-visible{outline:3px solid #8ab4f8;outline-offset:2px}
+      .section-panel[hidden]{display:none!important}
+      .section-panel{min-width:0}
       .nav button.active { background:#fff; color:var(--text); box-shadow:0 1px 4px rgba(60,64,67,.16); }
       .view[hidden] { display:none !important; }
       .view-title { margin:0; font-size:21px; }
@@ -290,7 +296,8 @@
           <h2 class="view-title">ภาพรวมระบบ</h2>
 
           <div class="work-toolbar"><label for="dashboardDepartment">หน่วยงาน</label><select id="dashboardDepartment" class="filter" onchange="changeDashboardDepartment(this.value)"><option value="">ทุกหน่วยงาน</option></select></div>
-          <section class="panel completion-dashboard" aria-labelledby="executiveTitle">
+<div class="section-tabs" role="tablist" aria-label="ภาพรวม" onkeydown="handleSectionTabKey(event,'dashboard')"><button type="button" role="tab" id="dashboard-summary-tab" aria-controls="dashboard-summary-panel" aria-selected="true" tabindex="0" onclick="showSectionTab('dashboard','summary')">สรุป</button><button type="button" role="tab" id="dashboard-installation-tab" aria-controls="dashboard-installation-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('dashboard','installation')">งานติดตั้ง</button><button type="button" role="tab" id="dashboard-equipment-tab" aria-controls="dashboard-equipment-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('dashboard','equipment')">อุปกรณ์</button></div>
+<section class="section-panel" role="tabpanel" id="dashboard-summary-panel" aria-labelledby="dashboard-summary-tab">          <section class="panel completion-dashboard" aria-labelledby="executiveTitle">
             <div class="completion-head"><div><h3 id="executiveTitle" class="panel-title">สรุปติดตั้งและรับคืนสำหรับผู้บริหาร</h3><p id="executiveMeta" class="view-note"></p></div><div class="executive-photo-actions"><button type="button" class="button button-primary" onclick="openExecutivePhotoReport(true)">ชุดเอกสารส่งผู้บริหาร</button><button type="button" class="button button-outline" onclick="printExecutiveReport()">พิมพ์เฉพาะสรุป</button><button type="button" class="button button-outline" onclick="openExecutivePhotoReport()">รายงานภาพคอมรายหน่วยงาน</button></div></div>
             <div id="executiveKpis" class="issue-kpis"></div>
             <div id="executiveBrief"></div>
@@ -298,13 +305,15 @@
             <div class="table-wrap completion-table-scroll"><table class="completion-table executive-unit-table"><thead><tr id="executiveHeaders"></tr></thead><tbody id="executiveDepartmentBody"></tbody></table></div>
             <label class="plan-note" style="display:block;margin-top:10px"><input id="executivePrintDetails" type="checkbox"> แนบรายการรับคืนตามเลขงาน</label>
           </section>
-          <div id="summaryCards" class="cards"></div>
+</section>
+<section class="section-panel" role="tabpanel" id="dashboard-equipment-panel" aria-labelledby="dashboard-equipment-tab" hidden>          <div id="summaryCards" class="cards"></div>
           <div class="dashboard-grid">
             <section class="panel"><h3 class="panel-title">สถานะชุดอุปกรณ์</h3><div id="assetStatusChart"></div></section>
             <section class="panel"><h3 class="panel-title">สถานะเตรียมเครื่อง</h3><div id="prepStatusChart"></div></section>
             <section class="panel"><h3 class="panel-title">ตัวชี้วัดอุปกรณ์</h3><div id="equipmentMetrics"></div></section>
           </div>
-          <section class="panel completion-dashboard" aria-labelledby="completionTitle">
+</section>
+<section class="section-panel" role="tabpanel" id="dashboard-installation-panel" aria-labelledby="dashboard-installation-tab" hidden>          <section class="panel completion-dashboard" aria-labelledby="completionTitle">
             <div class="completion-head"><div><h3 id="completionTitle" class="panel-title">รายงานเครื่องที่ติดตั้งเสร็จ</h3></div><button type="button" class="button button-primary" onclick="printCompletionReport()">พิมพ์ / บันทึก PDF ความคืบหน้า</button></div>
             <div id="completionKpis" class="issue-kpis"></div>
             <div id="completionProgress" class="completion-progress"></div>
@@ -314,17 +323,14 @@
               <div><h4 class="panel-title">รายการเครื่องที่ติดตั้งเสร็จ</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>สถานที่ติดตั้ง</th><th>รุ่นเครื่อง</th><th>S/N เครื่อง</th><th>เลข IP</th></tr></thead><tbody id="completionMachineBody"></tbody></table></div></div>
             </div>
           </section>
+</section>
         </section>
 
         <section id="workView" class="view" hidden>
           <h2 class="view-title">ติดตามงานรายเครื่อง</h2>
           <p class="view-note">ตรวจสถานะติดตั้ง อุปกรณ์ และรูปถ่ายของแต่ละงาน</p>
-          <section class="panel issue-dashboard">
-            <div class="issue-head"><div><h3 class="panel-title">งานติดปัญหา</h3></div><button type="button" class="button button-outline" onclick="printIssueReport()">พิมพ์รายงานสรุป</button></div>
-            <div id="issueKpis" class="issue-kpis"></div>
-            <div class="issue-layout"><div id="issueChart" class="issue-chart"></div><div class="table-wrap"><table class="issue-table"><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ผลติดตั้ง</th><th>ปัญหา / สิ่งที่ต้องประสาน</th></tr></thead><tbody id="issueTableBody"></tbody></table></div></div>
-          </section>
-          <div id="workSummaryCards" class="work-summary"></div>
+<div class="section-tabs" role="tablist" aria-label="ติดตามงาน" onkeydown="handleSectionTabKey(event,'work')"><button type="button" role="tab" id="work-jobs-tab" aria-controls="work-jobs-panel" aria-selected="true" tabindex="0" onclick="showSectionTab('work','jobs')">รายเครื่อง</button><button type="button" role="tab" id="work-issues-tab" aria-controls="work-issues-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('work','issues')">งานติดปัญหา</button></div>
+<section class="section-panel" role="tabpanel" id="work-jobs-panel" aria-labelledby="work-jobs-tab">          <div id="workSummaryCards" class="work-summary"></div>
           <div class="work-toolbar">
             <input id="workSearch" class="search work-search" type="search" placeholder="ค้นหาเลขงาน สถานที่ หรืองานค้าง" oninput="renderWorkTable()">
             <select id="workStatusFilter" class="filter work-filter" onchange="renderWorkTable()"><option value="">สถานะงานทั้งหมด</option><option>งานจบ</option><option>ยังไม่จบ</option><option>ติดปัญหา</option></select>
@@ -332,20 +338,31 @@
           </div>
           <p id="workTableMeta" class="table-meta">กำลังโหลดข้อมูล...</p>
           <div class="table-wrap"><table class="work-table"><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>เตรียมเครื่อง</th><th>ผลการติดตั้ง</th><th>อุปกรณ์เสริม</th><th>รูปหลัก</th><th>สรุปงาน</th><th>ต้องทำต่อ</th><th>ตรวจรูป / พิมพ์</th></tr></thead><tbody id="workTableBody"></tbody></table></div>
+</section>
+<section class="section-panel" role="tabpanel" id="work-issues-panel" aria-labelledby="work-issues-tab" hidden>          <section class="panel issue-dashboard">
+            <div class="issue-head"><div><h3 class="panel-title">งานติดปัญหา</h3></div><button type="button" class="button button-outline" onclick="printIssueReport()">พิมพ์รายงานสรุป</button></div>
+            <div id="issueKpis" class="issue-kpis"></div>
+            <div class="issue-layout"><div id="issueChart" class="issue-chart"></div><div class="table-wrap"><table class="issue-table"><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ผลติดตั้ง</th><th>ปัญหา / สิ่งที่ต้องประสาน</th></tr></thead><tbody id="issueTableBody"></tbody></table></div></div>
+          </section>
+</section>
         </section>
 
         <section id="planView" class="view" hidden>
           <h2 class="view-title">แผนการดำเนินงาน</h2>
           <p class="view-note">จำนวนตามแผน งานที่ทำแล้ว และงานที่เหลือ</p>
           <div id="planLocationTabs" class="plan-location-tabs"></div>
-          <div id="planSummary" class="plan-summary"></div>
-          <section class="panel plan-panel"><h3 id="planTableTitle" class="panel-title">รายการตามแผน</h3><div class="table-wrap"><table class="plan-table"><thead><tr><th>ตึก / ชั้น</th><th>หน่วยงาน</th><th>จำนวนตามแผน</th><th>เริ่ม</th><th>วัน</th><th>เสร็จ</th></tr></thead><tbody id="planTableBody"></tbody></table></div></section>
+<div class="section-tabs" role="tablist" aria-label="แผนงาน" onkeydown="handleSectionTabKey(event,'plan')"><button type="button" role="tab" id="plan-schedule-tab" aria-controls="plan-schedule-panel" aria-selected="true" tabindex="0" onclick="showSectionTab('plan','schedule')">แผนงาน</button><button type="button" role="tab" id="plan-summary-tab" aria-controls="plan-summary-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('plan','summary')">สรุป</button></div>
+<section class="section-panel" role="tabpanel" id="plan-schedule-panel" aria-labelledby="plan-schedule-tab">          <section class="panel plan-panel"><h3 id="planTableTitle" class="panel-title">รายการตามแผน</h3><div class="table-wrap"><table class="plan-table"><thead><tr><th>ตึก / ชั้น</th><th>หน่วยงาน</th><th>จำนวนตามแผน</th><th>เริ่ม</th><th>วัน</th><th>เสร็จ</th></tr></thead><tbody id="planTableBody"></tbody></table></div></section>
+</section>
+<section class="section-panel" role="tabpanel" id="plan-summary-panel" aria-labelledby="plan-summary-tab" hidden>          <div id="planSummary" class="plan-summary"></div>
+</section>
         </section>
 
         <section id="assetView" class="view" hidden>
           <h2 class="view-title">ทะเบียนอุปกรณ์</h2>
           <p class="view-note">ดูและแก้ไขข้อมูลอุปกรณ์</p>
-          <div class="toolbar">
+<div class="section-tabs" role="tablist" aria-label="ทะเบียนอุปกรณ์" onkeydown="handleSectionTabKey(event,'asset')"><button type="button" role="tab" id="asset-list-tab" aria-controls="asset-list-panel" aria-selected="true" tabindex="0" onclick="showSectionTab('asset','list')">รายการอุปกรณ์</button><button type="button" role="tab" id="asset-jobs-tab" aria-controls="asset-jobs-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('asset','jobs')">รับคืนตามงาน</button><button type="button" role="tab" id="asset-returns-tab" aria-controls="asset-returns-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('asset','returns')">สรุปรับคืน</button><button type="button" role="tab" id="asset-checks-tab" aria-controls="asset-checks-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('asset','checks')">ตรวจข้อมูล</button></div>
+<section class="section-panel" role="tabpanel" id="asset-list-panel" aria-labelledby="asset-list-tab">          <div class="toolbar">
             <input id="assetSearch" class="search" type="search" placeholder="ค้นหา Job, รหัสชุด, สถานที่, รุ่น หรือ S/N" oninput="renderAssetTable()">
             <select id="statusFilter" class="filter" onchange="renderAssetTable()"><option value="">สถานะชุดทั้งหมด</option></select>
             <select id="prepStatusFilter" class="filter" onchange="renderAssetTable()"><option value="">เตรียมเครื่องทั้งหมด</option></select>
@@ -359,23 +376,28 @@
               <tbody id="assetTableBody"></tbody>
             </table>
           </div>
-            <details id="executiveDetails" style="margin-top:14px"><summary id="executiveDetailsTitle" style="cursor:pointer;min-height:44px">ตรวจสอบข้อมูลรับคืนและงานค้าง</summary>
-              <div id="returnInfoMissingNotes"></div><h4 class="panel-title">รายการรับคืนตามเลขงาน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th></tr></thead><tbody id="executiveReturnJobs"></tbody></table></div>
-              <div id="executiveDuplicateNotes"></div><div id="executiveReturnNotes"></div>
-              <h4 class="panel-title" style="margin-top:18px">งานที่ต้องติดตาม</h4>
-              <div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>เรื่องที่ต้องติดตาม</th><th>รายละเอียด</th><th>เปิดงาน</th></tr></thead><tbody id="executiveAttentionBody"></tbody></table></div>
-            </details>
-          <section class="panel completion-dashboard" aria-labelledby="returnAssetTitle">
+</section>
+<section class="section-panel" role="tabpanel" id="asset-jobs-panel" aria-labelledby="asset-jobs-tab" hidden><h4 class="panel-title">รายการรับคืนตามเลขงาน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th></tr></thead><tbody id="executiveReturnJobs"></tbody></table></div>
+</section>
+<section class="section-panel" role="tabpanel" id="asset-returns-panel" aria-labelledby="asset-returns-tab" hidden>          <section class="panel completion-dashboard" aria-labelledby="returnAssetTitle">
             <div class="completion-head"><div><h3 id="returnAssetTitle" class="panel-title">รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h3><p class="view-note">เลขซ้ำนับครั้งเดียว รวมเครื่องที่ไม่มีเลข</p></div><button type="button" class="button button-outline" onclick="printReturnAssetReport()">พิมพ์ / บันทึก PDF รับคืน</button></div>
             <div id="returnAssetKpis" class="issue-kpis"></div><p id="returnAssetMeta" class="plan-note"></p><p id="returnAssetDuplicates" class="plan-note"></p>
             <div class="completion-tables"><div><h4 class="panel-title">สรุปตามพื้นที่</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>รายการทั้งหมด</th><th>คอมรับคืน</th><th>คอมไม่มีเลข</th><th>จอรับคืน</th><th>จอไม่มีเลข</th><th>UPS รับคืน</th><th>UPS ไม่มีเลข</th></tr></thead><tbody id="returnAssetAreaBody"></tbody></table></div></div><div><h4 class="panel-title">รายการอุปกรณ์รับคืน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ประเภทเครื่องเดิม</th><th>เลขครุภัณฑ์คอมเดิม</th><th>เลขครุภัณฑ์จอเดิม</th><th>เลขครุภัณฑ์ UPS เดิม</th></tr></thead><tbody id="returnAssetMachineBody"></tbody></table></div></div></div>
           </section>
+</section>
+<section class="section-panel" role="tabpanel" id="asset-checks-panel" aria-labelledby="asset-checks-tab" hidden>            <div id="executiveDetails"><h3 id="executiveDetailsTitle" class="panel-title">ตรวจข้อมูล</h3>
+              <div id="returnInfoMissingNotes"></div>              <div id="executiveDuplicateNotes"></div><div id="executiveReturnNotes"></div>
+              <h4 class="panel-title" style="margin-top:18px">งานที่ต้องติดตาม</h4>
+              <div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>เรื่องที่ต้องติดตาม</th><th>รายละเอียด</th><th>เปิดงาน</th></tr></thead><tbody id="executiveAttentionBody"></tbody></table></div>
+            </div>
+</section>
         </section>
 
         <section id="documentsView" class="view" hidden>
           <h2 class="view-title">เอกสารและการพิมพ์</h2>
           <p class="view-note">เลือกเอกสารที่ต้องการแก้ไขหรือพิมพ์</p>
-          <div id="documentGrid" class="document-grid"></div>
+<div class="section-tabs" role="tablist" aria-label="เอกสาร" onkeydown="handleSectionTabKey(event,'documents')"><button type="button" role="tab" id="documents-delivery-tab" aria-controls="documents-delivery-panel" aria-selected="true" tabindex="0" onclick="showSectionTab('documents','delivery')">ส่งมอบ</button><button type="button" role="tab" id="documents-returns-tab" aria-controls="documents-returns-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('documents','returns')">รับคืน</button><button type="button" role="tab" id="documents-photos-tab" aria-controls="documents-photos-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('documents','photos')">ภาพถ่าย</button><button type="button" role="tab" id="documents-other-tab" aria-controls="documents-other-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('documents','other')">แบบฟอร์มอื่น</button></div>
+          <div id="documentGrid"></div>
         </section>
         <div id="portalStatus" class="status" role="status" aria-live="polite"></div>
         <div class="brand-credit">POWER BY PNG TEAM</div>
@@ -506,6 +528,23 @@
         }).getWorkbookPortalData();
       }
 
+      const sectionTabKeys = {dashboard:['summary','installation','equipment'],work:['jobs','issues'],asset:['list','jobs','returns','checks'],plan:['schedule','summary'],documents:['delivery','returns','photos','other']};
+      const sectionTabs = {dashboard:'summary',work:'jobs',asset:'list',plan:'schedule',documents:'delivery'};
+      function showSectionTab(scope,key) {
+        if(!sectionTabKeys[scope]||sectionTabKeys[scope].indexOf(key)===-1)return;
+        sectionTabs[scope]=key;
+        sectionTabKeys[scope].forEach(function(name){
+          const selected=name===key,panel=document.getElementById(scope+'-'+name+'-panel'),tab=document.getElementById(scope+'-'+name+'-tab');
+          if(panel)panel.hidden=!selected;
+          if(tab&&tab.setAttribute){tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;}
+        });
+      }
+      function handleSectionTabKey(event,scope) {
+        if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+        const keys=sectionTabKeys[scope],index=keys.indexOf(sectionTabs[scope]);
+        const next=event.key==='Home'?0:event.key==='End'?keys.length-1:(index+(event.key==='ArrowRight'?1:-1)+keys.length)%keys.length;
+        event.preventDefault();showSectionTab(scope,keys[next]);document.getElementById(scope+'-'+keys[next]+'-tab').focus();
+      }
       function showView(view) {
         currentView = view;
         ['dashboard','work','asset','documents','plan'].forEach(function(name) {
@@ -532,8 +571,8 @@
         const tabs = document.getElementById('planLocationTabs');
         if (!keys.length) {
           tabs.innerHTML = '<div class="plan-note">ยังไม่พบข้อมูลชีทแผนการดำเนินงาน</div>';
-          document.getElementById('planSummary').innerHTML = '';
-          document.getElementById('planTableBody').innerHTML = '';
+          document.getElementById('planSummary').innerHTML = '<p class="plan-note">ยังไม่มีข้อมูลแผนงาน</p>';
+          document.getElementById('planTableBody').innerHTML = '<tr><td colspan="6">ยังไม่มีข้อมูลแผนงาน</td></tr>';
           return;
         }
         if (!locations[currentPlanKey]) currentPlanKey = keys[0];
@@ -678,7 +717,7 @@
         return report.attention.map(function(row) { return '<tr><td>'+escapeHtml(row.jobNo||'-')+'</td><td>'+reportTextCell(row.department)+'</td><td>'+escapeHtml(row.kind)+'</td><td>'+escapeHtml(row.detail)+'</td>'+(printable?'':'<td>'+(row.jobNo?'<button type="button" class="button button-outline" data-job="'+escapeHtml(row.jobNo)+'" onclick="openExecutiveWork(this)">ดูงาน</button>':'')+'</td>')+'</tr>'; }).join('')||'<tr><td colspan="'+(printable?4:5)+'" class="issue-empty">ไม่มีงานที่ต้องติดตาม</td></tr>';
       }
       function openExecutiveWork(button) {
-        document.getElementById('workSearch').value=button.getAttribute('data-job');document.getElementById('workStatusFilter').value='';renderWorkTable();showView('work');
+        showSectionTab('work','jobs');document.getElementById('workSearch').value=button.getAttribute('data-job');document.getElementById('workStatusFilter').value='';renderWorkTable();showView('work');
       }
       function executiveDuplicateNotesHtml(report) {
         if(!report.duplicates.length)return '';
@@ -694,7 +733,7 @@
         return '<h4 class="panel-title">ยังไม่มีข้อมูลรับคืน ('+rows.length+' งาน)</h4><p class="plan-note">ตรวจข้อมูลรับคืน หรือเลือก “ไม่มีเครื่องเดิมให้นำกลับ”</p><div class="table-wrap"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>แก้ไข</th></tr></thead><tbody>'+rows.map(function(row){return '<tr><td>'+escapeHtml(row.jobNo)+'</td><td>'+reportTextCell(row.department)+'</td><td><button type="button" class="button button-outline" data-job="'+escapeHtml(row.jobNo)+'" onclick="openReturnAssetCheck(this)">ดูอุปกรณ์</button></td></tr>';}).join('')+'</tbody></table></div>';
       }
       function openReturnAssetCheck(button) {
-        document.getElementById('assetSearch').value=button.getAttribute('data-job');document.getElementById('statusFilter').value='';document.getElementById('prepStatusFilter').value='';renderAssetTable();showView('asset');
+        showSectionTab('asset','list');document.getElementById('assetSearch').value=button.getAttribute('data-job');document.getElementById('statusFilter').value='';document.getElementById('prepStatusFilter').value='';renderAssetTable();showView('asset');
       }
       function executiveNote(report) {
         return 'หน่วยงาน: '+report.department+' · ข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt);
@@ -703,7 +742,7 @@
         const report=getExecutiveReport(),checks=buildExecutiveReportData(portalData.assetRows||[],portalData.jobWorkRows,portalData.loadedAt);
         document.getElementById('executiveMeta').textContent=executiveNote(report);
         document.getElementById('executiveBrief').innerHTML=executiveBriefHtml(report);
-        document.getElementById('executiveDetailsTitle').textContent='ตรวจสอบข้อมูลรับคืนและงานค้าง';
+        document.getElementById('executiveDetailsTitle').textContent='ตรวจข้อมูล';
         document.getElementById('executiveKpis').innerHTML=executiveKpis(report).map(function(item) { return '<div class="issue-kpi"><span class="card-label">'+item[0]+'</span><strong>'+item[1]+'</strong></div>'; }).join('');
         document.getElementById('returnInfoMissingNotes').innerHTML=returnInfoMissingNotesHtml(checks);
         document.getElementById('executiveReturnJobs').innerHTML=executiveReturnJobRows(checks,true);
@@ -1307,9 +1346,12 @@
 
       function renderDocuments() {
         const links = portalData.sheetLinks || {};
-        document.getElementById('documentGrid').innerHTML = DOCS.map(function(doc) {
+        document.getElementById('documentGrid').innerHTML = sectionTabKeys.documents.map(function(key){
+          const cards=DOCS.filter(function(doc){return ({Delivery_Form:'delivery',Return_Form:'returns',Photo_Report:'photos'}[doc[0]]||'other')===key;}).map(function(doc) {
           const url = links[doc[0]] || '#';
           return '<article class="document-card"><div><h3>' + ({Dashboard:'ภาพรวม',Asset_Master:'ทะเบียนอุปกรณ์',Delivery_Form:'ใบส่งมอบอุปกรณ์',Return_Form:'ใบรับคืนอุปกรณ์',Movement_Log:'ประวัติเคลื่อนย้ายอุปกรณ์',Photo_Report:'รายงานภาพถ่าย'}[doc[0]] || doc[0]) + '</h3><p>' + doc[1] + '</p></div><div class="document-actions"><button class="small-button green" type="button" onclick="openUrlWithCode(\'' + escapeJs(url) + '\')">เปิดชีตเพื่อแก้ไข/พิมพ์</button></div></article>';
+          }).join('');
+          return '<section class="section-panel document-grid" role="tabpanel" id="documents-'+key+'-panel" aria-labelledby="documents-'+key+'-tab"'+(key===sectionTabs.documents?'':' hidden')+'>'+cards+'</section>';
         }).join('');
       }
 
