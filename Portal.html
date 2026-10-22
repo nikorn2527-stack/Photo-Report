@@ -701,9 +701,9 @@
       function reportTextCell(value) { const text=String(value===null||value===undefined?'':value).trim().replace(/\s+/g,' ');return ['-','ไม่ระบุ','ไม่ระบุหน่วยงาน'].indexOf(text)!==-1?'':escapeHtml(text); }
       function reportCountCell(value,suffix) { return value===0||value===null||value===undefined?'':escapeHtml(value)+(suffix||''); }
       function compareReportLocation(a,b) { return ['building','floor','department'].map(function(key){return String(a[key]||'').localeCompare(String(b[key]||''),'th',{numeric:true});}).find(function(order){return order!==0;})||0; }
-      function executiveHeaders() { return ['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','คอมคืน','จอคืน','UPS คืน','จุดใหม่ / เพิ่มเครื่อง'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
+      function executiveHeaders() { return ['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','Computer','AIO','PC','Monitor','UPS','จุดใหม่ / เพิ่มเครื่อง'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
       function executiveDepartmentRows(report) {
-        return report.groups.map(function(row) { return '<tr><td>'+reportTextCell(row.building)+'</td><td>'+reportTextCell(row.floor)+'</td><td>'+reportTextCell(row.department)+'</td>'+['total','completed','remaining','percent','com','monitor','ups','additional'].map(function(key) { return '<td>'+reportCountCell(row[key],key==='percent'?'%':'')+'</td>'; }).join('')+'</tr>'; }).join('')||'<tr><td colspan="11" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
+        return report.groups.map(function(row) { return '<tr><td>'+reportTextCell(row.building)+'</td><td>'+reportTextCell(row.floor)+'</td><td>'+reportTextCell(row.department)+'</td>'+['total','completed','remaining','percent','com','aio','pc','monitor','ups','additional'].map(function(key) { return '<td>'+reportCountCell(row[key],key==='percent'?'%':'')+'</td>'; }).join('')+'</tr>'; }).join('')||'<tr><td colspan="13" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
       }
       function executiveReturnJobHeaders() { return '<th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th>'; }
       function executiveReturnJobRows(report, operational) {

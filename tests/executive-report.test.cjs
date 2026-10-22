@@ -65,7 +65,7 @@ test('executive view has four headline metrics and a compact print summary with 
  assert.equal(context.executiveKpis(report).length,4);const summary=context.executiveReportHtml(report),details=context.executiveReportHtml(report,true);
  assert.ok(summary.includes('คอมพิวเตอร์ 2 เครื่อง'));assert.ok(summary.includes('จอ 3 จอ'));assert.ok(!summary.includes('เลขครุภัณฑ์ซ้ำ'));assert.ok(!summary.includes('รับคืนเฉพาะจอ'));
  assert.ok(!summary.includes('PRIVATE-JOB-A'));assert.ok(details.includes('PRIVATE-JOB-A'));assert.ok(!details.includes('รายละเอียดประกอบการตรวจสอบ'));
- assert.equal((context.executiveHeaders().match(/<th>/g)||[]).length,11);
+ assert.equal((context.executiveHeaders().match(/<th>/g)||[]).length,13);
 });
 
 test('executive and submission figures use the reference completion report: 156 total, 126 completed, 30 remaining, 81%, 80 fully complete',()=>{
