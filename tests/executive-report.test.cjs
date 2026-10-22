@@ -9,9 +9,9 @@ const rows=[
  {rowNumber:8,jobNo:'JOB-5',installStatus:'ติดตั้งเสร็จ'}
 ];
 const work=[{rowNumber:4,jobNo:'JOB-1',workStatus:'งานจบ'},{rowNumber:5,jobNo:'JOB-2',workStatus:'ยังไม่จบ',blockers:['ขาดรูปป้ายหน่วยงาน']}];
-test('executive summary groups by trimmed department across floors, including unnamed departments',()=>{
+test('executive summary groups by building, floor and trimmed department, including unnamed departments',()=>{
  const {context}=page(),before=JSON.stringify(rows),report=context.buildExecutiveReportData(rows,work,'2026-10-22T00:00:00Z');
- assert.equal(report.groups.length,3);const finance=report.groups.find(r=>r.department==='การเงิน');assert.equal(finance.total,2);assert.equal(finance.completed,2);assert.equal(finance.percent,100);
+ assert.equal(report.groups.length,4);const finance=report.groups.filter(r=>r.department==='การเงิน');assert.equal(finance.length,2);assert.equal(finance.reduce((n,r)=>n+r.total,0),2);assert.ok(finance.every(r=>r.percent===100));
  assert.equal(report.totals.total,5);assert.equal(report.totals.completed,3);assert.equal(report.totals.remaining,2);assert.equal(report.totals.percent,60);assert.equal(report.totals.issues,1);
  assert.equal(report.attention.length,1);assert.equal(report.attention[0].jobNo,'JOB-3');assert.equal(report.attention[0].detail,'รอหน่วยงาน');
  assert.equal(JSON.stringify(rows),before);
@@ -65,7 +65,7 @@ test('executive view has four headline metrics and a compact print summary with 
  assert.equal(context.executiveKpis(report).length,4);const summary=context.executiveReportHtml(report),details=context.executiveReportHtml(report,true);
  assert.ok(summary.includes('คอมพิวเตอร์ 2 เครื่อง'));assert.ok(summary.includes('จอ 3 จอ'));assert.ok(!summary.includes('เลขครุภัณฑ์ซ้ำ'));assert.ok(!summary.includes('รับคืนเฉพาะจอ'));
  assert.ok(!summary.includes('PRIVATE-JOB-A'));assert.ok(details.includes('PRIVATE-JOB-A'));assert.ok(!details.includes('รายละเอียดประกอบการตรวจสอบ'));
- assert.equal((context.executiveHeaders().match(/<th>/g)||[]).length,9);
+ assert.equal((context.executiveHeaders().match(/<th>/g)||[]).length,11);
 });
 
 test('executive and submission figures use the reference completion report: 156 total, 126 completed, 30 remaining, 81%, 80 fully complete',()=>{
@@ -118,4 +118,13 @@ test('overview and executive PDFs omit operational warnings; asset checks retain
  const report=p.context.buildExecutiveReportData(assets,[]);for(const details of [false,true])assert.doesNotMatch(p.context.executiveReportHtml(report,details),/ยังไม่มีข้อมูลรับคืน|ต้องติดตาม|กรุณาตรวจสอบ|เลขครุภัณฑ์ซ้ำ/);
  const html=fs.readFileSync(path.join(__dirname,'..','Portal.html'),'utf8');const overview=html.slice(html.indexOf('<section id="dashboardView"'),html.indexOf('<section id="workView"'));assert.doesNotMatch(overview,/id="executiveDetails"|id="returnAssetDuplicates"|id="issueTableBody"/);
  const asset=html.slice(html.indexOf('<section id="assetView"'),html.indexOf('<section id="documentsView"'));assert.ok(asset.includes('id="returnInfoMissingNotes"'));assert.ok(asset.includes('id="returnAssetDuplicates"'));
+});
+
+
+test('report tables keep blank counts and sort building, numeric floor, department then job without changing totals',()=>{
+ const {context}=page(),assets=[{jobNo:'J10',building:'B',floor:'10',department:'A',installStatus:'ติดตั้งเสร็จ'},{jobNo:'J2',building:'B',floor:'2',department:'A',installStatus:'ติดตั้งเสร็จ'},{jobNo:'J1',building:'A',floor:'3',department:'Z',oldComSn:'C',installStatus:'รอดำเนินการ'}],before=JSON.stringify(assets),report=context.buildExecutiveReportData(assets,[]);
+ assert.deepEqual(Array.from(report.groups,r=>[r.building,r.floor,r.department]),[['A','3','Z'],['B','2','A'],['B','10','A']]);assert.deepEqual(Array.from(report.returnJobs,r=>r.jobNo),['J1','J2','J10']);
+ for(const html of [context.executiveDepartmentRows(report),context.completionAreaRows(context.buildCompletionReportData(assets,[])),context.returnAssetAreaRows(context.buildReturnAssetReportData(assets))]){assert.doesNotMatch(html,/>0%?<\/td>/);assert.ok(html.includes('<td></td>'));}
+ assert.equal(context.reportTextCell('ไม่ระบุ'),'');assert.equal(context.reportTextCell(' A\nB '),'A B');assert.equal(report.totals.total,3);assert.equal(report.totals.completed,2);assert.equal(JSON.stringify(assets),before);
+ const html=context.executiveReportHtml(report);assert.ok(html.includes('white-space:nowrap'));assert.ok(html.includes('<th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th>'));
 });

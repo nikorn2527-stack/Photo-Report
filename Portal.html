@@ -57,7 +57,7 @@
       .executive-submission-summary th,.executive-submission-summary td { padding:7px; border:1px solid #777; text-align:left; overflow-wrap:anywhere; font-size:11px; }
       .executive-submission-summary th { background:#edf4ff; }
       .executive-submission-summary .note { font-size:11px; color:#5f6368; }
-      table.executive-unit-table th:first-child{width:24%}table.executive-unit-table th,table.executive-unit-table td{padding:4px}
+      table.executive-unit-table{table-layout:auto}table.executive-unit-table th,table.executive-unit-table td{padding:4px;white-space:nowrap;overflow-wrap:normal;font-size:10px}.completion-table th,.completion-table td{white-space:nowrap;overflow-wrap:normal}
       .executive-photo-actions { display:flex; flex-wrap:wrap; gap:8px; }
       .executive-photo-modal[hidden] { display:none!important; }
       .executive-photo-modal { position:fixed; inset:0; z-index:1200; overflow:auto; background:#e5e9ef; padding:12px; }
@@ -634,11 +634,11 @@
       function buildExecutiveReportData(rows,workRows,updatedAt,department) {
         const departments=new Map(),attention=[],returnNotes=[];
         (rows||[]).forEach(function(row) {
-          const name=departmentName(row);if(!departments.has(name))departments.set(name,[]);departments.get(name).push(row);
+          const name=departmentName(row),key=JSON.stringify([String(row.building||'').trim(),String(row.floor||'').trim(),name]);if(!departments.has(key))departments.set(key,[]);departments.get(key).push(row);
           if(!classifyReturnedAsset(row.oldComSn).received&&classifyReturnedAsset(row.oldMonitorSn).received)returnNotes.push({jobNo:row.jobNo||'',department:name,kind:'รับคืนเฉพาะจอ — กรุณาตรวจสอบ',detail:'ระบุจอรับคืน แต่ไม่ได้ระบุคอมพิวเตอร์'});
           if (installationNeedsReason(row.installStatus)) attention.push({jobNo:row.jobNo||'',department:name,kind:row.installStatus,detail:row.installReason||'ยังไม่ระบุปัญหา'});
         });
-        const groups=Array.from(departments.entries()).map(function(entry) { return Object.assign({department:entry[0]},executiveCounts(entry[1],workRows)); }).sort(function(a,b) { return a.department.localeCompare(b.department,'th',{numeric:true}); });
+        const groups=Array.from(departments.entries()).map(function(entry) { return Object.assign({building:JSON.parse(entry[0])[0],floor:JSON.parse(entry[0])[1],department:JSON.parse(entry[0])[2]},executiveCounts(entry[1],workRows)); }).sort(compareReportLocation);
         attention.sort(function(a,b) { return a.department.localeCompare(b.department,'th',{numeric:true})||a.jobNo.localeCompare(b.jobNo,'th',{numeric:true}); });
         const returns=buildReturnAssetReportData(rows);
         const duplicates=returns.duplicates.map(function(item) {
@@ -646,7 +646,7 @@
           const entries=(rows||[]).filter(function(row){return classifyReturnedAsset(row[type.field]).number.toUpperCase()===item.number.toUpperCase();}).map(function(row){return (row.jobNo||'แถว '+row.rowNumber)+' ('+departmentName(row)+')';});
           return Object.assign({},item,{entries:entries});
         });
-        const returnJobs=(rows||[]).map(function(row){return {jobNo:row.jobNo||'',department:departmentName(row),installStatus:row.installStatus||'',comNo:row.oldComSn,monitorNo:row.oldMonitorSn,upsNo:row.oldUpsSn,noOldEquipment:row.noOldEquipment===true};}).sort(function(a,b){return a.department.localeCompare(b.department,'th',{numeric:true})||a.jobNo.localeCompare(b.jobNo,'th',{numeric:true});});
+        const returnJobs=(rows||[]).map(function(row){return {jobNo:row.jobNo||'',building:String(row.building||'').trim(),floor:String(row.floor||'').trim(),department:departmentName(row),installStatus:row.installStatus||'',comNo:row.oldComSn,monitorNo:row.oldMonitorSn,upsNo:row.oldUpsSn,noOldEquipment:row.noOldEquipment===true};}).sort(function(a,b){return compareReportLocation(a,b)||a.jobNo.localeCompare(b.jobNo,'th',{numeric:true});});
         return {totals:executiveCounts(rows||[],workRows),groups:groups,returnJobs:returnJobs,attention:attention,returnNotes:returnNotes,duplicates:duplicates,updatedAt:updatedAt||'',department:department||'ทุกหน่วยงาน'};
       }
       function getExecutiveReport() { return buildExecutiveReportData(getDashboardAssetRows(),portalData.jobWorkRows,portalData.loadedAt,dashboardDepartment); }
@@ -658,9 +658,12 @@
         const t=report.totals;
         return '<p><strong>รับคืน:</strong> คอมพิวเตอร์ '+t.com+' เครื่อง · จอ '+t.monitor+' จอ · UPS '+t.ups+' เครื่อง<br><strong>ติดตั้งจุดใหม่ / เพิ่มเครื่อง:</strong> '+t.additional+' งาน</p><p class="plan-note">รับคืนไม่มีเลขครุภัณฑ์: คอม '+t.comWithoutNumber+' · จอ '+t.monitorWithoutNumber+' · UPS '+t.upsWithoutNumber+' (รวมในยอดรับคืน)</p>';
       }
-      function executiveHeaders() { return ['หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','คอมคืน','จอคืน','UPS คืน','จุดใหม่ / เพิ่มเครื่อง'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
+      function reportTextCell(value) { const text=String(value===null||value===undefined?'':value).trim().replace(/\s+/g,' ');return ['-','ไม่ระบุ','ไม่ระบุหน่วยงาน'].indexOf(text)!==-1?'':escapeHtml(text); }
+      function reportCountCell(value,suffix) { return value===0||value===null||value===undefined?'':escapeHtml(value)+(suffix||''); }
+      function compareReportLocation(a,b) { return ['building','floor','department'].map(function(key){return String(a[key]||'').localeCompare(String(b[key]||''),'th',{numeric:true});}).find(function(order){return order!==0;})||0; }
+      function executiveHeaders() { return ['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','คอมคืน','จอคืน','UPS คืน','จุดใหม่ / เพิ่มเครื่อง'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
       function executiveDepartmentRows(report) {
-        return report.groups.map(function(row) { return '<tr><td>'+escapeHtml(row.department)+'</td>'+['total','completed','remaining','percent','com','monitor','ups','additional'].map(function(key) { return '<td>'+row[key]+(key==='percent'?'%':'')+'</td>'; }).join('')+'</tr>'; }).join('')||'<tr><td colspan="9" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
+        return report.groups.map(function(row) { return '<tr><td>'+reportTextCell(row.building)+'</td><td>'+reportTextCell(row.floor)+'</td><td>'+reportTextCell(row.department)+'</td>'+['total','completed','remaining','percent','com','monitor','ups','additional'].map(function(key) { return '<td>'+reportCountCell(row[key],key==='percent'?'%':'')+'</td>'; }).join('')+'</tr>'; }).join('')||'<tr><td colspan="11" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
       }
       function executiveReturnJobHeaders() { return '<th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th>'; }
       function executiveReturnJobRows(report, operational) {
@@ -668,11 +671,11 @@
           const com=classifyReturnedAsset(row.comNo),monitor=classifyReturnedAsset(row.monitorNo),ups=classifyReturnedAsset(row.upsNo),received=com.received||monitor.received||ups.received;
           const note=!received?(row.noOldEquipment?'ติดตั้งจุดใหม่ / เพิ่มเครื่อง':operational&&row.installStatus==='ติดตั้งเสร็จ'?'ยังไม่มีข้อมูลรับคืน':''):(operational&&!com.received&&monitor.received?'รับคืนเฉพาะจอ — กรุณาตรวจสอบ':'');
           function value(raw){const state=classifyReturnedAsset(raw);return !state.received?'':state.noNumber?'ไม่มีเลขครุภัณฑ์':state.number;}
-          return '<tr><td>'+escapeHtml(row.jobNo||'-')+'</td><td>'+escapeHtml(row.department)+'</td><td>'+escapeHtml(row.installStatus)+'</td><td>'+escapeHtml(value(row.comNo))+'</td><td>'+escapeHtml(value(row.monitorNo))+'</td><td>'+escapeHtml(value(row.upsNo))+'</td><td>'+escapeHtml(note)+'</td></tr>';
+          return '<tr><td>'+escapeHtml(row.jobNo||'-')+'</td><td>'+reportTextCell(row.department)+'</td><td>'+escapeHtml(row.installStatus)+'</td><td>'+escapeHtml(value(row.comNo))+'</td><td>'+escapeHtml(value(row.monitorNo))+'</td><td>'+escapeHtml(value(row.upsNo))+'</td><td>'+escapeHtml(note)+'</td></tr>';
         }).join('')||'<tr><td colspan="7" class="issue-empty">ยังไม่มีรายการ</td></tr>';
       }
       function executiveAttentionRows(report,printable) {
-        return report.attention.map(function(row) { return '<tr><td>'+escapeHtml(row.jobNo||'-')+'</td><td>'+escapeHtml(row.department)+'</td><td>'+escapeHtml(row.kind)+'</td><td>'+escapeHtml(row.detail)+'</td>'+(printable?'':'<td>'+(row.jobNo?'<button type="button" class="button button-outline" data-job="'+escapeHtml(row.jobNo)+'" onclick="openExecutiveWork(this)">ดูงาน</button>':'')+'</td>')+'</tr>'; }).join('')||'<tr><td colspan="'+(printable?4:5)+'" class="issue-empty">ไม่มีงานที่ต้องติดตาม</td></tr>';
+        return report.attention.map(function(row) { return '<tr><td>'+escapeHtml(row.jobNo||'-')+'</td><td>'+reportTextCell(row.department)+'</td><td>'+escapeHtml(row.kind)+'</td><td>'+escapeHtml(row.detail)+'</td>'+(printable?'':'<td>'+(row.jobNo?'<button type="button" class="button button-outline" data-job="'+escapeHtml(row.jobNo)+'" onclick="openExecutiveWork(this)">ดูงาน</button>':'')+'</td>')+'</tr>'; }).join('')||'<tr><td colspan="'+(printable?4:5)+'" class="issue-empty">ไม่มีงานที่ต้องติดตาม</td></tr>';
       }
       function openExecutiveWork(button) {
         document.getElementById('workSearch').value=button.getAttribute('data-job');document.getElementById('workStatusFilter').value='';renderWorkTable();showView('work');
@@ -688,7 +691,7 @@
       function returnInfoMissingNotesHtml(report) {
         const rows=report.returnJobs.filter(function(row){return row.installStatus==='ติดตั้งเสร็จ'&&!row.noOldEquipment&&![row.comNo,row.monitorNo,row.upsNo].some(function(value){return classifyReturnedAsset(value).received;});});
         if(!rows.length)return '';
-        return '<h4 class="panel-title">ยังไม่มีข้อมูลรับคืน ('+rows.length+' งาน)</h4><p class="plan-note">ติดตั้งเสร็จแล้ว แต่ช่องรับคืนว่าง และไม่ได้เลือก “ไม่มีเครื่องเดิมให้นำกลับ” กรุณาตรวจสอบข้อมูลในทะเบียนอุปกรณ์</p><div class="table-wrap"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>แก้ไข</th></tr></thead><tbody>'+rows.map(function(row){return '<tr><td>'+escapeHtml(row.jobNo)+'</td><td>'+escapeHtml(row.department)+'</td><td><button type="button" class="button button-outline" data-job="'+escapeHtml(row.jobNo)+'" onclick="openReturnAssetCheck(this)">ดูอุปกรณ์</button></td></tr>';}).join('')+'</tbody></table></div>';
+        return '<h4 class="panel-title">ยังไม่มีข้อมูลรับคืน ('+rows.length+' งาน)</h4><p class="plan-note">ติดตั้งเสร็จแล้ว แต่ช่องรับคืนว่าง และไม่ได้เลือก “ไม่มีเครื่องเดิมให้นำกลับ” กรุณาตรวจสอบข้อมูลในทะเบียนอุปกรณ์</p><div class="table-wrap"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>แก้ไข</th></tr></thead><tbody>'+rows.map(function(row){return '<tr><td>'+escapeHtml(row.jobNo)+'</td><td>'+reportTextCell(row.department)+'</td><td><button type="button" class="button button-outline" data-job="'+escapeHtml(row.jobNo)+'" onclick="openReturnAssetCheck(this)">ดูอุปกรณ์</button></td></tr>';}).join('')+'</tbody></table></div>';
       }
       function openReturnAssetCheck(button) {
         document.getElementById('assetSearch').value=button.getAttribute('data-job');document.getElementById('statusFilter').value='';document.getElementById('prepStatusFilter').value='';renderAssetTable();showView('asset');
@@ -711,7 +714,7 @@
       function executiveReportHtml(report,includeDetails) {
         const base=completionReportHtml({total:0,completed:0,remaining:0,percent:0,workComplete:0,areas:[],rows:[]}),start=base.indexOf('<body>');
         const details=includeDetails?'<section style="break-before:page"><h2>รายการรับคืนตามเลขงาน</h2><table><thead><tr>'+executiveReturnJobHeaders()+'</tr></thead><tbody>'+executiveReturnJobRows(report)+'</tbody></table></section>':'';
-        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>').replace('</style>','table.executive-unit-table th:first-child{width:24%}table.executive-unit-table th,table.executive-unit-table td{padding:4px}</style>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table><p class="note">ยอดรับคืนรวมเครื่องที่ไม่มีเลขครุภัณฑ์ จอและ UPS นับแยกกัน จุดใหม่หรือเพิ่มเครื่องนับจากช่อง “ไม่มีเครื่องเดิมให้นำกลับ” ที่เลือกไว้</p>'+details+'</body></html>';
+        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>').replace('</style>','table.executive-unit-table{table-layout:auto}table.executive-unit-table th,table.executive-unit-table td{padding:4px;white-space:nowrap;overflow-wrap:normal;font-size:10px}.completion-table th,.completion-table td{white-space:nowrap;overflow-wrap:normal}</style>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table><p class="note">ยอดรับคืนรวมเครื่องที่ไม่มีเลขครุภัณฑ์ จอและ UPS นับแยกกัน จุดใหม่หรือเพิ่มเครื่องนับจากช่อง “ไม่มีเครื่องเดิมให้นำกลับ” ที่เลือกไว้</p>'+details+'</body></html>';
       }
       function printExecutiveReport() {
         if(!portalData.loadedAt){setStatus('กรุณารอโหลดข้อมูลก่อนพิมพ์',true);return;}
@@ -821,7 +824,7 @@
             const area={building:location[0],floor:location[1],department:location[2],total:0};
             RETURN_ASSET_TYPES.forEach(function(type) { area[type.key]={numbers:new Set(),withoutNumber:0}; });areas.set(key,area);
           }
-          const area=areas.get(key),states={},record={jobNo:row.jobNo||'-',machineType:returnedMachineType(row),location:[row.building,row.floor,row.department,row.room].filter(Boolean).join(' | ')||'-'};area.total++;
+          const area=areas.get(key),states={},record={jobNo:row.jobNo||'-',machineType:returnedMachineType(row),building:location[0],floor:location[1],department:location[2],location:[row.building,row.floor,row.department,row.room].filter(Boolean).join(' | ')||'-'};area.total++;
           RETURN_ASSET_TYPES.forEach(function(type) {
             const state=classifyReturnedAsset(row[type.field]);states[type.key]=state;
             record[type.key+'No']=String(row[type.field]===null||row[type.field]===undefined?'':row[type.field]).trim();
@@ -842,8 +845,8 @@
           const group={building:area.building,floor:area.floor,department:area.department,total:area.total};
           RETURN_ASSET_TYPES.forEach(function(type) { group[type.key]=area[type.key].numbers.size+area[type.key].withoutNumber;group[type.key+'WithoutNumber']=area[type.key].withoutNumber; });return group;
         });
-        groups.sort(function(a,b) { return [a.building,a.floor,a.department].join('|').localeCompare([b.building,b.floor,b.department].join('|'),'th',{numeric:true}); });
-        returned.sort(function(a,b) { return a.jobNo.localeCompare(b.jobNo,'th',{numeric:true}); });
+        groups.sort(function(a,b) { return compareReportLocation(a,b); });
+        returned.sort(function(a,b) { return compareReportLocation(a,b)||a.jobNo.localeCompare(b.jobNo,'th',{numeric:true}); });
         const result={total:(rows||[]).length,recorded:returned.length,duplicates:duplicates,groups:groups,rows:returned,updatedAt:updatedAt||''};
         RETURN_ASSET_TYPES.forEach(function(type) { const count=totals[type.key];result[type.key+'Count']=count.numbers.size+count.withoutNumber;result[type.key+'WithNumber']=count.numbers.size;result[type.key+'WithoutNumber']=count.withoutNumber;result['missing'+type.key[0].toUpperCase()+type.key.slice(1)]=count.missing; });
         return result;
@@ -853,7 +856,7 @@
         return '<th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>รายการทั้งหมด</th>'+RETURN_ASSET_TYPES.map(function(type) { return '<th>'+type.label+'รับคืน</th><th>'+type.label+'ไม่มีเลข</th>'; }).join('');
       }
       function returnAssetAreaRows(report) {
-        return report.groups.map(function(row) { return '<tr><td>'+escapeHtml(row.building)+'</td><td>'+escapeHtml(row.floor)+'</td><td>'+escapeHtml(row.department)+'</td><td>'+row.total+'</td>'+RETURN_ASSET_TYPES.map(function(type) { return '<td>'+row[type.key]+'</td><td>'+row[type.key+'WithoutNumber']+'</td>'; }).join('')+'</tr>'; }).join('') || '<tr><td colspan="10" class="issue-empty">ยังไม่มีข้อมูล</td></tr>';
+        return report.groups.map(function(row) { return '<tr><td>'+reportTextCell(row.building)+'</td><td>'+reportTextCell(row.floor)+'</td><td>'+reportTextCell(row.department)+'</td><td>'+row.total+'</td>'+RETURN_ASSET_TYPES.map(function(type) { return '<td>'+reportCountCell(row[type.key])+'</td><td>'+reportCountCell(row[type.key+'WithoutNumber'])+'</td>'; }).join('')+'</tr>'; }).join('') || '<tr><td colspan="10" class="issue-empty">ยังไม่มีข้อมูล</td></tr>';
       }
       function returnAssetMachineRows(report) {
         return report.rows.map(function(row) { return '<tr><td>'+escapeHtml(row.jobNo)+'</td><td>'+escapeHtml(row.location)+'</td><td>'+escapeHtml(row.machineType)+'</td>'+RETURN_ASSET_TYPES.map(function(type) { return '<td>'+escapeHtml(returnAssetLabel(row[type.key+'No']))+'</td>'; }).join('')+'</tr>'; }).join('') || '<tr><td colspan="6" class="issue-empty">ไม่มีรายการเครื่องกลับที่บันทึก</td></tr>';
@@ -923,12 +926,12 @@
       }
       function completionAreaRows(report) {
         return report.areas.map(function(row) {
-          return '<tr><td>' + escapeHtml(row.building) + '</td><td>' + escapeHtml(row.floor) + '</td><td>' + escapeHtml(row.department) + '</td><td>' + row.total + '</td><td class="complete">' + row.completed + '</td><td>' + row.remaining + '</td><td>' + row.percent + '%</td></tr>';
+          return '<tr><td>' + reportTextCell(row.building) + '</td><td>' + reportTextCell(row.floor) + '</td><td>' + reportTextCell(row.department) + '</td><td>' + reportCountCell(row.total) + '</td><td class="complete">' + reportCountCell(row.completed) + '</td><td>' + reportCountCell(row.remaining) + '</td><td>' + reportCountCell(row.percent,'%') + '</td></tr>';
         }).join('') || '<tr><td colspan="7" class="issue-empty">ยังไม่มีข้อมูลเครื่อง</td></tr>';
       }
       function completionMachineRows(report) {
         return report.rows.map(function(row) {
-          return '<tr><td>' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join(' | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td>' + escapeHtml(row.ipAddress) + '</td></tr>';
+          return '<tr><td>' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml([row.building,row.floor,row.department,row.room].filter(function(value){return value&&value!=='ไม่ระบุ';}).join(' | ')) + '</td><td>' + reportTextCell(row.brand) + '</td><td>' + reportTextCell(row.aioSn) + '</td><td>' + reportTextCell(row.ipAddress) + '</td></tr>';
         }).join('') || '<tr><td colspan="5" class="issue-empty">ยังไม่มีเครื่องที่ติดตั้งเสร็จ</td></tr>';
       }
       function renderCompletionDashboard() {
@@ -940,7 +943,7 @@
         document.getElementById('completionMachineBody').innerHTML = completionMachineRows(report);
       }
       function completionReportHtml(report) {
-        return '<!doctype html><html lang="th"><head><meta charset="utf-8"><title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title><style>@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#202124;font-size:11px}h1{font-size:20px;text-align:center}h2{font-size:15px;margin-top:22px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.summary div{padding:10px;border:1px solid #c7d7eb}.summary strong{display:block;font-size:24px;color:#137333}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{padding:7px;border:1px solid #777;text-align:left;overflow-wrap:anywhere}th{background:#edf4ff}thead{display:table-header-group}tr{break-inside:avoid}.complete{color:#137333;font-weight:bold}.note{color:#555}.progress{height:10px;background:#e5eaf0}.progress span{display:block;height:100%;background:#16834b;print-color-adjust:exact}</style></head><body><h1>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที | ข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(report.updatedAt))+'</p><div class="summary"><div>เครื่องทั้งหมด<strong>'+report.total+'</strong></div><div>ติดตั้งเสร็จ<strong>'+report.completed+'</strong></div><div>คงเหลือ<strong>'+report.remaining+'</strong></div><div>ความคืบหน้า<strong>'+report.percent+'%</strong></div></div><div class="progress"><span style="width:'+report.percent+'%"></span></div><p class="note">คงเหลือหมายถึงเครื่องที่ยังติดตั้งไม่เสร็จ</p><h2>สรุปตามตึก / ชั้น / หน่วยงาน</h2><table><thead><tr><th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>ทั้งหมด</th><th>ติดตั้งเสร็จ</th><th>คงเหลือ</th><th>ความคืบหน้า</th></tr></thead><tbody>'+completionAreaRows(report)+'</tbody></table><h2>รายการเครื่องที่ติดตั้งเสร็จ</h2><table><thead><tr><th>เลขงาน</th><th>สถานที่ติดตั้ง</th><th>รุ่นเครื่อง</th><th>S/N เครื่อง</th><th>เลข IP</th></tr></thead><tbody>'+completionMachineRows(report)+'</tbody></table></body></html>';
+        return '<!doctype html><html lang="th"><head><meta charset="utf-8"><title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title><style>@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#202124;font-size:11px}h1{font-size:20px;text-align:center}h2{font-size:15px;margin-top:22px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.summary div{padding:10px;border:1px solid #c7d7eb}.summary strong{display:block;font-size:24px;color:#137333}table{width:100%;border-collapse:collapse;table-layout:auto}th,td{padding:5px;border:1px solid #777;text-align:left;white-space:nowrap;overflow-wrap:normal;font-size:10px}th{background:#edf4ff}thead{display:table-header-group}tr{break-inside:avoid}.complete{color:#137333;font-weight:bold}.note{color:#555}.progress{height:10px;background:#e5eaf0}.progress span{display:block;height:100%;background:#16834b;print-color-adjust:exact}</style></head><body><h1>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที | ข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(report.updatedAt))+'</p><div class="summary"><div>เครื่องทั้งหมด<strong>'+report.total+'</strong></div><div>ติดตั้งเสร็จ<strong>'+report.completed+'</strong></div><div>คงเหลือ<strong>'+report.remaining+'</strong></div><div>ความคืบหน้า<strong>'+report.percent+'%</strong></div></div><div class="progress"><span style="width:'+report.percent+'%"></span></div><p class="note">คงเหลือหมายถึงเครื่องที่ยังติดตั้งไม่เสร็จ</p><h2>สรุปตามตึก / ชั้น / หน่วยงาน</h2><table><thead><tr><th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>ทั้งหมด</th><th>ติดตั้งเสร็จ</th><th>คงเหลือ</th><th>ความคืบหน้า</th></tr></thead><tbody>'+completionAreaRows(report)+'</tbody></table><h2>รายการเครื่องที่ติดตั้งเสร็จ</h2><table><thead><tr><th>เลขงาน</th><th>สถานที่ติดตั้ง</th><th>รุ่นเครื่อง</th><th>S/N เครื่อง</th><th>เลข IP</th></tr></thead><tbody>'+completionMachineRows(report)+'</tbody></table></body></html>';
       }
       function printCompletionReport() {
         if (!portalData.loadedAt) { setStatus('กรุณารอโหลดข้อมูลล่าสุดก่อนพิมพ์รายงาน',true); return; }
@@ -1019,7 +1022,7 @@
           if (!rows.length) { body.innerHTML = '<tr><td colspan="14" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + escapeHtml(row.brand) + '</td><td>' + escapeHtml(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">Photo</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
+          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + reportTextCell(row.brand) + '</td><td>' + reportTextCell(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">Photo</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
           body.appendChild(tr);
         });
       }
