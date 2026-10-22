@@ -12,9 +12,9 @@ test('executive cards show the full computer independently of individual-job cro
  const {context}=page();vm.runInContext("workPhotoAdjustments.set('JOB-1::after1',{zoom:3,x:10,y:5});workPhotoAdjustments.set('JOB-2::after1',{zoom:7})",context);
  const html=context.executivePhotoJobHtml({jobNo:'JOB-1',room:'<img>'},'original-after1');assert.ok(!html.includes('transform:'));assert.ok(!html.includes('scale('));assert.ok(html.includes('&lt;img&gt;'));assert.ok(html.includes('JOB-1 หลังติดตั้ง 1'));assert.equal((html.match(/<img /g)||[]).length,1);
 });
-test('report snapshots the selected unit, loads only after1 and waits for both originals before enabling print',async()=>{
+test('report snapshots the selected unit and enables photo printing as each original becomes available',async()=>{
  const p=page(),requests=[];p.context.rows=rows.slice(0,2);vm.runInContext("portalData={assetRows:rows,loadedAt:'2026-10-22T00:00:00Z'};dashboardDepartment='การเงิน'",p.context);api(p,r=>{requests.push(r);});p.context.openExecutivePhotoReport();await tick();assert.equal(requests.length,2);const photos=requests.filter(r=>r.method==='photo');assert.ok(photos.every(r=>r.type==='after1'));assert.equal(p.document.getElementById('executivePhotoPrint').disabled,true);
- photos[0].success('original-one');await tick();assert.equal(p.document.getElementById('executivePhotoPrint').disabled,true);photos[1].success('original-two');await tick();await tick();assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);assert.ok(p.document.getElementById('executivePhotoJob0').innerHTML.includes('original-one'));assert.ok(p.document.getElementById('executivePhotoStatus').textContent.includes('2 เครื่อง · 2 รูป'));
+ photos[0].success('original-one');await tick();assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);photos[1].success('original-two');await tick();await tick();assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);assert.ok(p.document.getElementById('executivePhotoJob0').innerHTML.includes('original-one'));assert.ok(p.document.getElementById('executivePhotoStatus').textContent.includes('2 เครื่อง · 2 รูป'));
 });
 test('missing after1 never substitutes stickers, UPS or before photos, and identifies the job for review',async()=>{
  const p=page(),requests=[];p.context.rows=[rows[0]];vm.runInContext("portalData={assetRows:rows,loadedAt:'2026-10-22T00:00:00Z'}",p.context);api(p,r=>{requests.push(r);r.success('')});p.context.openExecutivePhotoReport();await tick();assert.equal(requests.length,1);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);assert.ok(p.document.getElementById('executivePhotoJob0').innerHTML.includes('ยังไม่มีภาพหลังติดตั้ง 1'));assert.ok(p.document.getElementById('executivePhotoStatus').textContent.includes('ยังไม่มีภาพหลังติดตั้ง 1: JOB-1'));
@@ -39,7 +39,7 @@ test('a submission without completed computers can print its summary without iss
 
 test('switching the print unit scopes both the summary and photos, ignores stale responses and reuses downloaded originals',async()=>{
  const p=page(),requests=[];p.context.rows=rows;vm.runInContext("portalData={assetRows:rows,jobWorkRows:[],loadedAt:'snapshot-1'};dashboardDepartment='การเงิน'",p.context);api(p,r=>requests.push(r));
- p.context.openExecutivePhotoReport(true);assert.equal(requests.length,4);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,true);
+ p.context.openExecutivePhotoReport(true);assert.equal(requests.length,4);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);
  const switching=p.context.changeExecutivePhotoDepartment('เภสัช');assert.equal(requests.length,5);assert.equal(requests[4].job,'JOB-6');
  requests[4].success('original-pharmacy');await switching;assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);assert.ok(p.document.getElementById('executivePhotoPages').innerHTML.includes('หน่วยงาน: เภสัช'));assert.ok(!p.document.getElementById('executivePhotoPages').innerHTML.includes('JOB-1'));
  requests[0].success('stale-finance');await tick();assert.ok(p.document.getElementById('executivePhotoJob0').innerHTML.includes('original-pharmacy'));assert.equal(requests.length,5);
@@ -49,7 +49,7 @@ test('switching the print unit scopes both the summary and photos, ignores stale
 
 test('photo loading uses at most four RPCs at a time and failures are retried instead of cached',async()=>{
  const p=page(),requests=[];p.context.rows=rows;vm.runInContext("portalData={assetRows:rows,jobWorkRows:[],loadedAt:'snapshot-1'};dashboardDepartment='การเงิน'",p.context);api(p,r=>requests.push(r));p.context.openExecutivePhotoReport();assert.equal(requests.length,4);
- requests[0].success('first-original');await tick();assert.equal(requests.length,5);requests[1].failure(new Error('Drive unavailable'));await tick();assert.equal(p.document.getElementById('executivePhotoPrint').disabled,true);
+ requests[0].success('first-original');await tick();assert.equal(requests.length,5);requests[1].failure(new Error('Drive unavailable'));await tick();assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);
  const retry=p.context.loadExecutivePhotoReport();await tick();assert.equal(requests.length,9);assert.equal(requests.filter(r=>r.job==='JOB-1').length,1);assert.equal(requests.filter(r=>r.job==='JOB-2').length,2);
  for(const r of requests.slice(5))r.success('retried-original');await retry;assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);
 });
@@ -68,7 +68,30 @@ test('photo-only printing verifies returned images, hides empty units and blocks
 
 
 test('summary printing works while photos are pending and never includes photo pages or the optional job appendix',async()=>{
- const p=page();p.context.rows=[{jobNo:'A1',department:'A',installStatus:'ติดตั้งเสร็จ'}];vm.runInContext("portalData={assetRows:rows,jobWorkRows:[{jobNo:'A1',hasAfterPhoto:true}],loadedAt:'snapshot'}",p.context);p.document.getElementById('executivePhotosOnly').checked=true;p.document.getElementById('executivePrintDetails').checked=true;let pending=0;api(p,()=>pending++);p.context.openExecutivePhotoReport(true);assert.equal(pending,1);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,true);assert.equal(p.document.getElementById('executiveSummaryPrint').disabled,false);
- let contents='',printed=0;p.context.window.open=()=>({document:{open(){},write(html){contents=html;},close(){},fonts:{ready:Promise.resolve()}},focus(){},print(){printed++}});await p.context.printExecutivePhotoSummary();assert.equal(printed,1);assert.ok(contents.includes('หน่วยงาน: ทุกหน่วยงาน'));assert.ok(!contents.includes('รายการรับคืนตามเลขงาน'));assert.ok(!contents.includes('executive-photo-grid'));assert.ok(!contents.includes('<img'));assert.equal(pending,1);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,true);
+ const p=page();p.context.rows=[{jobNo:'A1',department:'A',installStatus:'ติดตั้งเสร็จ'}];vm.runInContext("portalData={assetRows:rows,jobWorkRows:[{jobNo:'A1',hasAfterPhoto:true}],loadedAt:'snapshot'}",p.context);p.document.getElementById('executivePhotosOnly').checked=true;p.document.getElementById('executivePrintDetails').checked=true;let pending=0;api(p,()=>pending++);p.context.openExecutivePhotoReport(true);assert.equal(pending,1);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);assert.equal(p.document.getElementById('executiveSummaryPrint').disabled,false);
+ let contents='',printed=0;p.context.openReportPrintPreview=html=>{contents=html;printed++;return Promise.resolve(true);};await p.context.printExecutivePhotoSummary();assert.equal(printed,1);assert.ok(contents.includes('หน่วยงาน: ทุกหน่วยงาน'));assert.ok(!contents.includes('รายการรับคืนตามเลขงาน'));assert.ok(!contents.includes('executive-photo-grid'));assert.ok(!contents.includes('<img'));assert.equal(pending,1);assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);
  contents='';await p.context.printExecutiveReport();assert.equal(printed,2);assert.ok(!contents.includes('รายการรับคืนตามเลขงาน'));
+});
+
+
+test('export snapshots only loaded photos while other originals remain pending or have failed',async()=>{
+ const p=page(),requests=[];p.context.rows=rows.slice(0,2);vm.runInContext("portalData={assetRows:rows,jobWorkRows:[],loadedAt:'snapshot'}",p.context);api(p,r=>requests.push(r));p.context.openExecutivePhotoReport();requests[0].success('original-one');await tick();
+ assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);assert.equal(vm.runInContext('executivePhotoReady',p.context),false);let content=p.context.executiveLoadedPhotoContent();assert.ok(content.includes('JOB-1'));assert.ok(!content.includes('JOB-2'));assert.ok(!content.includes('กำลังโหลด'));assert.ok(!content.includes('ยังไม่มีภาพ'));assert.equal((content.match(/<img /g)||[]).length,1);
+ requests[1].failure(new Error('Drive unavailable'));await tick();assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);assert.equal(p.context.executiveLoadedPhotoContent(),content);
+});
+
+test('selected table printing exports only that table without KPI cards, appendices or photos',()=>{
+ const {context}=page(),report=context.buildExecutiveReportData(rows,[]);const units=context.executiveReportPartHtml(report,'units'),jobs=context.executiveReportPartHtml(report,'jobs');
+ for(const html of [units,jobs]){assert.equal((html.match(/<table/g)||[]).length,1);assert.ok(!html.includes('<div class="summary">'));assert.ok(!html.includes('<img'));assert.ok(html.includes('size:A4 landscape'));}
+ assert.ok(units.includes('<th>Computer</th>'));assert.ok(!units.includes('JOB-1'));assert.ok(jobs.includes('JOB-1'));assert.ok(jobs.includes('รายการรับคืนตามงาน'));
+});
+
+test('print preview populates an inline document before enabling its real print control and never opens a popup',async()=>{
+ const p=page(),frame=p.document.getElementById('reportPrintFrame');let printed=0;p.context.window.open=()=>{throw new Error('Popup must not be used');};frame.contentDocument={body:{innerText:'Selected report'},fonts:{ready:Promise.resolve()},querySelectorAll(){return []}};frame.contentWindow={focus(){},print(){printed++}};
+ const ready=p.context.openReportPrintPreview('<html><body>Selected report</body></html>','Report');assert.equal(frame.srcdoc,'<html><body>Selected report</body></html>');assert.equal(p.document.getElementById('reportPrintButton').disabled,true);p.context.printReportPreview();assert.equal(printed,0);
+ await frame.onload();assert.equal(await ready,true);assert.equal(p.document.getElementById('reportPrintButton').disabled,false);p.context.printReportPreview();assert.equal(printed,1);p.context.closeReportPrintPreview();assert.equal(p.document.getElementById('reportPrintPreview').hidden,true);assert.equal(frame.srcdoc,'');
+});
+
+test('an empty or inaccessible print document shows an error and stays unprintable',async()=>{
+ const p=page(),frame=p.document.getElementById('reportPrintFrame');frame.contentDocument={body:{innerText:''},querySelectorAll(){return []}};const ready=p.context.openReportPrintPreview('<html></html>');await frame.onload();assert.equal(await ready,false);assert.equal(p.document.getElementById('reportPrintButton').disabled,true);assert.ok(p.document.getElementById('reportPrintStatus').textContent.includes('เอกสารว่าง'));
 });
