@@ -63,9 +63,9 @@ test('duplicate warnings list the asset number, every affected job and departmen
 test('executive view has four headline metrics and a compact print summary with optional detailed appendix',()=>{
  const {context}=page(),report=context.buildExecutiveReportData([{jobNo:'PRIVATE-JOB-A',oldComSn:'C',oldMonitorSn:'M'},{jobNo:'PRIVATE-JOB-B',oldComSn:'C',oldMonitorSn:'M'},{jobNo:'MON',oldMonitorSn:'ONLY'}],[]);
  assert.equal(context.executiveKpis(report).length,4);const summary=context.executiveReportHtml(report),details=context.executiveReportHtml(report,true);
- assert.ok(summary.includes('PC 2 เครื่อง'));assert.ok(summary.includes('จอ 3 จอ'));assert.ok(summary.includes('เลขครุภัณฑ์ซ้ำ 2 เลข'));assert.ok(summary.includes('รับคืนเฉพาะจอ 1 รายการ'));
+ assert.ok(summary.includes('คอมพิวเตอร์ 2 เครื่อง'));assert.ok(summary.includes('จอ 3 จอ'));assert.ok(summary.includes('เลขครุภัณฑ์ซ้ำ 2 เลข'));assert.ok(summary.includes('รับคืนเฉพาะจอ 1 รายการ'));
  assert.ok(!summary.includes('PRIVATE-JOB-A'));assert.ok(details.includes('PRIVATE-JOB-A'));assert.ok(details.includes('รายละเอียดประกอบการตรวจสอบ'));
- assert.equal((context.executiveHeaders().match(/<th>/g)||[]).length,11);
+ assert.equal((context.executiveHeaders().match(/<th>/g)||[]).length,10);
 });
 
 test('executive and submission figures use the reference completion report: 156 total, 126 completed, 30 remaining, 81%, 80 fully complete',()=>{
@@ -99,4 +99,12 @@ test('executive reports and optional appendix ignore photo completeness but reta
  const a=context.buildExecutiveReportData(assets,missing),b=context.buildExecutiveReportData(assets,complete);assert.equal(a.totals.completed,1);assert.equal(a.totals.remaining,1);assert.equal(a.attention.length,1);assert.equal(a.attention[0].jobNo,'BLOCKED');
  for(const details of [false,true]){const html=context.executiveReportHtml(a,details);assert.equal(html,context.executiveReportHtml(b,details));assert.doesNotMatch(html,/ขาดรูป|รูปไม่ครบ|รอตรวจข้อมูลหลังติดตั้ง|ข้อมูลและรูปครบ/);if(details)assert.ok(html.includes('รอไฟฟ้า'));}
  const installation=context.buildCompletionReportData(assets,missing),html=context.completionReportHtml(installation);assert.doesNotMatch(html,/ขาดรูป|ความครบถ้วนของงาน|ข้อมูลและรูปครบ|รอตรวจข้อมูล/);
+});
+
+test('executive returns have three categories and job detail reconciles all received counts',()=>{
+ const {context}=page(),assets=[{jobNo:'PC',department:'A',oldComSn:'C1',oldMonitorSn:'M1',oldUpsSn:'ไม่มีเลข'},{jobNo:'AIO',department:'A',oldComSn:'HP ไม่มีเลข'},{jobNo:'MON',department:'B',oldMonitorSn:'M2'},{jobNo:'NEW',department:'B',noOldEquipment:true,installStatus:'ติดตั้งเสร็จ'},{jobNo:'UNKNOWN',department:'B',installStatus:'ติดตั้งเสร็จ'}],before=JSON.stringify(assets),report=context.buildExecutiveReportData(assets,[]);
+ assert.equal(report.totals.com,2);assert.equal(report.totals.monitor,2);assert.equal(report.totals.ups,1);assert.equal(report.returnJobs.length,5);assert.equal(report.groups.reduce((n,r)=>n+r.com,0),2);assert.equal(report.totals.com,report.totals.pc+report.totals.aio);
+ for(const [field,total]of [['comNo','com'],['monitorNo','monitor'],['upsNo','ups']])assert.equal(report.returnJobs.filter(r=>context.classifyReturnedAsset(r[field]).received).length,report.totals[total]);
+ const html=context.executiveReturnJobRows(report);assert.ok(html.includes('C1'));assert.ok(html.includes('M1'));assert.ok(html.includes('ไม่มีเลขครุภัณฑ์'));assert.ok(html.includes('ติดตั้งจุดใหม่ / เพิ่มเครื่อง'));assert.ok(html.includes('ยังไม่มีข้อมูลรับคืน'));
+ const summary=context.executiveReportHtml(report),details=context.executiveReportHtml(report,true);assert.ok(summary.includes('คอมพิวเตอร์ 2 เครื่อง'));assert.ok(!summary.includes('PC คืน'));assert.ok(!summary.includes('AIO คืน'));assert.ok(details.includes('รายการรับคืนตามเลขงาน'));assert.ok(details.includes('C1'));assert.equal(JSON.stringify(assets),before);
 });
