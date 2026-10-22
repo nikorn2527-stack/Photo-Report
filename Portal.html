@@ -296,13 +296,7 @@
             <div id="executiveBrief"></div>
             <p class="plan-note">ของรับคืนมี 3 ประเภท: คอมพิวเตอร์ จอ และ UPS นับตามเลขงาน รวมเครื่องที่ไม่มีเลขครุภัณฑ์แล้ว</p>
             <div class="table-wrap completion-table-scroll"><table class="completion-table executive-unit-table"><thead><tr id="executiveHeaders"></tr></thead><tbody id="executiveDepartmentBody"></tbody></table></div>
-            <details id="executiveDetails" style="margin-top:14px"><summary id="executiveDetailsTitle" style="cursor:pointer;min-height:44px">ดูรายละเอียดตรวจสอบ</summary>
-              <h4 class="panel-title">รายการรับคืนตามเลขงาน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th></tr></thead><tbody id="executiveReturnJobs"></tbody></table></div>
-              <div id="executiveDuplicateNotes"></div><div id="executiveReturnNotes"></div>
-              <h4 class="panel-title" style="margin-top:18px">งานที่ต้องติดตาม</h4>
-              <div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>เรื่องที่ต้องติดตาม</th><th>รายละเอียด</th><th>เปิดงาน</th></tr></thead><tbody id="executiveAttentionBody"></tbody></table></div>
-            </details>
-            <label class="plan-note" style="display:block;margin-top:10px"><input id="executivePrintDetails" type="checkbox"> แนบรายการรับคืนตามเลขงานและรายการตรวจสอบ</label>
+            <label class="plan-note" style="display:block;margin-top:10px"><input id="executivePrintDetails" type="checkbox"> แนบรายการรับคืนตามเลขงาน</label>
           </section>
           <div id="summaryCards" class="cards"></div>
           <div class="dashboard-grid">
@@ -320,21 +314,16 @@
               <div><h4 class="panel-title">รายการเครื่องที่ติดตั้งเสร็จ</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>สถานที่ติดตั้ง</th><th>รุ่นเครื่อง</th><th>S/N เครื่อง</th><th>เลข IP</th></tr></thead><tbody id="completionMachineBody"></tbody></table></div></div>
             </div>
           </section>
-          <section class="panel completion-dashboard" aria-labelledby="returnAssetTitle">
-            <div class="completion-head"><div><h3 id="returnAssetTitle" class="panel-title">รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h3><p class="view-note">ตรวจเลขครุภัณฑ์ของอุปกรณ์ที่รับคืน เลขซ้ำนับครั้งเดียว ส่วนเครื่องไม่มีเลขนับตามรายการ</p></div><button type="button" class="button button-outline" onclick="printReturnAssetReport()">พิมพ์ / บันทึก PDF รับคืน</button></div>
-            <div id="returnAssetKpis" class="issue-kpis"></div><p id="returnAssetMeta" class="plan-note"></p><p id="returnAssetDuplicates" class="plan-note"></p>
-            <div class="completion-tables"><div><h4 class="panel-title">สรุปตามพื้นที่</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>รายการทั้งหมด</th><th>คอมรับคืน</th><th>คอมไม่มีเลข</th><th>จอรับคืน</th><th>จอไม่มีเลข</th><th>UPS รับคืน</th><th>UPS ไม่มีเลข</th></tr></thead><tbody id="returnAssetAreaBody"></tbody></table></div></div><div><h4 class="panel-title">รายการอุปกรณ์รับคืน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ประเภทเครื่องเดิม</th><th>เลขครุภัณฑ์คอมเดิม</th><th>เลขครุภัณฑ์จอเดิม</th><th>เลขครุภัณฑ์ UPS เดิม</th></tr></thead><tbody id="returnAssetMachineBody"></tbody></table></div></div></div>
-          </section>
-          <section class="panel issue-dashboard">
-            <div class="issue-head"><div><h3 class="panel-title">ปัญหาหน้างานที่ทำให้ติดตั้งยังไม่เสร็จ</h3><p class="view-note">งานที่ยังติดปัญหาและเรื่องที่ต้องประสาน</p></div><button type="button" class="button button-outline" onclick="printIssueReport()">พิมพ์รายงานสรุป</button></div>
-            <div id="issueKpis" class="issue-kpis"></div>
-            <div class="issue-layout"><div id="issueChart" class="issue-chart"></div><div class="table-wrap"><table class="issue-table"><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ผลติดตั้ง</th><th>ปัญหา / สิ่งที่ต้องประสาน</th></tr></thead><tbody id="issueTableBody"></tbody></table></div></div>
-          </section>
         </section>
 
         <section id="workView" class="view" hidden>
           <h2 class="view-title">ติดตามงานรายเครื่อง</h2>
           <p class="view-note">ตรวจสถานะติดตั้ง อุปกรณ์ และรูปถ่ายของแต่ละงาน</p>
+          <section class="panel issue-dashboard">
+            <div class="issue-head"><div><h3 class="panel-title">ปัญหาหน้างานที่ทำให้ติดตั้งยังไม่เสร็จ</h3><p class="view-note">งานที่ยังติดปัญหาและเรื่องที่ต้องประสาน</p></div><button type="button" class="button button-outline" onclick="printIssueReport()">พิมพ์รายงานสรุป</button></div>
+            <div id="issueKpis" class="issue-kpis"></div>
+            <div class="issue-layout"><div id="issueChart" class="issue-chart"></div><div class="table-wrap"><table class="issue-table"><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ผลติดตั้ง</th><th>ปัญหา / สิ่งที่ต้องประสาน</th></tr></thead><tbody id="issueTableBody"></tbody></table></div></div>
+          </section>
           <div id="workSummaryCards" class="work-summary"></div>
           <div class="work-toolbar">
             <input id="workSearch" class="search work-search" type="search" placeholder="ค้นหาเลขงาน สถานที่ หรืองานค้าง" oninput="renderWorkTable()">
@@ -356,6 +345,17 @@
         <section id="assetView" class="view" hidden>
           <h2 class="view-title">ทะเบียนอุปกรณ์</h2>
           <p class="view-note">แหล่งข้อมูลหลักสำหรับงานประจำวัน แสดงเฉพาะคอลัมน์ที่ต้องใช้งาน ส่วนข้อมูลเพิ่มเติมเปิดดูได้ที่ “รายละเอียด” หรือ “แก้ไข”</p>
+            <details id="executiveDetails" style="margin-top:14px"><summary id="executiveDetailsTitle" style="cursor:pointer;min-height:44px">ตรวจสอบข้อมูลรับคืนและงานค้าง</summary>
+              <div id="returnInfoMissingNotes"></div><h4 class="panel-title">รายการรับคืนตามเลขงาน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th></tr></thead><tbody id="executiveReturnJobs"></tbody></table></div>
+              <div id="executiveDuplicateNotes"></div><div id="executiveReturnNotes"></div>
+              <h4 class="panel-title" style="margin-top:18px">งานที่ต้องติดตาม</h4>
+              <div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>เรื่องที่ต้องติดตาม</th><th>รายละเอียด</th><th>เปิดงาน</th></tr></thead><tbody id="executiveAttentionBody"></tbody></table></div>
+            </details>
+          <section class="panel completion-dashboard" aria-labelledby="returnAssetTitle">
+            <div class="completion-head"><div><h3 id="returnAssetTitle" class="panel-title">รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h3><p class="view-note">ตรวจเลขครุภัณฑ์ของอุปกรณ์ที่รับคืน เลขซ้ำนับครั้งเดียว ส่วนเครื่องไม่มีเลขนับตามรายการ</p></div><button type="button" class="button button-outline" onclick="printReturnAssetReport()">พิมพ์ / บันทึก PDF รับคืน</button></div>
+            <div id="returnAssetKpis" class="issue-kpis"></div><p id="returnAssetMeta" class="plan-note"></p><p id="returnAssetDuplicates" class="plan-note"></p>
+            <div class="completion-tables"><div><h4 class="panel-title">สรุปตามพื้นที่</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>รายการทั้งหมด</th><th>คอมรับคืน</th><th>คอมไม่มีเลข</th><th>จอรับคืน</th><th>จอไม่มีเลข</th><th>UPS รับคืน</th><th>UPS ไม่มีเลข</th></tr></thead><tbody id="returnAssetAreaBody"></tbody></table></div></div><div><h4 class="panel-title">รายการอุปกรณ์รับคืน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ประเภทเครื่องเดิม</th><th>เลขครุภัณฑ์คอมเดิม</th><th>เลขครุภัณฑ์จอเดิม</th><th>เลขครุภัณฑ์ UPS เดิม</th></tr></thead><tbody id="returnAssetMachineBody"></tbody></table></div></div></div>
+          </section>
           <div class="toolbar">
             <input id="assetSearch" class="search" type="search" placeholder="ค้นหา Job, รหัสชุด, สถานที่, รุ่น หรือ S/N" oninput="renderAssetTable()">
             <select id="statusFilter" class="filter" onchange="renderAssetTable()"><option value="">สถานะชุดทั้งหมด</option></select>
@@ -656,17 +656,17 @@
       }
       function executiveBriefHtml(report) {
         const t=report.totals;
-        return '<p><strong>รับคืน:</strong> คอมพิวเตอร์ '+t.com+' เครื่อง · จอ '+t.monitor+' จอ · UPS '+t.ups+' เครื่อง<br><strong>ติดตั้งจุดใหม่ / เพิ่มเครื่อง:</strong> '+t.additional+' งาน · <strong>ยังไม่มีข้อมูลรับคืน:</strong> '+t.returnInfoMissing+' งานที่ติดตั้งเสร็จ</p><p class="plan-note">รับคืนไม่มีเลขครุภัณฑ์: คอม '+t.comWithoutNumber+' · จอ '+t.monitorWithoutNumber+' · UPS '+t.upsWithoutNumber+' (รวมในยอดรับคืน)</p><p><strong>ต้องติดตาม:</strong> ติดปัญหา '+t.issues+' งาน · เลขครุภัณฑ์ซ้ำ '+report.duplicates.length+' เลข'+(t.monitorOnly?' · รับคืนเฉพาะจอ '+t.monitorOnly+' รายการ (กรุณาตรวจสอบ)':'')+'</p>';
+        return '<p><strong>รับคืน:</strong> คอมพิวเตอร์ '+t.com+' เครื่อง · จอ '+t.monitor+' จอ · UPS '+t.ups+' เครื่อง<br><strong>ติดตั้งจุดใหม่ / เพิ่มเครื่อง:</strong> '+t.additional+' งาน</p><p class="plan-note">รับคืนไม่มีเลขครุภัณฑ์: คอม '+t.comWithoutNumber+' · จอ '+t.monitorWithoutNumber+' · UPS '+t.upsWithoutNumber+' (รวมในยอดรับคืน)</p>';
       }
-      function executiveHeaders() { return ['หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','คอมคืน','จอคืน','UPS คืน','จุดใหม่ / เพิ่มเครื่อง','ยังไม่มีข้อมูลรับคืน'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
+      function executiveHeaders() { return ['หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','คอมคืน','จอคืน','UPS คืน','จุดใหม่ / เพิ่มเครื่อง'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
       function executiveDepartmentRows(report) {
-        return report.groups.map(function(row) { return '<tr><td>'+escapeHtml(row.department)+'</td>'+['total','completed','remaining','percent','com','monitor','ups','additional','returnInfoMissing'].map(function(key) { return '<td>'+row[key]+(key==='percent'?'%':'')+'</td>'; }).join('')+'</tr>'; }).join('')||'<tr><td colspan="10" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
+        return report.groups.map(function(row) { return '<tr><td>'+escapeHtml(row.department)+'</td>'+['total','completed','remaining','percent','com','monitor','ups','additional'].map(function(key) { return '<td>'+row[key]+(key==='percent'?'%':'')+'</td>'; }).join('')+'</tr>'; }).join('')||'<tr><td colspan="9" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
       }
       function executiveReturnJobHeaders() { return '<th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th>'; }
-      function executiveReturnJobRows(report) {
+      function executiveReturnJobRows(report, operational) {
         return report.returnJobs.map(function(row) {
           const com=classifyReturnedAsset(row.comNo),monitor=classifyReturnedAsset(row.monitorNo),ups=classifyReturnedAsset(row.upsNo),received=com.received||monitor.received||ups.received;
-          const note=!received?(row.noOldEquipment?'ติดตั้งจุดใหม่ / เพิ่มเครื่อง':row.installStatus==='ติดตั้งเสร็จ'?'ยังไม่มีข้อมูลรับคืน':''):(!com.received&&monitor.received?'รับคืนเฉพาะจอ — กรุณาตรวจสอบ':'');
+          const note=!received?(row.noOldEquipment?'ติดตั้งจุดใหม่ / เพิ่มเครื่อง':operational&&row.installStatus==='ติดตั้งเสร็จ'?'ยังไม่มีข้อมูลรับคืน':''):(operational&&!com.received&&monitor.received?'รับคืนเฉพาะจอ — กรุณาตรวจสอบ':'');
           function value(raw){const state=classifyReturnedAsset(raw);return !state.received?'':state.noNumber?'ไม่มีเลขครุภัณฑ์':state.number;}
           return '<tr><td>'+escapeHtml(row.jobNo||'-')+'</td><td>'+escapeHtml(row.department)+'</td><td>'+escapeHtml(row.installStatus)+'</td><td>'+escapeHtml(value(row.comNo))+'</td><td>'+escapeHtml(value(row.monitorNo))+'</td><td>'+escapeHtml(value(row.upsNo))+'</td><td>'+escapeHtml(note)+'</td></tr>';
         }).join('')||'<tr><td colspan="7" class="issue-empty">ยังไม่มีรายการ</td></tr>';
@@ -685,24 +685,33 @@
         if(!(report.returnNotes||[]).length)return '';
         return '<h4 class="panel-title">หมายเหตุการรับคืน ('+report.returnNotes.length+' รายการ)</h4><div class="table-wrap"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>หมายเหตุ</th><th>รายละเอียด</th>'+(printable?'':'<th>เปิดงาน</th>')+'</tr></thead><tbody>'+executiveAttentionRows({attention:report.returnNotes},printable)+'</tbody></table></div>';
       }
+      function returnInfoMissingNotesHtml(report) {
+        const rows=report.returnJobs.filter(function(row){return row.installStatus==='ติดตั้งเสร็จ'&&!row.noOldEquipment&&![row.comNo,row.monitorNo,row.upsNo].some(function(value){return classifyReturnedAsset(value).received;});});
+        if(!rows.length)return '';
+        return '<h4 class="panel-title">ยังไม่มีข้อมูลรับคืน ('+rows.length+' งาน)</h4><p class="plan-note">ติดตั้งเสร็จแล้ว แต่ช่องรับคืนว่าง และไม่ได้เลือก “ไม่มีเครื่องเดิมให้นำกลับ” กรุณาตรวจสอบข้อมูลในทะเบียนอุปกรณ์</p><div class="table-wrap"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>แก้ไข</th></tr></thead><tbody>'+rows.map(function(row){return '<tr><td>'+escapeHtml(row.jobNo)+'</td><td>'+escapeHtml(row.department)+'</td><td><button type="button" class="button button-outline" data-job="'+escapeHtml(row.jobNo)+'" onclick="openReturnAssetCheck(this)">ดูอุปกรณ์</button></td></tr>';}).join('')+'</tbody></table></div>';
+      }
+      function openReturnAssetCheck(button) {
+        document.getElementById('assetSearch').value=button.getAttribute('data-job');document.getElementById('statusFilter').value='';document.getElementById('prepStatusFilter').value='';renderAssetTable();showView('asset');
+      }
       function executiveNote(report) {
         return 'หน่วยงาน: '+report.department+' · ข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt);
       }
       function renderExecutiveDashboard() {
-        const report=getExecutiveReport();
+        const report=getExecutiveReport(),checks=buildExecutiveReportData(portalData.assetRows||[],portalData.jobWorkRows,portalData.loadedAt);
         document.getElementById('executiveMeta').textContent=executiveNote(report);
         document.getElementById('executiveBrief').innerHTML=executiveBriefHtml(report);
-        document.getElementById('executiveDetailsTitle').textContent='ดูรายการรับคืนตามเลขงาน เลขซ้ำ และหมายเหตุ';
+        document.getElementById('executiveDetailsTitle').textContent='ตรวจสอบข้อมูลรับคืนและงานค้าง';
         document.getElementById('executiveKpis').innerHTML=executiveKpis(report).map(function(item) { return '<div class="issue-kpi"><span class="card-label">'+item[0]+'</span><strong>'+item[1]+'</strong></div>'; }).join('');
-        document.getElementById('executiveReturnJobs').innerHTML=executiveReturnJobRows(report);
-        document.getElementById('executiveDuplicateNotes').innerHTML=executiveDuplicateNotesHtml(report);
-        document.getElementById('executiveReturnNotes').innerHTML=executiveReturnNotesHtml(report,false);
-        document.getElementById('executiveHeaders').innerHTML=executiveHeaders();document.getElementById('executiveDepartmentBody').innerHTML=executiveDepartmentRows(report);document.getElementById('executiveAttentionBody').innerHTML=executiveAttentionRows(report,false);
+        document.getElementById('returnInfoMissingNotes').innerHTML=returnInfoMissingNotesHtml(checks);
+        document.getElementById('executiveReturnJobs').innerHTML=executiveReturnJobRows(checks,true);
+        document.getElementById('executiveDuplicateNotes').innerHTML=executiveDuplicateNotesHtml(checks);
+        document.getElementById('executiveReturnNotes').innerHTML=executiveReturnNotesHtml(checks,false);
+        document.getElementById('executiveHeaders').innerHTML=executiveHeaders();document.getElementById('executiveDepartmentBody').innerHTML=executiveDepartmentRows(report);document.getElementById('executiveAttentionBody').innerHTML=executiveAttentionRows(checks,false);
       }
       function executiveReportHtml(report,includeDetails) {
         const base=completionReportHtml({total:0,completed:0,remaining:0,percent:0,workComplete:0,areas:[],rows:[]}),start=base.indexOf('<body>');
-        const details=includeDetails?'<section style="break-before:page"><h2>รายการรับคืนตามเลขงาน</h2><table><thead><tr>'+executiveReturnJobHeaders()+'</tr></thead><tbody>'+executiveReturnJobRows(report)+'</tbody></table><h2>รายละเอียดประกอบการตรวจสอบ</h2>'+executiveDuplicateNotesHtml(report)+executiveReturnNotesHtml(report,true)+'<h2>งานที่ต้องติดตาม</h2><table><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>เรื่องที่ต้องติดตาม</th><th>รายละเอียด</th></tr></thead><tbody>'+executiveAttentionRows(report,true)+'</tbody></table></section>':'';
-        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>').replace('</style>','table.executive-unit-table th:first-child{width:24%}table.executive-unit-table th,table.executive-unit-table td{padding:4px}</style>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table><p class="note">ยอดรับคืนรวมเครื่องที่ไม่มีเลขครุภัณฑ์ จอและ UPS นับแยกกัน จุดใหม่หรือเพิ่มเครื่องนับจากช่อง “ไม่มีเครื่องเดิมให้นำกลับ” ที่เลือกไว้ ส่วนช่องรับคืนว่างที่ไม่ได้เลือกจะแสดงว่ายังไม่มีข้อมูล</p>'+details+'</body></html>';
+        const details=includeDetails?'<section style="break-before:page"><h2>รายการรับคืนตามเลขงาน</h2><table><thead><tr>'+executiveReturnJobHeaders()+'</tr></thead><tbody>'+executiveReturnJobRows(report)+'</tbody></table></section>':'';
+        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>').replace('</style>','table.executive-unit-table th:first-child{width:24%}table.executive-unit-table th,table.executive-unit-table td{padding:4px}</style>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table><p class="note">ยอดรับคืนรวมเครื่องที่ไม่มีเลขครุภัณฑ์ จอและ UPS นับแยกกัน จุดใหม่หรือเพิ่มเครื่องนับจากช่อง “ไม่มีเครื่องเดิมให้นำกลับ” ที่เลือกไว้</p>'+details+'</body></html>';
       }
       function printExecutiveReport() {
         if(!portalData.loadedAt){setStatus('กรุณารอโหลดข้อมูลก่อนพิมพ์',true);return;}
@@ -839,7 +848,7 @@
         RETURN_ASSET_TYPES.forEach(function(type) { const count=totals[type.key];result[type.key+'Count']=count.numbers.size+count.withoutNumber;result[type.key+'WithNumber']=count.numbers.size;result[type.key+'WithoutNumber']=count.withoutNumber;result['missing'+type.key[0].toUpperCase()+type.key.slice(1)]=count.missing; });
         return result;
       }
-      function getReturnAssetReport() { return buildReturnAssetReportData(getDashboardAssetRows(),portalData.loadedAt); }
+      function getReturnAssetReport() { return buildReturnAssetReportData(portalData.assetRows||[],portalData.loadedAt); }
       function returnAssetAreaHeaders() {
         return '<th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>รายการทั้งหมด</th>'+RETURN_ASSET_TYPES.map(function(type) { return '<th>'+type.label+'รับคืน</th><th>'+type.label+'ไม่มีเลข</th>'; }).join('');
       }
@@ -949,7 +958,7 @@
       function installationNeedsReason(status) { return INSTALL_BLOCKED_STATUSES.indexOf(status) !== -1; }
 
       function getIssueRows() {
-        return getDashboardAssetRows().filter(function(row) { return installationNeedsReason(row.installStatus); });
+        return (portalData.assetRows||[]).filter(function(row) { return installationNeedsReason(row.installStatus); });
       }
 
       function renderIssueDashboard() {
