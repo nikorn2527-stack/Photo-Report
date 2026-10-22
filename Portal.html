@@ -307,7 +307,7 @@
 <section class="section-panel" role="tabpanel" id="dashboard-summary-panel" aria-labelledby="dashboard-summary-tab">          <section class="panel completion-dashboard" aria-labelledby="executiveTitle">
             <div class="completion-head"><div><h3 id="executiveTitle" class="panel-title">สรุปติดตั้งและรับคืนสำหรับผู้บริหาร</h3><p id="executiveMeta" class="view-note"></p></div><div class="executive-photo-actions"><button type="button" class="button button-primary" onclick="openExecutivePhotoReport(true)">ชุดเอกสารส่งผู้บริหาร</button><select id="executivePrintPart" class="filter" aria-label="เลือกตารางพิมพ์"><option value="summary">สรุป</option><option value="units">ตารางหน่วยงาน</option><option value="jobs">รายการรับคืนตามงาน</option></select><button type="button" class="button button-outline" onclick="printExecutiveReport()">พิมพ์ที่เลือก</button><button type="button" class="button button-outline" onclick="openExecutivePhotoReport()">รายงานภาพคอมรายหน่วยงาน</button></div></div>
             <div class="work-toolbar"><label for="executiveDepartment">พิมพ์หน่วยงาน</label><select id="executiveDepartment" class="filter" onchange="changeDashboardDepartment(this.value)"><option value="">ทุกหน่วยงาน</option></select></div>
-            <label class="plan-note" style="display:block"><input id="executivePhotosOnly" type="checkbox" checked onchange="renderExecutiveDashboard()"> เฉพาะหน่วยงานที่รูปครบ</label>
+            <label class="plan-note" style="display:block"><input id="executivePhotosOnly" type="checkbox" checked onchange="renderExecutiveDashboard()"> ภาพแนบเฉพาะหน่วยงานที่รูปครบ</label>
             <div id="executiveKpis" class="issue-kpis"></div>
             <div id="executiveBrief"></div>
 
@@ -710,9 +710,7 @@
         return rows.filter(function(row){return departments.has(departmentName(row));});
       }
       function getExecutiveReport() {
-        const onlyPhotos=!!document.getElementById('executivePhotosOnly').checked;
-        const rows=getDashboardAssetRows(),report=buildExecutiveReportData(onlyPhotos?filterExecutivePhotoDepartments(rows,portalData.jobWorkRows):rows,portalData.jobWorkRows,portalData.loadedAt,dashboardDepartment);
-        report.photoDepartmentsOnly=onlyPhotos;return report;
+        return buildExecutiveReportData(getDashboardAssetRows(),portalData.jobWorkRows,portalData.loadedAt,dashboardDepartment);
       }
       function executiveKpis(report) {
         const t=report.totals;
@@ -765,7 +763,7 @@
         showSectionTab('asset','list');document.getElementById('assetSearch').value=button.getAttribute('data-job');document.getElementById('statusFilter').value='';document.getElementById('prepStatusFilter').value='';renderAssetTable();showView('asset');
       }
       function executiveNote(report) {
-        return 'หน่วยงาน: '+report.department+' · ข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt)+(report.photoDepartmentsOnly?' · เฉพาะหน่วยงานที่รูปครบ':'');
+        return 'หน่วยงาน: '+report.department+' · ข้อมูลล่าสุด: '+completionTimestamp(report.updatedAt);
       }
       function renderExecutiveDashboard() {
         const report=getExecutiveReport(),checks=buildExecutiveReportData(portalData.assetRows||[],portalData.jobWorkRows,portalData.loadedAt);
@@ -866,7 +864,7 @@
       function changeExecutivePhotoDepartment(value) {
         const scoped=executivePhotoAllSource.filter(function(row){return !value||departmentName(row)===value;});
         executivePhotoSource=executivePhotoOnlyWithPhotos?filterExecutivePhotoDepartments(scoped,executivePhotoWorkSnapshot):scoped;
-        executivePhotoSnapshot=buildExecutiveReportData(executivePhotoSource,executivePhotoWorkSnapshot,executivePhotoTime,value);executivePhotoSnapshot.photoDepartmentsOnly=executivePhotoOnlyWithPhotos;
+        executivePhotoSnapshot=buildExecutiveReportData(scoped,executivePhotoWorkSnapshot,executivePhotoTime,value);
         document.getElementById('executiveSummaryPrint').disabled=!executivePhotoSnapshot.totals.total;
         document.getElementById('executivePhotoDepartment').value=value;
         document.getElementById('executivePhotoTitle').textContent=(executivePhotoSubmission?'ชุดเอกสารส่งผู้บริหาร · ':'รายงานภาพคอมรายหน่วยงาน · ')+(value||'ทุกหน่วยงาน');
@@ -890,7 +888,7 @@
           const body=page.jobs.map(function(row){const index=jobs.length;jobs.push(row);return '<div class="executive-photo-job" id="executivePhotoJob'+index+'">กำลังโหลด '+escapeHtml(row.jobNo)+'...</div>';}).join('');
           return '<article id="executivePhotoPage'+pageIndex+'" class="executive-photo-page"'+(executivePhotoOnlyWithPhotos?' hidden':'')+'><h2>ภาพเครื่องที่ติดตั้งเสร็จ · '+escapeHtml(page.department)+'</h2><p id="executivePhotoPageNote'+pageIndex+'" class="executive-photo-page-note">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที · หลังติดตั้ง 1 · '+page.departmentJobs+' เครื่องในหน่วยงาน · หน้า '+(pageIndex+1)+'/'+pages.length+'</p><p class="executive-photo-page-note">ข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(executivePhotoTime))+'</p><div class="executive-photo-grid">'+body+'</div></article>';
         }).join('');
-        if(!jobs.length&&executivePhotoOnlyWithPhotos){root.innerHTML='<article class="executive-photo-page"><p>ยังไม่มีหน่วยงานที่รูปครบ</p></article>';document.getElementById('executiveSummaryPrint').disabled=true;status.textContent='ยังไม่มีรูปสำหรับรายงาน';return;}
+        if(!jobs.length&&executivePhotoOnlyWithPhotos){root.innerHTML=summary+'<article class="executive-photo-page"><p>ยังไม่มีหน่วยงานที่รูปครบ</p></article>';document.getElementById('executiveSummaryPrint').disabled=!executivePhotoSnapshot.totals.total;status.textContent='ยังไม่มีรูปแนบ · พิมพ์สรุปได้';return;}
         if(!jobs.length){executivePhotoReady=!!summary&&executivePhotoSnapshot.totals.total>0;root.innerHTML=summary||'<article class="executive-photo-page"><p>ยังไม่มี Job ติดตั้งเสร็จในหน่วยงานที่เลือก</p></article>';document.getElementById('executivePhotoPrint').disabled=!executivePhotoReady;status.textContent=executivePhotoReady?'ยังไม่มีภาพเครื่องติดตั้งเสร็จ พิมพ์ได้เฉพาะรายงานสรุป':'ไม่มีรายการสำหรับพิมพ์';return;}
         let next=0,loadedJobs=0,loadedPhotos=0;const missing=[],photoDepartments=new Set();
         status.textContent='กำลังโหลดรูป · 0/'+jobs.length+' เครื่อง';
@@ -908,11 +906,8 @@
           let visiblePages=pages;
           if(executivePhotoOnlyWithPhotos){
             const completeRows=executiveLoadedUnitRows();photoDepartments.clear();completeRows.forEach(function(row){photoDepartments.add(departmentName(row));});visiblePages=updateExecutivePhotoPageVisibility(pages);
-            if(!visiblePages.length){executivePhotoSnapshot=buildExecutiveReportData([],executivePhotoWorkSnapshot,executivePhotoTime,document.getElementById('executivePhotoDepartment').value);document.getElementById('executivePhotoPrint').disabled=true;root.innerHTML='<article class="executive-photo-page"><p>ยังไม่มีหน่วยงานที่รูปครบ</p></article>';document.getElementById('executiveSummaryPrint').disabled=true;status.textContent='ยังไม่มีรูปสำหรับรายงาน';return;}
-            const included=executivePhotoSource.filter(function(row){return photoDepartments.has(departmentName(row));});
-            executivePhotoSnapshot=buildExecutiveReportData(included,executivePhotoWorkSnapshot,executivePhotoTime,document.getElementById('executivePhotoDepartment').value);executivePhotoSnapshot.photoDepartmentsOnly=true;
-            document.getElementById('executiveSummaryPrint').disabled=!executivePhotoSnapshot.totals.total;
-            if(executivePhotoSubmission)document.getElementById('executivePhotoSummary').innerHTML=executiveSubmissionSummaryHtml(executivePhotoSnapshot,executivePhotoIncludeDetails);
+            if(!visiblePages.length){document.getElementById('executivePhotoPrint').disabled=true;root.innerHTML=summary+'<article class="executive-photo-page"><p>ยังไม่มีหน่วยงานที่รูปครบ</p></article>';document.getElementById('executiveSummaryPrint').disabled=!executivePhotoSnapshot.totals.total;status.textContent='ยังไม่มีรูปแนบ · พิมพ์สรุปได้';return;}
+
           }
           executivePhotoReady=true;document.getElementById('executivePhotoPrint').disabled=false;
           const visibleJobs=new Set(visiblePages.flatMap(function(page){return page.jobs.map(function(row){return row.jobNo;});})),visibleMissing=missing.filter(function(job){return visibleJobs.has(job);});
@@ -948,8 +943,7 @@
         const included=executivePhotoOnlyWithPhotos?executiveLoadedUnitRows():executivePhotoSource;
         if(executivePhotoOnlyWithPhotos&&!included.length)return '';
         const loadedRows=included.filter(function(row){return executivePhotoLoadedImages.has(row.jobNo);}),pages=buildExecutivePhotoPlan(loadedRows);
-        const report=executivePhotoOnlyWithPhotos?buildExecutiveReportData(included,executivePhotoWorkSnapshot,executivePhotoTime,document.getElementById('executivePhotoDepartment').value):executivePhotoSnapshot;
-        if(report)report.photoDepartmentsOnly=executivePhotoOnlyWithPhotos;
+        const report=executivePhotoSnapshot;
         const summary=executivePhotoSubmission&&report&&report.totals.total?executiveSubmissionSummaryHtml(report,executivePhotoIncludeDetails):'';
         return summary+pages.map(function(page,index){return '<article class="executive-photo-page"><h2>ภาพเครื่องที่ติดตั้งเสร็จ · '+escapeHtml(page.department)+'</h2><p class="executive-photo-page-note">'+page.jobs.length+' รูป · หน้า '+(index+1)+'/'+pages.length+'</p><div class="executive-photo-grid">'+page.jobs.map(function(row){return '<div class="executive-photo-job">'+executivePhotoJobHtml(row,executivePhotoLoadedImages.get(row.jobNo))+'</div>';}).join('')+'</div></article>';}).join('');
       }
