@@ -288,13 +288,13 @@
 
         <section id="dashboardView" class="view">
           <h2 class="view-title">ภาพรวมระบบ</h2>
-          <p class="view-note">สรุปงานติดตั้งและการรับคืนอุปกรณ์</p>
+
           <div class="work-toolbar"><label for="dashboardDepartment">หน่วยงาน</label><select id="dashboardDepartment" class="filter" onchange="changeDashboardDepartment(this.value)"><option value="">ทุกหน่วยงาน</option></select></div>
           <section class="panel completion-dashboard" aria-labelledby="executiveTitle">
             <div class="completion-head"><div><h3 id="executiveTitle" class="panel-title">สรุปติดตั้งและรับคืนสำหรับผู้บริหาร</h3><p id="executiveMeta" class="view-note"></p></div><div class="executive-photo-actions"><button type="button" class="button button-primary" onclick="openExecutivePhotoReport(true)">ชุดเอกสารส่งผู้บริหาร</button><button type="button" class="button button-outline" onclick="printExecutiveReport()">พิมพ์เฉพาะสรุป</button><button type="button" class="button button-outline" onclick="openExecutivePhotoReport()">รายงานภาพคอมรายหน่วยงาน</button></div></div>
             <div id="executiveKpis" class="issue-kpis"></div>
             <div id="executiveBrief"></div>
-            <p class="plan-note">ของรับคืนมี 3 ประเภท: คอมพิวเตอร์ จอ และ UPS นับตามเลขงาน รวมเครื่องที่ไม่มีเลขครุภัณฑ์แล้ว</p>
+
             <div class="table-wrap completion-table-scroll"><table class="completion-table executive-unit-table"><thead><tr id="executiveHeaders"></tr></thead><tbody id="executiveDepartmentBody"></tbody></table></div>
             <label class="plan-note" style="display:block;margin-top:10px"><input id="executivePrintDetails" type="checkbox"> แนบรายการรับคืนตามเลขงาน</label>
           </section>
@@ -305,7 +305,7 @@
             <section class="panel"><h3 class="panel-title">ตัวชี้วัดอุปกรณ์</h3><div id="equipmentMetrics"></div></section>
           </div>
           <section class="panel completion-dashboard" aria-labelledby="completionTitle">
-            <div class="completion-head"><div><h3 id="completionTitle" class="panel-title">รายงานเครื่องที่ติดตั้งเสร็จ</h3><p class="view-note">จำนวนเครื่องที่ติดตั้งเสร็จและงานที่เหลือ</p></div><button type="button" class="button button-primary" onclick="printCompletionReport()">พิมพ์ / บันทึก PDF ความคืบหน้า</button></div>
+            <div class="completion-head"><div><h3 id="completionTitle" class="panel-title">รายงานเครื่องที่ติดตั้งเสร็จ</h3></div><button type="button" class="button button-primary" onclick="printCompletionReport()">พิมพ์ / บันทึก PDF ความคืบหน้า</button></div>
             <div id="completionKpis" class="issue-kpis"></div>
             <div id="completionProgress" class="completion-progress"></div>
             <p id="completionMeta" class="plan-note"></p>
@@ -320,7 +320,7 @@
           <h2 class="view-title">ติดตามงานรายเครื่อง</h2>
           <p class="view-note">ตรวจสถานะติดตั้ง อุปกรณ์ และรูปถ่ายของแต่ละงาน</p>
           <section class="panel issue-dashboard">
-            <div class="issue-head"><div><h3 class="panel-title">ปัญหาหน้างานที่ทำให้ติดตั้งยังไม่เสร็จ</h3><p class="view-note">งานที่ยังติดปัญหาและเรื่องที่ต้องประสาน</p></div><button type="button" class="button button-outline" onclick="printIssueReport()">พิมพ์รายงานสรุป</button></div>
+            <div class="issue-head"><div><h3 class="panel-title">งานติดปัญหา</h3></div><button type="button" class="button button-outline" onclick="printIssueReport()">พิมพ์รายงานสรุป</button></div>
             <div id="issueKpis" class="issue-kpis"></div>
             <div class="issue-layout"><div id="issueChart" class="issue-chart"></div><div class="table-wrap"><table class="issue-table"><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ผลติดตั้ง</th><th>ปัญหา / สิ่งที่ต้องประสาน</th></tr></thead><tbody id="issueTableBody"></tbody></table></div></div>
           </section>
@@ -344,7 +344,7 @@
 
         <section id="assetView" class="view" hidden>
           <h2 class="view-title">ทะเบียนอุปกรณ์</h2>
-          <p class="view-note">แหล่งข้อมูลหลักสำหรับงานประจำวัน แสดงเฉพาะคอลัมน์ที่ต้องใช้งาน ส่วนข้อมูลเพิ่มเติมเปิดดูได้ที่ “รายละเอียด” หรือ “แก้ไข”</p>
+          <p class="view-note">ดูและแก้ไขข้อมูลอุปกรณ์</p>
             <details id="executiveDetails" style="margin-top:14px"><summary id="executiveDetailsTitle" style="cursor:pointer;min-height:44px">ตรวจสอบข้อมูลรับคืนและงานค้าง</summary>
               <div id="returnInfoMissingNotes"></div><h4 class="panel-title">รายการรับคืนตามเลขงาน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th></tr></thead><tbody id="executiveReturnJobs"></tbody></table></div>
               <div id="executiveDuplicateNotes"></div><div id="executiveReturnNotes"></div>
@@ -352,7 +352,7 @@
               <div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>เรื่องที่ต้องติดตาม</th><th>รายละเอียด</th><th>เปิดงาน</th></tr></thead><tbody id="executiveAttentionBody"></tbody></table></div>
             </details>
           <section class="panel completion-dashboard" aria-labelledby="returnAssetTitle">
-            <div class="completion-head"><div><h3 id="returnAssetTitle" class="panel-title">รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h3><p class="view-note">ตรวจเลขครุภัณฑ์ของอุปกรณ์ที่รับคืน เลขซ้ำนับครั้งเดียว ส่วนเครื่องไม่มีเลขนับตามรายการ</p></div><button type="button" class="button button-outline" onclick="printReturnAssetReport()">พิมพ์ / บันทึก PDF รับคืน</button></div>
+            <div class="completion-head"><div><h3 id="returnAssetTitle" class="panel-title">รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h3><p class="view-note">เลขซ้ำนับครั้งเดียว รวมเครื่องที่ไม่มีเลข</p></div><button type="button" class="button button-outline" onclick="printReturnAssetReport()">พิมพ์ / บันทึก PDF รับคืน</button></div>
             <div id="returnAssetKpis" class="issue-kpis"></div><p id="returnAssetMeta" class="plan-note"></p><p id="returnAssetDuplicates" class="plan-note"></p>
             <div class="completion-tables"><div><h4 class="panel-title">สรุปตามพื้นที่</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>รายการทั้งหมด</th><th>คอมรับคืน</th><th>คอมไม่มีเลข</th><th>จอรับคืน</th><th>จอไม่มีเลข</th><th>UPS รับคืน</th><th>UPS ไม่มีเลข</th></tr></thead><tbody id="returnAssetAreaBody"></tbody></table></div></div><div><h4 class="panel-title">รายการอุปกรณ์รับคืน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ประเภทเครื่องเดิม</th><th>เลขครุภัณฑ์คอมเดิม</th><th>เลขครุภัณฑ์จอเดิม</th><th>เลขครุภัณฑ์ UPS เดิม</th></tr></thead><tbody id="returnAssetMachineBody"></tbody></table></div></div></div>
           </section>
@@ -588,7 +588,7 @@
         const total = Math.max(1, d.total || 0);
         const delivered = d.deliveryCompleted || 0;
         const deliveryPercent = Math.round(delivered / total * 100);
-        document.getElementById('assetStatusChart').innerHTML = '<div class="status-line"><span>ส่งมอบแล้ว</span><span class="bar"><span style="width:' + deliveryPercent + '%"></span></span><strong>' + delivered + '/' + (d.total || 0) + '</strong></div><p class="plan-note">แสดงจำนวนอุปกรณ์ที่ส่งมอบแล้วเทียบกับอุปกรณ์ทั้งหมด โดยไม่แยกสถานะชุดอุปกรณ์ย่อย</p>';
+        document.getElementById('assetStatusChart').innerHTML = '<div class="status-line"><span>ส่งมอบแล้ว</span><span class="bar"><span style="width:' + deliveryPercent + '%"></span></span><strong>' + delivered + '/' + (d.total || 0) + '</strong></div>';
         document.getElementById('prepStatusChart').innerHTML = PREP_STATUS_OPTIONS.map(function(status) {
           const count = (d.prepStatuses && d.prepStatuses[status]) || 0;
           const percent = Math.round(count / total * 100);
@@ -656,7 +656,7 @@
       }
       function executiveBriefHtml(report) {
         const t=report.totals;
-        return '<p><strong>รับคืน:</strong> คอมพิวเตอร์ '+t.com+' เครื่อง · จอ '+t.monitor+' จอ · UPS '+t.ups+' เครื่อง<br><strong>ติดตั้งจุดใหม่ / เพิ่มเครื่อง:</strong> '+t.additional+' งาน</p><p class="plan-note">รับคืนไม่มีเลขครุภัณฑ์: คอม '+t.comWithoutNumber+' · จอ '+t.monitorWithoutNumber+' · UPS '+t.upsWithoutNumber+' (รวมในยอดรับคืน)</p>';
+        return '<p><strong>รับคืน:</strong> คอมพิวเตอร์ '+t.com+' เครื่อง · จอ '+t.monitor+' จอ · UPS '+t.ups+' เครื่อง<br><strong>ติดตั้งจุดใหม่ / เพิ่มเครื่อง:</strong> '+t.additional+' งาน</p><p class="plan-note">ในจำนวนนี้ไม่มีเลขครุภัณฑ์: คอม '+t.comWithoutNumber+' · จอ '+t.monitorWithoutNumber+' · UPS '+t.upsWithoutNumber+'</p>';
       }
       function reportTextCell(value) { const text=String(value===null||value===undefined?'':value).trim().replace(/\s+/g,' ');return ['-','ไม่ระบุ','ไม่ระบุหน่วยงาน'].indexOf(text)!==-1?'':escapeHtml(text); }
       function reportCountCell(value,suffix) { return value===0||value===null||value===undefined?'':escapeHtml(value)+(suffix||''); }
@@ -682,7 +682,7 @@
       }
       function executiveDuplicateNotesHtml(report) {
         if(!report.duplicates.length)return '';
-        return '<h4 class="panel-title">เลขครุภัณฑ์ซ้ำที่ต้องตรวจสอบ ('+report.duplicates.length+' เลข)</h4><p class="plan-note">พบเลขเดียวกันหลายรายการ กรุณาตรวจสอบรายการด้านล่าง</p><div class="table-wrap"><table class="completion-table"><thead><tr><th>ประเภท</th><th>เลขครุภัณฑ์ซ้ำ</th><th>เลขงาน / หน่วยงาน</th></tr></thead><tbody>'+report.duplicates.map(function(row){return '<tr><td>'+escapeHtml(row.type)+'</td><td>'+escapeHtml(row.number)+'</td><td>'+escapeHtml(row.entries.join(' · '))+'</td></tr>';}).join('')+'</tbody></table></div>';
+        return '<h4 class="panel-title">เลขครุภัณฑ์ซ้ำที่ต้องตรวจสอบ ('+report.duplicates.length+' เลข)</h4><div class="table-wrap"><table class="completion-table"><thead><tr><th>ประเภท</th><th>เลขครุภัณฑ์ซ้ำ</th><th>เลขงาน / หน่วยงาน</th></tr></thead><tbody>'+report.duplicates.map(function(row){return '<tr><td>'+escapeHtml(row.type)+'</td><td>'+escapeHtml(row.number)+'</td><td>'+escapeHtml(row.entries.join(' · '))+'</td></tr>';}).join('')+'</tbody></table></div>';
       }
       function executiveReturnNotesHtml(report,printable) {
         if(!(report.returnNotes||[]).length)return '';
@@ -691,7 +691,7 @@
       function returnInfoMissingNotesHtml(report) {
         const rows=report.returnJobs.filter(function(row){return row.installStatus==='ติดตั้งเสร็จ'&&!row.noOldEquipment&&![row.comNo,row.monitorNo,row.upsNo].some(function(value){return classifyReturnedAsset(value).received;});});
         if(!rows.length)return '';
-        return '<h4 class="panel-title">ยังไม่มีข้อมูลรับคืน ('+rows.length+' งาน)</h4><p class="plan-note">ติดตั้งเสร็จแล้ว แต่ช่องรับคืนว่าง และไม่ได้เลือก “ไม่มีเครื่องเดิมให้นำกลับ” กรุณาตรวจสอบข้อมูลในทะเบียนอุปกรณ์</p><div class="table-wrap"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>แก้ไข</th></tr></thead><tbody>'+rows.map(function(row){return '<tr><td>'+escapeHtml(row.jobNo)+'</td><td>'+reportTextCell(row.department)+'</td><td><button type="button" class="button button-outline" data-job="'+escapeHtml(row.jobNo)+'" onclick="openReturnAssetCheck(this)">ดูอุปกรณ์</button></td></tr>';}).join('')+'</tbody></table></div>';
+        return '<h4 class="panel-title">ยังไม่มีข้อมูลรับคืน ('+rows.length+' งาน)</h4><p class="plan-note">ตรวจข้อมูลรับคืน หรือเลือก “ไม่มีเครื่องเดิมให้นำกลับ”</p><div class="table-wrap"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>แก้ไข</th></tr></thead><tbody>'+rows.map(function(row){return '<tr><td>'+escapeHtml(row.jobNo)+'</td><td>'+reportTextCell(row.department)+'</td><td><button type="button" class="button button-outline" data-job="'+escapeHtml(row.jobNo)+'" onclick="openReturnAssetCheck(this)">ดูอุปกรณ์</button></td></tr>';}).join('')+'</tbody></table></div>';
       }
       function openReturnAssetCheck(button) {
         document.getElementById('assetSearch').value=button.getAttribute('data-job');document.getElementById('statusFilter').value='';document.getElementById('prepStatusFilter').value='';renderAssetTable();showView('asset');
@@ -714,7 +714,7 @@
       function executiveReportHtml(report,includeDetails) {
         const base=completionReportHtml({total:0,completed:0,remaining:0,percent:0,workComplete:0,areas:[],rows:[]}),start=base.indexOf('<body>');
         const details=includeDetails?'<section style="break-before:page"><h2>รายการรับคืนตามเลขงาน</h2><table><thead><tr>'+executiveReturnJobHeaders()+'</tr></thead><tbody>'+executiveReturnJobRows(report)+'</tbody></table></section>':'';
-        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>').replace('</style>','table.executive-unit-table{table-layout:auto}table.executive-unit-table th,table.executive-unit-table td{padding:4px;white-space:nowrap;overflow-wrap:normal;font-size:10px}.completion-table th,.completion-table td{white-space:nowrap;overflow-wrap:normal}</style>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table><p class="note">ยอดรับคืนรวมเครื่องที่ไม่มีเลขครุภัณฑ์ จอและ UPS นับแยกกัน จุดใหม่หรือเพิ่มเครื่องนับจากช่อง “ไม่มีเครื่องเดิมให้นำกลับ” ที่เลือกไว้</p>'+details+'</body></html>';
+        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>').replace('</style>','table.executive-unit-table{table-layout:auto}table.executive-unit-table th,table.executive-unit-table td{padding:4px;white-space:nowrap;overflow-wrap:normal;font-size:10px}.completion-table th,.completion-table td{white-space:nowrap;overflow-wrap:normal}</style>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table>'+details+'</body></html>';
       }
       function printExecutiveReport() {
         if(!portalData.loadedAt){setStatus('กรุณารอโหลดข้อมูลก่อนพิมพ์',true);return;}
@@ -868,7 +868,7 @@
         return [['คอมรับคืนทั้งหมด',report.comCount],['คอมไม่มีเลขครุภัณฑ์',report.comWithoutNumber],['จอรับคืนทั้งหมด',report.monitorCount],['จอไม่มีเลขครุภัณฑ์',report.monitorWithoutNumber],['UPS รับคืนทั้งหมด',report.upsCount],['UPS ไม่มีเลขครุภัณฑ์',report.upsWithoutNumber],['งานที่มีอุปกรณ์รับคืน / งานทั้งหมด',report.recorded+'/'+report.total]];
       }
       function returnAssetRules(report) {
-        return 'เลขครุภัณฑ์ซ้ำนับครั้งเดียว เครื่องที่ไม่มีเลขนับตามรายการ '+RETURN_ASSET_TYPES.map(function(type) { return type.label+': มีเลข '+report[type.key+'WithNumber']+' ไม่มีเลข '+report[type.key+'WithoutNumber']; }).join(' · ');
+        return 'เลขซ้ำนับครั้งเดียว รวมเครื่องที่ไม่มีเลข';
       }
       function renderReturnAssetDashboard() {
         const report=getReturnAssetReport();
@@ -882,7 +882,7 @@
         const html=completionReportHtml({total:report.total,completed:report.recorded,remaining:report.total-report.recorded,percent:report.total?Math.round(report.recorded/report.total*100):0,workComplete:0,updatedAt:report.updatedAt,areas:[],rows:[]});
         const start=html.indexOf('<body>'),end=html.indexOf('</body>');
         const kpis=returnAssetKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('');
-        return html.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>รายงานเลขครุภัณฑ์รับคืน</title>')+'<body><h1>รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที | ข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(report.updatedAt))+'</p><div class="summary">'+kpis+'</div><p>'+escapeHtml(returnAssetRules(report))+' เลขซ้ำต่างพื้นที่อาจทำให้ยอดรายพื้นที่รวมกันสูงกว่ายอดรวม</p><p>'+(report.duplicates.length ? 'พบเลขซ้ำ '+report.duplicates.length+' เลข: '+returnAssetDuplicateRows(report) : 'ไม่พบเลขครุภัณฑ์ซ้ำ')+'</p><h2>สรุปตามพื้นที่</h2><table><thead><tr>'+returnAssetAreaHeaders()+'</tr></thead><tbody>'+returnAssetAreaRows(report)+'</tbody></table><h2>รายการเครื่องที่รับคืน</h2><table><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ประเภทเครื่องเดิม</th><th>คอมเดิม / เลขครุภัณฑ์</th><th>จอเดิม / เลขครุภัณฑ์</th><th>UPS เดิม / เลขครุภัณฑ์</th></tr></thead><tbody>'+returnAssetMachineRows(report)+'</tbody></table>'+html.slice(end);
+        return html.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>รายงานเลขครุภัณฑ์รับคืน</title>')+'<body><h1>รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที | ข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(report.updatedAt))+'</p><div class="summary">'+kpis+'</div><p>'+escapeHtml(returnAssetRules(report))+'</p><p>'+(report.duplicates.length ? 'พบเลขซ้ำ '+report.duplicates.length+' เลข: '+returnAssetDuplicateRows(report) : 'ไม่พบเลขครุภัณฑ์ซ้ำ')+'</p><h2>สรุปตามพื้นที่</h2><table><thead><tr>'+returnAssetAreaHeaders()+'</tr></thead><tbody>'+returnAssetAreaRows(report)+'</tbody></table><h2>รายการเครื่องที่รับคืน</h2><table><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ประเภทเครื่องเดิม</th><th>คอมเดิม / เลขครุภัณฑ์</th><th>จอเดิม / เลขครุภัณฑ์</th><th>UPS เดิม / เลขครุภัณฑ์</th></tr></thead><tbody>'+returnAssetMachineRows(report)+'</tbody></table>'+html.slice(end);
       }
       function printReturnAssetReport() {
         if (!portalData.loadedAt) { setStatus('กรุณารอโหลดข้อมูลก่อนพิมพ์',true); return; }
@@ -943,7 +943,7 @@
         document.getElementById('completionMachineBody').innerHTML = completionMachineRows(report);
       }
       function completionReportHtml(report) {
-        return '<!doctype html><html lang="th"><head><meta charset="utf-8"><title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title><style>@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#202124;font-size:11px}h1{font-size:20px;text-align:center}h2{font-size:15px;margin-top:22px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.summary div{padding:10px;border:1px solid #c7d7eb}.summary strong{display:block;font-size:24px;color:#137333}table{width:100%;border-collapse:collapse;table-layout:auto}th,td{padding:5px;border:1px solid #777;text-align:left;white-space:nowrap;overflow-wrap:normal;font-size:10px}th{background:#edf4ff}thead{display:table-header-group}tr{break-inside:avoid}.complete{color:#137333;font-weight:bold}.note{color:#555}.progress{height:10px;background:#e5eaf0}.progress span{display:block;height:100%;background:#16834b;print-color-adjust:exact}</style></head><body><h1>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที | ข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(report.updatedAt))+'</p><div class="summary"><div>เครื่องทั้งหมด<strong>'+report.total+'</strong></div><div>ติดตั้งเสร็จ<strong>'+report.completed+'</strong></div><div>คงเหลือ<strong>'+report.remaining+'</strong></div><div>ความคืบหน้า<strong>'+report.percent+'%</strong></div></div><div class="progress"><span style="width:'+report.percent+'%"></span></div><p class="note">คงเหลือหมายถึงเครื่องที่ยังติดตั้งไม่เสร็จ</p><h2>สรุปตามตึก / ชั้น / หน่วยงาน</h2><table><thead><tr><th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>ทั้งหมด</th><th>ติดตั้งเสร็จ</th><th>คงเหลือ</th><th>ความคืบหน้า</th></tr></thead><tbody>'+completionAreaRows(report)+'</tbody></table><h2>รายการเครื่องที่ติดตั้งเสร็จ</h2><table><thead><tr><th>เลขงาน</th><th>สถานที่ติดตั้ง</th><th>รุ่นเครื่อง</th><th>S/N เครื่อง</th><th>เลข IP</th></tr></thead><tbody>'+completionMachineRows(report)+'</tbody></table></body></html>';
+        return '<!doctype html><html lang="th"><head><meta charset="utf-8"><title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title><style>@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#202124;font-size:11px}h1{font-size:20px;text-align:center}h2{font-size:15px;margin-top:22px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.summary div{padding:10px;border:1px solid #c7d7eb}.summary strong{display:block;font-size:24px;color:#137333}table{width:100%;border-collapse:collapse;table-layout:auto}th,td{padding:5px;border:1px solid #777;text-align:left;white-space:nowrap;overflow-wrap:normal;font-size:10px}th{background:#edf4ff}thead{display:table-header-group}tr{break-inside:avoid}.complete{color:#137333;font-weight:bold}.note{color:#555}.progress{height:10px;background:#e5eaf0}.progress span{display:block;height:100%;background:#16834b;print-color-adjust:exact}</style></head><body><h1>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที | ข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(report.updatedAt))+'</p><div class="summary"><div>เครื่องทั้งหมด<strong>'+report.total+'</strong></div><div>ติดตั้งเสร็จ<strong>'+report.completed+'</strong></div><div>คงเหลือ<strong>'+report.remaining+'</strong></div><div>ความคืบหน้า<strong>'+report.percent+'%</strong></div></div><div class="progress"><span style="width:'+report.percent+'%"></span></div><h2>สรุปตามตึก / ชั้น / หน่วยงาน</h2><table><thead><tr><th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>ทั้งหมด</th><th>ติดตั้งเสร็จ</th><th>คงเหลือ</th><th>ความคืบหน้า</th></tr></thead><tbody>'+completionAreaRows(report)+'</tbody></table><h2>รายการเครื่องที่ติดตั้งเสร็จ</h2><table><thead><tr><th>เลขงาน</th><th>สถานที่ติดตั้ง</th><th>รุ่นเครื่อง</th><th>S/N เครื่อง</th><th>เลข IP</th></tr></thead><tbody>'+completionMachineRows(report)+'</tbody></table></body></html>';
       }
       function printCompletionReport() {
         if (!portalData.loadedAt) { setStatus('กรุณารอโหลดข้อมูลล่าสุดก่อนพิมพ์รายงาน',true); return; }
