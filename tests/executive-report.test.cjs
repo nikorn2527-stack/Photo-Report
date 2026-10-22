@@ -65,7 +65,7 @@ test('executive view has four headline metrics and a compact print summary with 
  assert.equal(context.executiveKpis(report).length,4);const summary=context.executiveReportHtml(report),details=context.executiveReportHtml(report,true);
  assert.ok(summary.includes('คอมพิวเตอร์ 2 เครื่อง'));assert.ok(summary.includes('จอ 3 จอ'));assert.ok(!summary.includes('เลขครุภัณฑ์ซ้ำ'));assert.ok(!summary.includes('รับคืนเฉพาะจอ'));
  assert.ok(!summary.includes('PRIVATE-JOB-A'));assert.ok(details.includes('PRIVATE-JOB-A'));assert.ok(!details.includes('รายละเอียดประกอบการตรวจสอบ'));
- assert.equal((context.executiveHeaders().match(/<th>/g)||[]).length,13);
+ assert.equal((context.executiveHeaders().match(/<th>/g)||[]).length,14);
 });
 
 test('executive and submission figures use the reference completion report: 156 total, 126 completed, 30 remaining, 81%, 80 fully complete',()=>{
@@ -160,7 +160,7 @@ test('complete-unit filtering checks only after1; unknown or missing after1 on a
 
 test('unit tables show matching grand totals and weighted progress in screen, standalone print and photo bundles',()=>{
  const p=page(),assets=[{jobNo:'A1',department:'A',installStatus:'ติดตั้งเสร็จ',oldComSn:'C1',oldMonitorSn:'M1'},{jobNo:'A2',department:'A',installStatus:'รอดำเนินการ'},{jobNo:'B1',department:'B',installStatus:'ติดตั้งเสร็จ',oldComSn:'ไม่มีเลข',oldUpsSn:'U1'}],report=p.context.buildExecutiveReportData(assets,[]),footer=p.context.executiveDepartmentTotals(report);
- const values=Array.from(footer.matchAll(/<td(?: colspan="3")?>(.*?)<\/td>/g),m=>m[1]);assert.deepEqual(values,['รวม','3','2','1','67%','2','1','1','1','1','']);
+ const values=Array.from(footer.matchAll(/<td(?: colspan="3")?>(.*?)<\/td>/g),m=>m[1]);assert.deepEqual(values,['รวม','3','2','1','67%','2','1','1','1','1','','']);
  for(const html of [p.context.executiveReportHtml(report),p.context.executiveReportPartHtml(report,'units'),p.context.executiveSubmissionSummaryHtml(report,false)])assert.ok(html.includes('<tfoot>'+footer+'</tfoot>'));
  p.context.assets=assets;vm.runInContext('portalData={assetRows:assets,jobWorkRows:[]}',p.context);p.context.renderExecutiveDashboard();assert.equal(p.document.getElementById('executiveDepartmentTotals').innerHTML,footer);
 });

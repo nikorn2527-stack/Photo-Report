@@ -273,6 +273,29 @@
       @media (max-width:900px) { .cards{grid-template-columns:repeat(3,1fr)} .dashboard-grid,.issue-layout{grid-template-columns:1fr} .issue-kpis{grid-template-columns:repeat(2,1fr)} .document-grid{grid-template-columns:repeat(2,1fr)} }
       @media (max-width:640px) { body{padding:5px} .shell{padding:12px;min-height:calc(100vh - 10px)} .asset-table th:last-child, .asset-table td:last-child { width:252px; min-width:252px; } .asset-table td:last-child .action-row { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; } .brand{display:block} .brand-actions{display:grid;grid-template-columns:1fr;width:100%;margin-top:10px} .sheet-button,.photo-report-button{width:100%;margin-top:0} .cards{grid-template-columns:repeat(2,1fr)} .card-value{font-size:22px} .toolbar{display:grid;grid-template-columns:1fr 1fr} .search{grid-column:1 / -1;width:100%} .filter{width:100%;min-width:0} .button{width:100%} .document-grid{grid-template-columns:1fr} .form-grid{grid-template-columns:1fr 1fr;gap:8px} .field.full{grid-column:1 / -1} .work-summary{grid-template-columns:repeat(2,1fr)} .work-toolbar{display:grid;grid-template-columns:1fr 1fr} .work-search{grid-column:1 / -1;width:100%} .work-filter{width:100%;min-width:0} .work-print-backdrop{padding:6px} .work-print-shell{min-width:0} .work-print-toolbar{width:100%;max-width:none;align-items:stretch;flex-direction:column} .work-print-toolbar-actions{display:grid;grid-template-columns:1fr 1fr} .work-print-action{width:100%} .work-print-status{width:100%;max-width:none} }
       @media (max-width:380px) { .form-grid{grid-template-columns:1fr} .field.full{grid-column:auto} }
+
+      :root { --report-ink:#182e55; --report-line:#d9e1ec; --report-blue:#1765d9; }
+      .nav button.active{background:var(--report-blue);color:white}
+      .report-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:18px;padding:20px;background:#f7f9fc;border:1px solid var(--report-line);border-radius:9px;margin:18px 0}
+      .report-filters label{display:grid;gap:6px;color:var(--report-ink);font-weight:700;font-size:13px}
+      .report-filters select{width:100%;min-width:0}.report-filters button{align-self:end}
+      .report-layout{display:grid;grid-template-columns:225px minmax(0,1fr);gap:18px}
+      .report-catalogue{border:1px solid var(--report-line);border-radius:8px;overflow:hidden;align-self:start}
+      .report-catalogue button{display:block;width:100%;padding:17px 16px;border:0;border-left:4px solid transparent;text-align:left;background:white;color:var(--report-ink);font:inherit;cursor:pointer}
+      .report-catalogue button[aria-pressed=true]{background:#eaf2ff;border-left-color:var(--report-blue);color:var(--report-blue);font-weight:700}
+      .report-workspace{min-width:0;border:1px solid var(--report-line);border-radius:8px;padding:20px;color:var(--report-ink)}
+      .report-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.report-heading h3{margin:0;font-size:20px}.report-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+      .report-scope{padding:10px 12px;background:#f0f4f8;margin:16px 0;font-size:13px}
+      #reportCenterContent .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+      #reportCenterContent .summary div{border:1px solid var(--report-line);padding:12px;border-radius:6px;font-size:13px}
+      #reportCenterContent .summary strong{display:block;font-size:24px;margin-top:8px}
+      #reportCenterContent h1,#reportCenterContent>p:first-of-type{display:none}
+      #reportCenterContent h2{font-size:16px}#reportCenterContent{overflow-x:auto;font-size:12px}
+      #reportCenterContent table{width:100%;border-collapse:collapse}#reportCenterContent th,#reportCenterContent td{padding:7px;border:1px solid var(--report-line);white-space:nowrap;text-align:left}
+      #reportCenterContent th{background:#f1f5fa}#reportCenterContent tfoot{background:#e9f2ff;font-weight:700}
+      .report-photo-note{padding:35px 15px;background:#f7f9fc;line-height:1.8}
+      #dashboardView>.section-tabs,#dashboard-summary-panel,#dashboard-installation-panel,#dashboard-machines-panel{display:none!important}
+      @media(max-width:800px){.report-layout{grid-template-columns:1fr}.report-catalogue{display:flex;overflow-x:auto}.report-catalogue button{width:auto;flex:0 0 auto;border-left:0;border-bottom:3px solid transparent;padding:12px}.report-catalogue button[aria-pressed=true]{border-bottom-color:var(--report-blue)}.report-filters{grid-template-columns:1fr 1fr;gap:10px;padding:12px}.report-workspace{padding:12px}#reportCenterContent .summary{grid-template-columns:1fr 1fr}}
     </style>
   </head>
   <body>
@@ -295,14 +318,31 @@
               <button id="dashboardTab" class="active" type="button" onclick="showView('dashboard')">ภาพรวม</button>
               <button id="workTab" type="button" onclick="showView('work')">ติดตามงาน</button>
               <button id="assetTab" type="button" onclick="showView('asset')">ทะเบียนอุปกรณ์</button>
-          <button id="documentsTab" type="button" onclick="showView('documents')">เอกสารและพิมพ์</button>
+          <button id="reportsTab" type="button" onclick="showView('reports')">รายงาน</button>
+          <button id="documentsTab" type="button" onclick="showView('documents')">แบบฟอร์ม</button>
           <button id="planTab" type="button" onclick="showView('plan')">แผนการดำเนินงาน</button>
         </nav>
 
+        <section id="reportsView" class="view" hidden>
+          <h2 class="view-title">ศูนย์รายงาน</h2>
+          <div class="report-filters">
+            <label>ตึก<select id="reportBuilding" class="filter" onchange="changeReportFilter('building',this.value)"></select></label>
+            <label>ชั้น<select id="reportFloor" class="filter" onchange="changeReportFilter('floor',this.value)"></select></label>
+            <label>หน่วยงาน<select id="reportDepartment" class="filter" onchange="changeReportFilter('department',this.value)"></select></label>
+            <button type="button" class="button button-outline" onclick="resetReportFilters()">ล้างตัวกรอง</button>
+          </div>
+          <div class="report-layout">
+            <nav id="reportCatalogue" class="report-catalogue" aria-label="ประเภทรายงาน"></nav>
+            <section class="report-workspace">
+              <div class="report-heading"><h3 id="reportCenterTitle"></h3><div class="report-actions"><label for="reportLayout">รูปแบบ</label><select id="reportLayout" class="filter" onchange="renderReportCenter()"></select><button id="reportCsvButton" type="button" class="button button-outline" onclick="downloadCenterCsv()">CSV</button><button type="button" class="button button-primary" onclick="printCenterReport()">ตัวอย่าง / พิมพ์</button></div></div>
+              <div id="reportCenterScope" class="report-scope"></div><div id="reportCenterContent"></div>
+            </section>
+          </div>
+        </section>
         <section id="dashboardView" class="view">
-          <h2 class="view-title">ภาพรวมระบบ</h2>
+          <div class="completion-head"><h2 class="view-title">ภาพรวมระบบ</h2><button type="button" class="button button-outline" onclick="showView('reports')">เปิดรายงาน</button></div>
 
-          <div class="work-toolbar"><label for="dashboardDepartment">หน่วยงาน</label><select id="dashboardDepartment" class="filter" onchange="changeDashboardDepartment(this.value)"><option value="">ทุกหน่วยงาน</option></select></div>
+          <div id="dailyCompletionKpis" class="issue-kpis"></div><div class="work-toolbar"><label for="dashboardDepartment">หน่วยงาน</label><select id="dashboardDepartment" class="filter" onchange="changeDashboardDepartment(this.value)"><option value="">ทุกหน่วยงาน</option></select></div>
 <div class="section-tabs" role="tablist" aria-label="ภาพรวม" onkeydown="handleSectionTabKey(event,'dashboard')"><button type="button" role="tab" id="dashboard-summary-tab" aria-controls="dashboard-summary-panel" aria-selected="true" tabindex="0" onclick="showSectionTab('dashboard','summary')">สรุป</button><button type="button" role="tab" id="dashboard-installation-tab" aria-controls="dashboard-installation-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('dashboard','installation')">งานติดตั้ง</button><button type="button" role="tab" id="dashboard-machines-tab" aria-controls="dashboard-machines-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('dashboard','machines')">รายการเครื่อง</button><button type="button" role="tab" id="dashboard-equipment-tab" aria-controls="dashboard-equipment-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('dashboard','equipment')">อุปกรณ์</button></div>
 <section class="section-panel" role="tabpanel" id="dashboard-summary-panel" aria-labelledby="dashboard-summary-tab">          <section class="panel completion-dashboard" aria-labelledby="executiveTitle">
             <div class="completion-head"><div><h3 id="executiveTitle" class="panel-title">สรุปติดตั้งและรับคืนสำหรับผู้บริหาร</h3><p id="executiveMeta" class="view-note"></p></div><div class="executive-photo-actions"><button type="button" class="button button-primary" onclick="openExecutivePhotoReport(true)">ชุดเอกสารส่งผู้บริหาร</button><select id="executivePrintPart" class="filter" aria-label="เลือกตารางพิมพ์"><option value="summary">สรุป</option><option value="units">ตารางหน่วยงาน</option><option value="jobs">รายการรับคืนตามงาน</option></select><button type="button" class="button button-outline" onclick="printExecutiveReport()">พิมพ์ที่เลือก</button><button type="button" class="button button-outline" onclick="openExecutivePhotoReport()">รายงานภาพคอมรายหน่วยงาน</button></div></div>
@@ -377,7 +417,7 @@
         <section id="assetView" class="view" hidden>
           <h2 class="view-title">ทะเบียนอุปกรณ์</h2>
           <p class="view-note">ดูและแก้ไขข้อมูลอุปกรณ์</p>
-<div class="section-tabs" role="tablist" aria-label="ทะเบียนอุปกรณ์" onkeydown="handleSectionTabKey(event,'asset')"><button type="button" role="tab" id="asset-list-tab" aria-controls="asset-list-panel" aria-selected="true" tabindex="0" onclick="showSectionTab('asset','list')">รายการอุปกรณ์</button><button type="button" role="tab" id="asset-jobs-tab" aria-controls="asset-jobs-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('asset','jobs')">รับคืนตามงาน</button><button type="button" role="tab" id="asset-returns-tab" aria-controls="asset-returns-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('asset','returns')">สรุปรับคืน</button><button type="button" role="tab" id="asset-checks-tab" aria-controls="asset-checks-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('asset','checks')">ตรวจข้อมูล</button></div>
+<div class="section-tabs" role="tablist" aria-label="ทะเบียนอุปกรณ์" onkeydown="handleSectionTabKey(event,'asset')"><button type="button" role="tab" id="asset-list-tab" aria-controls="asset-list-panel" aria-selected="true" tabindex="0" onclick="showSectionTab('asset','list')">รายการอุปกรณ์</button><button type="button" role="tab" id="asset-jobs-tab" aria-controls="asset-jobs-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('asset','jobs')">รับคืนตามงาน</button><button type="button" role="tab" id="asset-returns-tab" aria-controls="asset-returns-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('asset','returns')">ตรวจเลขรับคืน</button><button type="button" role="tab" id="asset-checks-tab" aria-controls="asset-checks-panel" aria-selected="false" tabindex="-1" onclick="showSectionTab('asset','checks')">ตรวจข้อมูล</button></div>
 <section class="section-panel" role="tabpanel" id="asset-list-panel" aria-labelledby="asset-list-tab">          <div class="toolbar">
             <input id="assetSearch" class="search" type="search" placeholder="ค้นหา Job, รหัสชุด, สถานที่, รุ่น หรือ S/N" oninput="renderAssetTable()">
             <select id="statusFilter" class="filter" onchange="renderAssetTable()"><option value="">สถานะชุดทั้งหมด</option></select>
@@ -396,7 +436,7 @@
 <section class="section-panel" role="tabpanel" id="asset-jobs-panel" aria-labelledby="asset-jobs-tab" hidden><h4 class="panel-title">รายการรับคืนตามเลขงาน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th></tr></thead><tbody id="executiveReturnJobs"></tbody></table></div>
 </section>
 <section class="section-panel" role="tabpanel" id="asset-returns-panel" aria-labelledby="asset-returns-tab" hidden>          <section class="panel completion-dashboard" aria-labelledby="returnAssetTitle">
-            <div class="completion-head"><div><h3 id="returnAssetTitle" class="panel-title">รายงานเลขครุภัณฑ์เครื่องเดิมที่รับคืน</h3><p class="view-note">เลขซ้ำนับครั้งเดียว รวมเครื่องที่ไม่มีเลข</p></div><button type="button" class="button button-outline" onclick="printReturnAssetReport()">พิมพ์ / บันทึก PDF รับคืน</button></div>
+            <div class="completion-head"><div><h3 id="returnAssetTitle" class="panel-title">ตรวจเลขครุภัณฑ์รับคืน</h3><p class="view-note">เลขซ้ำนับครั้งเดียว รวมเครื่องที่ไม่มีเลข</p></div><button type="button" class="button button-outline" onclick="printReturnAssetReport()">พิมพ์ / บันทึก PDF รับคืน</button></div>
             <div id="returnAssetKpis" class="issue-kpis"></div><p id="returnAssetMeta" class="plan-note"></p><p id="returnAssetDuplicates" class="plan-note"></p>
             <div class="completion-tables"><div><h4 class="panel-title">สรุปตามพื้นที่</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>รายการทั้งหมด</th><th>คอมรับคืน</th><th>คอมไม่มีเลข</th><th>จอรับคืน</th><th>จอไม่มีเลข</th><th>UPS รับคืน</th><th>UPS ไม่มีเลข</th></tr></thead><tbody id="returnAssetAreaBody"></tbody></table></div></div><div><h4 class="panel-title">รายการอุปกรณ์รับคืน</h4><div class="table-wrap completion-table-scroll"><table class="completion-table"><thead><tr><th>เลขงาน</th><th>สถานที่</th><th>ประเภทเครื่องเดิม</th><th>เลขครุภัณฑ์คอมเดิม</th><th>เลขครุภัณฑ์จอเดิม</th><th>เลขครุภัณฑ์ UPS เดิม</th></tr></thead><tbody id="returnAssetMachineBody"></tbody></table></div></div></div>
           </section>
@@ -526,6 +566,7 @@
       window.addEventListener('load', loadPortal);
 
       function loadPortal() {
+        if(pendingAssetSaves.size){setStatus('กำลังบันทึกอยู่ กรุณารอสักครู่');return;}
         // Use the URL view only for the first load. Subsequent refreshes must keep
         // the tab that the user is working in (especially after saving an asset).
         const requestedView = portalLoaded ? currentView : INITIAL_VIEW;
@@ -541,7 +582,7 @@
           renderAssetFilters();
           renderAssetTable();
           renderDocuments();
-          showView(['dashboard', 'work', 'asset', 'documents', 'plan'].indexOf(requestedView) !== -1 ? requestedView : 'dashboard');
+          showView(['dashboard', 'work', 'asset', 'documents', 'plan','reports'].indexOf(requestedView) !== -1 ? requestedView : 'dashboard');
           portalLoaded = true;
           setStatus('');
         }).withFailureHandler(function(error) {
@@ -568,7 +609,9 @@
       }
       function showView(view) {
         currentView = view;
-        ['dashboard','work','asset','documents','plan'].forEach(function(name) {
+        if(view==='reports')renderReportCenter();
+        if(view==='dashboard')showSectionTab('dashboard','equipment');
+        ['dashboard','work','asset','documents','plan','reports'].forEach(function(name) {
           document.getElementById(name + 'View').hidden = name !== view;
           document.getElementById(name + 'Tab').classList.toggle('active', name === view);
         });
@@ -631,6 +674,7 @@
         dashboardRows.forEach(function(row) { const status=row.prepStatus||PREP_STATUS_OPTIONS[0];prepStatuses[status]=(prepStatuses[status]||0)+1; });
         const d={total:dashboardRows.length,deliveryCompleted:dashboardRows.filter(function(row) { return row.status==='ส่งมอบแล้ว'; }).length,prepStatuses:prepStatuses,upsBundle:dashboardRows.filter(function(row) { return row.deliverUps; }).length,expiring:dashboardRows.filter(function(row) { return row.alert==='เตือน: ใกล้หมดสัญญา'; }).length};
         renderExecutiveDashboard();
+        const daily=document.getElementById('dailyCompletionKpis');if(daily)daily.innerHTML=executiveKpis(getExecutiveReport()).map(function(item){return '<div class="metric"><div class="metric-label">'+item[0]+'</div><div class="metric-value">'+item[1]+'</div></div>';}).join('');
         const cards = [
           ['ส่งมอบแล้ว / ทั้งหมด', (d.deliveryCompleted || 0) + '/' + (d.total || 0), 'blue'],
           ['เตรียมเครื่อง: รับเข้าแล้ว', (d.prepStatuses && d.prepStatuses['รับเข้าแล้ว']) || 0, 'gray'],
@@ -661,6 +705,69 @@
         renderReturnAssetDashboard();
       }
 
+      const reportFilters={building:'',floor:'',department:''};
+      let reportCenterType='summary';
+      const REPORT_CATALOGUE=[['summary','สรุปติดตั้งและรับคืน'],['progress','ความคืบหน้าติดตั้ง'],['machines','เครื่องที่ติดตั้งเสร็จ'],['returns','รายการรับคืน'],['issues','งานติดปัญหา'],['photos','ภาพหลังติดตั้ง 1']];
+      function getReportAssetRows(){return (portalData.assetRows||[]).filter(function(row){return Object.keys(reportFilters).every(function(key){return !reportFilters[key]||String(row[key]||'').trim()===reportFilters[key];});}).slice().sort(compareReportLocation);}
+      function changeReportFilter(key,value){reportFilters[key]=value;if(key==='building'){reportFilters.floor='';reportFilters.department='';}if(key==='floor')reportFilters.department='';renderReportCenter();}
+      function resetReportFilters(){Object.keys(reportFilters).forEach(function(key){reportFilters[key]='';});renderReportCenter();}
+      function selectCenterReport(type){if(!REPORT_CATALOGUE.some(function(item){return item[0]===type;}))return;reportCenterType=type;document.getElementById('reportLayout').value='';renderReportCenter();}
+      function centerReportData(){return buildExecutiveReportData(getReportAssetRows(),portalData.jobWorkRows,portalData.loadedAt,[reportFilters.building,reportFilters.floor,reportFilters.department].filter(Boolean).join(' / '));}
+      function centerReportHtml(){
+        const rows=getReportAssetRows(),report=centerReportData(),part=document.getElementById('reportLayout').value;
+        if(reportCenterType==='summary')return part==='bundle'?executiveReportHtml(report,true):executiveReportPartHtml(report,part||'summary');
+        if(reportCenterType==='returns')return executiveReportPartHtml(report,part==='units'?'units':'jobs');
+        const completion=buildCompletionReportData(rows,portalData.jobWorkRows,portalData.loadedAt);
+        if(reportCenterType==='progress')return completionReportHtml(completion);
+        if(reportCenterType==='machines')return completedMachinesReportHtml(completion);
+        if(reportCenterType==='issues')return centerIssueReportHtml(rows);
+        return '';
+      }
+      function centerIssueReportHtml(rows){
+        const report=executiveReportHtml(buildExecutiveReportData(rows,[],portalData.loadedAt)),head=report.slice(0,report.indexOf('<body>')).replace('<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>','<title>งานติดปัญหา</title>');
+        const issues=rows.filter(function(row){return installationNeedsReason(row.installStatus);});
+        return head+'<body><h1>งานติดปัญหา</h1><p>'+escapeHtml(completionTimestamp(portalData.loadedAt))+'</p><table><thead><tr><th>เลขงาน</th><th>ตึก</th><th>ชั้น</th><th>หน่วยงาน</th><th>สถานะ</th><th>ปัญหา</th></tr></thead><tbody>'+ (issues.map(function(row){return '<tr>'+[row.jobNo,row.building,row.floor,row.department,row.installStatus,row.installReason].map(function(value){return '<td>'+reportTextCell(value)+'</td>';}).join('')+'</tr>';}).join('')||'<tr><td colspan="6">ไม่มีงานติดปัญหา</td></tr>')+'</tbody></table></body></html>';
+      }
+      function renderReportCenter(){
+        const keys=['building','floor','department'];keys.forEach(function(key,index){
+          const rows=(portalData.assetRows||[]).filter(function(row){return keys.slice(0,index).every(function(parent){return !reportFilters[parent]||String(row[parent]||'').trim()===reportFilters[parent];});});
+          const names=Array.from(new Set(rows.map(function(row){return String(row[key]||'').trim();}).filter(Boolean))).sort(function(a,b){return a.localeCompare(b,'th',{numeric:true});});
+          if(reportFilters[key]&&!names.includes(reportFilters[key]))reportFilters[key]='';
+          const select=document.getElementById('report'+key[0].toUpperCase()+key.slice(1));select.innerHTML='<option value="">ทั้งหมด</option>'+names.map(function(name){return '<option value="'+escapeHtml(name)+'">'+escapeHtml(name)+'</option>';}).join('');select.value=reportFilters[key];
+        });
+        document.getElementById('reportCatalogue').innerHTML=REPORT_CATALOGUE.map(function(item){return '<button type="button" aria-pressed="'+(item[0]===reportCenterType)+'" onclick="selectCenterReport(\''+item[0]+'\')">'+item[1]+'</button>';}).join('');
+        const title=reportCenterType==='summary'?'สรุปติดตั้งและรับคืนตามหน่วยงาน':REPORT_CATALOGUE.find(function(item){return item[0]===reportCenterType;})[1];
+        document.getElementById('reportCenterTitle').textContent=title;
+        const select=document.getElementById('reportLayout'),previous=select.value;
+        const layouts=reportCenterType==='summary'?[['summary','สรุป'],['units','ตารางหน่วยงาน'],['jobs','รายการตาม Job'],['bundle','สรุปพร้อมรายการ'],['photos','สรุปพร้อมภาพ']]:reportCenterType==='returns'?[['jobs','รายการตาม Job'],['units','ตารางหน่วยงาน']]:[['default',reportCenterType==='photos'?'4 รูปต่อหน้า A4':'รายงาน']];
+        select.innerHTML=layouts.map(function(item){return '<option value="'+item[0]+'">'+item[1]+'</option>';}).join('');select.value=layouts.some(function(item){return item[0]===previous;})?previous:layouts[0][0];select.disabled=layouts.length===1;
+        document.getElementById('reportCenterScope').textContent=[reportFilters.building,reportFilters.floor,reportFilters.department].filter(Boolean).join(' / ')||'ทุกหน่วยงาน';
+        document.getElementById('reportCsvButton').disabled=reportCenterType==='photos';
+        const content=document.getElementById('reportCenterContent');
+        if(reportCenterType==='photos'){content.innerHTML='<p class="report-photo-note">ภาพคอมช่องหลังติดตั้ง 1 · หน่วยงานละ 4 รูปต่อหน้า A4<br>แสดงเฉพาะหน่วยงานที่มีรูปเครื่องติดตั้งเสร็จครบ<br>กด “ตัวอย่าง / พิมพ์” เพื่อโหลดรูป</p>';return;}
+        const doc=new DOMParser().parseFromString(centerReportHtml(),'text/html');content.innerHTML=doc.body.innerHTML;
+      }
+      function printCenterReport(){if(pendingAssetSaves.size){setStatus('กรุณารอให้บันทึกสถานะเสร็จก่อนพิมพ์',true);return;}if(reportCenterType==='photos'||(reportCenterType==='summary'&&document.getElementById('reportLayout').value==='photos'))return openExecutivePhotoReport(reportCenterType==='summary',getReportAssetRows());return openReportPrintPreview(centerReportHtml(),document.getElementById('reportCenterTitle').textContent);}
+      function centerCsvRows(){
+        const report=centerReportData();
+        if((reportCenterType==='summary'&&document.getElementById('reportLayout').value!=='jobs')||(reportCenterType==='returns'&&document.getElementById('reportLayout').value==='units')){
+          const fields=['building','floor','department','total','completed','remaining','percent','com','aio','pc','monitor','ups','additional','testStatus'];
+          return [['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','Computer','AIO','PC','Monitor','UPS','จุดใหม่ / เพิ่มเครื่อง','ผลการทดสอบ']].concat(report.groups.map(function(row){return fields.map(function(key){return row[key]||'';});}),[['รวม','',''].concat(fields.slice(3).map(function(key){return report.totals[key]||'';}))]);
+        }
+        if(reportCenterType==='progress'){const completion=buildCompletionReportData(getReportAssetRows(),portalData.jobWorkRows,portalData.loadedAt),fields=['building','floor','department','total','completed','remaining','percent'];return [['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า']].concat(completion.areas.map(function(row){return fields.map(function(key){return row[key]||'';});}),[['รวม','','',completion.total||'',completion.completed||'',completion.remaining||'',completion.percent||'']]);}
+        let rows=getReportAssetRows();
+        if(reportCenterType==='machines')rows=rows.filter(function(row){return row.installStatus==='ติดตั้งเสร็จ';});
+        if(reportCenterType==='issues')rows=rows.filter(function(row){return installationNeedsReason(row.installStatus);});
+        const fields=(reportCenterType==='returns'||reportCenterType==='summary')?['jobNo','building','floor','department','oldComSn','oldMonitorSn','oldUpsSn']:reportCenterType==='machines'?['jobNo','building','floor','department','brand','aioSn','ipAddress']:['jobNo','building','floor','department','installStatus','installReason'];
+        const headers=(reportCenterType==='returns'||reportCenterType==='summary')?['เลขงาน','ตึก','ชั้น','หน่วยงาน','Computer','Monitor','UPS']:reportCenterType==='machines'?['เลขงาน','ตึก','ชั้น','หน่วยงาน','ยี่ห้อ','S/N AIO','IP']:['เลขงาน','ตึก','ชั้น','หน่วยงาน','ผลติดตั้ง','ปัญหา'];
+        return [headers].concat(rows.map(function(row){return fields.map(function(key){if(['oldComSn','oldMonitorSn','oldUpsSn'].includes(key)){const value=classifyReturnedAsset(row[key]);return !value.received?'':value.noNumber?'ไม่มีเลขครุภัณฑ์':value.number;}return row[key]||'';});}));
+      }
+      function downloadCenterCsv(){
+        if(pendingAssetSaves.size){setStatus('กรุณารอให้บันทึกสถานะเสร็จก่อนดาวน์โหลด',true);return;}
+        const csv='\ufeff'+centerCsvRows().map(function(row){return row.map(function(value){let text=String(value==null?'':value);if(/^[\s]*[=+@-]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
+        const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download='report-'+reportCenterType+'.csv';document.body.appendChild(link);link.click();link.remove();window.setTimeout(function(){URL.revokeObjectURL(url);},1000);
+      }
+
       let dashboardDepartment='';
       function departmentName(row) { return String(row.department || '').trim() || 'ไม่ระบุหน่วยงาน'; }
       function getDashboardAssetRows() {
@@ -675,6 +782,7 @@
         document.getElementById('executiveDepartment').innerHTML=select.innerHTML;document.getElementById('executiveDepartment').value=dashboardDepartment;
       }
       function changeDashboardDepartment(value) { dashboardDepartment=value;renderDashboard(); }
+      function getUnitTestStatus(rows){const count=rows.filter(function(row){return row.installStatus==='ติดตั้งเสร็จ';}).length;return !count?'':count===rows.length?'ผ่านการทดสอบ':'ผ่าน '+count+'/'+rows.length+' เครื่อง';}
       function executiveCounts(rows,workRows) {
         const completion=buildCompletionReportData(rows,[]);
         const result={total:completion.total,completed:completion.completed,remaining:completion.remaining,percent:completion.percent,issues:0,com:0,aio:0,pc:0,monitor:0,ups:0,comWithoutNumber:0,monitorWithoutNumber:0,upsWithoutNumber:0,additional:0,returnInfoMissing:0,monitorOnly:0};
@@ -699,7 +807,7 @@
           if(!classifyReturnedAsset(row.oldComSn).received&&classifyReturnedAsset(row.oldMonitorSn).received)returnNotes.push({jobNo:row.jobNo||'',department:name,kind:'รับคืนเฉพาะจอ — กรุณาตรวจสอบ',detail:'ระบุจอรับคืน แต่ไม่ได้ระบุคอมพิวเตอร์'});
           if (installationNeedsReason(row.installStatus)) attention.push({jobNo:row.jobNo||'',department:name,kind:row.installStatus,detail:row.installReason||'ยังไม่ระบุปัญหา'});
         });
-        const groups=Array.from(departments.entries()).map(function(entry) { return Object.assign({building:JSON.parse(entry[0])[0],floor:JSON.parse(entry[0])[1],department:JSON.parse(entry[0])[2]},executiveCounts(entry[1],workRows)); }).sort(compareReportLocation);
+        const groups=Array.from(departments.entries()).map(function(entry) { return Object.assign({building:JSON.parse(entry[0])[0],floor:JSON.parse(entry[0])[1],department:JSON.parse(entry[0])[2]},executiveCounts(entry[1],workRows),{testStatus:getUnitTestStatus(entry[1])}); }).sort(compareReportLocation);
         attention.sort(function(a,b) { return a.department.localeCompare(b.department,'th',{numeric:true})||a.jobNo.localeCompare(b.jobNo,'th',{numeric:true}); });
         const returns=buildReturnAssetReportData(rows);
         const duplicates=returns.duplicates.map(function(item) {
@@ -730,13 +838,13 @@
       function reportTextCell(value) { const text=String(value===null||value===undefined?'':value).trim().replace(/\s+/g,' ');return ['-','ไม่ระบุ','ไม่ระบุหน่วยงาน'].indexOf(text)!==-1?'':escapeHtml(text); }
       function reportCountCell(value,suffix) { return value===0||value===null||value===undefined?'':escapeHtml(value)+(suffix||''); }
       function compareReportLocation(a,b) { return ['building','floor','department'].map(function(key){return String(a[key]||'').localeCompare(String(b[key]||''),'th',{numeric:true});}).find(function(order){return order!==0;})||0; }
-      function executiveHeaders() { return ['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','Computer','AIO','PC','Monitor','UPS','จุดใหม่ / เพิ่มเครื่อง'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
+      function executiveHeaders() { return ['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า','Computer','AIO','PC','Monitor','UPS','จุดใหม่ / เพิ่มเครื่อง','ผลการทดสอบ'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
       function executiveDepartmentRows(report) {
-        return report.groups.map(function(row) { return '<tr><td>'+reportTextCell(row.building)+'</td><td>'+reportTextCell(row.floor)+'</td><td>'+reportTextCell(row.department)+'</td>'+['total','completed','remaining','percent','com','aio','pc','monitor','ups','additional'].map(function(key) { return '<td>'+reportCountCell(row[key],key==='percent'?'%':'')+'</td>'; }).join('')+'</tr>'; }).join('')||'<tr><td colspan="13" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
+        return report.groups.map(function(row) { return '<tr><td>'+reportTextCell(row.building)+'</td><td>'+reportTextCell(row.floor)+'</td><td>'+reportTextCell(row.department)+'</td>'+['total','completed','remaining','percent','com','aio','pc','monitor','ups','additional'].map(function(key) { return '<td>'+reportCountCell(row[key],key==='percent'?'%':'')+'</td>'; }).join('')+'<td>'+reportTextCell(row.testStatus)+'</td></tr>'; }).join('')||'<tr><td colspan="14" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
       }
       function executiveDepartmentTotals(report) {
         const totals=report.totals;
-        return '<tr><td colspan="3">รวม</td>'+['total','completed','remaining','percent','com','aio','pc','monitor','ups','additional'].map(function(key){return '<td>'+reportCountCell(totals[key],key==='percent'?'%':'')+'</td>';}).join('')+'</tr>';
+        return '<tr><td colspan="3">รวม</td>'+['total','completed','remaining','percent','com','aio','pc','monitor','ups','additional'].map(function(key){return '<td>'+reportCountCell(totals[key],key==='percent'?'%':'')+'</td>';}).join('')+'<td></td></tr>';
       }
       function executiveReturnJobHeaders() { return '<th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th>'; }
       function executiveReturnJobRows(report, operational) {
@@ -796,8 +904,26 @@
         const table=part==='units'?'<table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody><tfoot>'+executiveDepartmentTotals(report)+'</tfoot></table>':'<table><thead><tr>'+executiveReturnJobHeaders()+'</tr></thead><tbody>'+executiveReturnJobRows(report)+'</tbody></table>';
         return summary.slice(0,summary.indexOf('<body>'))+'<body><h1>'+title+'</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p>'+table+'</body></html>';
       }
-      let reportPrintRequest=0,reportPrintFocus=null;
+      let reportPrintRequest=0,reportPrintFocus=null,reportPrintResourceUrls=[];
+      function releaseReportPrintResources() {
+        reportPrintResourceUrls.forEach(function(url){URL.revokeObjectURL(url);});reportPrintResourceUrls=[];
+      }
+      function prepareReportPrintResources(html) {
+        if(!/src=["']data:image\//i.test(html))return html;
+        const doc=new DOMParser().parseFromString(html,'text/html'),resources=new Map();
+        doc.querySelectorAll('img').forEach(function(img){
+          const source=img.getAttribute('src')||'',match=source.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([a-zA-Z0-9+/=\s]+)$/);
+          if(!match)return;
+          if(!resources.has(source)){
+            const binary=atob(match[2].replace(/\s/g,'')),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+            const url=URL.createObjectURL(new Blob([bytes],{type:match[1]}));resources.set(source,url);reportPrintResourceUrls.push(url);
+          }
+          img.setAttribute('src',resources.get(source));img.setAttribute('loading','eager');
+        });
+        return '<!doctype html>'+doc.documentElement.outerHTML;
+      }
       function openReportPrintPreview(html,title) {
+        releaseReportPrintResources();
         const request=++reportPrintRequest,frame=document.getElementById('reportPrintFrame'),status=document.getElementById('reportPrintStatus'),button=document.getElementById('reportPrintButton');
         reportPrintFocus=document.activeElement;document.getElementById('reportPrintTitle').textContent=title||'ตัวอย่างก่อนพิมพ์';status.textContent='กำลังเตรียมเอกสาร A4';button.disabled=true;document.getElementById('reportPrintPreview').hidden=false;document.getElementById('reportPrintClose').focus();
         return new Promise(function(resolve){
@@ -810,7 +936,7 @@
               button.disabled=false;status.textContent='พร้อมพิมพ์ · กระดาษ A4';button.focus();resolve(true);
             }catch(error){status.textContent='เตรียมเอกสารไม่สำเร็จ: '+getErrorMessage(error);resolve(false);}
           };
-          frame.srcdoc=html;
+          try{frame.srcdoc=prepareReportPrintResources(html);}catch(error){releaseReportPrintResources();status.textContent='เตรียมรูปสำหรับพิมพ์ไม่สำเร็จ: '+getErrorMessage(error);resolve(false);}
         });
       }
       function printReportPreview() {
@@ -819,7 +945,7 @@
         catch(error){document.getElementById('reportPrintStatus').textContent='พิมพ์ไม่สำเร็จ: '+getErrorMessage(error);}
       }
       function closeReportPrintPreview() {
-        ++reportPrintRequest;document.getElementById('reportPrintPreview').hidden=true;const frame=document.getElementById('reportPrintFrame');frame.onload=null;frame.srcdoc='';if(reportPrintFocus&&reportPrintFocus.isConnected)reportPrintFocus.focus();
+        ++reportPrintRequest;document.getElementById('reportPrintPreview').hidden=true;const frame=document.getElementById('reportPrintFrame');frame.onload=null;frame.srcdoc='';releaseReportPrintResources();if(reportPrintFocus&&reportPrintFocus.isConnected)reportPrintFocus.focus();
       }
       function handleReportPrintKey(event) {
         if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeReportPrintPreview();}
@@ -855,17 +981,33 @@
       let executivePhotoLoadedImages=new Map();
       const executivePhotoCache=new Map();
       let executivePhotoCacheSize=0;
+      // สำเนาสำหรับรายงาน 4 รูปต่อ A4 ประมาณ 300 dpi ขึ้นไป ไม่แก้ไฟล์ต้นฉบับใน Drive
+      async function prepareExecutiveReportImage(source) {
+        if(!/^data:image\//i.test(source||''))return source;
+        const image=new Image();
+        await new Promise(function(resolve,reject){const timer=window.setTimeout(function(){image.onload=null;image.onerror=null;reject(new Error('เตรียมรูปนานเกินไป'));},30000);image.onload=function(){window.clearTimeout(timer);resolve();};image.onerror=function(){window.clearTimeout(timer);reject(new Error('เปิดไฟล์รูปไม่สำเร็จ'));};image.src=source;});
+        if(image.decode)await image.decode();
+        const width=image.naturalWidth,height=image.naturalHeight;if(!width||!height)throw new Error('ไฟล์รูปไม่มีขนาด');
+        const scale=Math.min(1,1600/Math.max(width,height),Math.sqrt(1200000/(width*height)));
+        if(scale===1&&source.length<512*1024)return source;
+        const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.floor(width*scale));canvas.height=Math.max(1,Math.floor(height*scale));
+        const ctx=canvas.getContext('2d');if(!ctx)throw new Error('เตรียมรูปสำหรับรายงานไม่สำเร็จ');
+        ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);
+        const result=canvas.toDataURL('image/jpeg',0.92);canvas.width=1;canvas.height=1;image.src='';return result;
+      }
       function executivePhotoApi(job,force) {
         const key=executivePhotoTime+'::'+job,generation=executivePhotoRequest;
         if(!force&&executivePhotoCache.has(key))return Promise.resolve(executivePhotoCache.get(key));
         if(force&&executivePhotoCache.has(key)){executivePhotoCacheSize-=executivePhotoCache.get(key).length;executivePhotoCache.delete(key);}
-        return new Promise(function(resolve,reject){google.script.run.withSuccessHandler(function(image){
+        return new Promise(function(resolve,reject){google.script.run.withSuccessHandler(async function(original){
+          try{const image=await prepareExecutiveReportImage(original);
           if(image&&generation===executivePhotoRequest&&image.length<=24*1024*1024){
             if(executivePhotoCache.has(key)){executivePhotoCacheSize-=executivePhotoCache.get(key).length;executivePhotoCache.delete(key);}
             while(executivePhotoCacheSize+image.length>24*1024*1024&&executivePhotoCache.size){const oldest=executivePhotoCache.keys().next().value;executivePhotoCacheSize-=executivePhotoCache.get(oldest).length;executivePhotoCache.delete(oldest);}
             executivePhotoCache.set(key,image);executivePhotoCacheSize+=image.length;
           }
           resolve(image);
+          }catch(error){reject(error);}
         }).withFailureHandler(reject).getExecutivePhotoImage(job);});
       }
       function changeExecutivePhotoDepartment(value) {
@@ -877,15 +1019,15 @@
         document.getElementById('executivePhotoTitle').textContent=(executivePhotoSubmission?'ชุดเอกสารส่งผู้บริหาร · ':'รายงานภาพคอมรายหน่วยงาน · ')+(value||'ทุกหน่วยงาน');
         return loadExecutivePhotoReport();
       }
-      function openExecutivePhotoReport(submission) {
+      function openExecutivePhotoReport(submission,sourceRows) {
         if(!portalData.loadedAt){setStatus('กรุณารอให้โหลดข้อมูลเสร็จก่อน',true);return;}
-        executivePhotoOnlyWithPhotos=!!document.getElementById('executivePhotosOnly').checked;executivePhotoWorkSnapshot=(portalData.jobWorkRows||[]).map(function(row){return Object.assign({},row);});
+        executivePhotoOnlyWithPhotos=!!sourceRows||!!document.getElementById('executivePhotosOnly').checked;executivePhotoWorkSnapshot=(portalData.jobWorkRows||[]).map(function(row){return Object.assign({},row);});
         document.getElementById('executivePhotoPrint').textContent=submission?'สรุปพร้อมรูปที่โหลดแล้ว':'พิมพ์รูปที่โหลดแล้ว';
         executivePhotoSubmission=!!submission;executivePhotoIncludeDetails=!!document.getElementById('executivePrintDetails').checked;
-        executivePhotoFocus=document.activeElement;executivePhotoAllSource=(portalData.assetRows||[]).map(function(row){return Object.assign({},row);});executivePhotoTime=portalData.loadedAt;
+        executivePhotoFocus=document.activeElement;executivePhotoAllSource=(sourceRows||portalData.assetRows||[]).map(function(row){return Object.assign({},row);});executivePhotoTime=portalData.loadedAt;
         const names=Array.from(new Set(executivePhotoAllSource.map(departmentName))).sort(function(a,b){return a.localeCompare(b,'th',{numeric:true});});
         document.getElementById('executivePhotoDepartment').innerHTML='<option value="">ทุกหน่วยงาน</option>'+names.map(function(name){return '<option value="'+escapeHtml(name)+'">'+escapeHtml(name)+'</option>';}).join('');
-        document.getElementById('executivePhotoModal').hidden=false;document.getElementById('executivePhotoBack').focus();return changeExecutivePhotoDepartment(dashboardDepartment);
+        document.getElementById('executivePhotoModal').hidden=false;document.getElementById('executivePhotoBack').focus();return changeExecutivePhotoDepartment(sourceRows?'':dashboardDepartment);
       }
       async function loadExecutivePhotoReport(force) {
         const request=++executivePhotoRequest;executivePhotoReady=false;executivePhotoLoadedImages=new Map();document.getElementById('executivePhotoPrint').disabled=executivePhotoOnlyWithPhotos||!(executivePhotoSubmission&&executivePhotoSnapshot&&executivePhotoSnapshot.totals.total);
@@ -1145,15 +1287,7 @@
         }).join('') : '<tr><td colspan="4" class="issue-empty">ไม่มีงานที่ต้องประสานในขณะนี้</td></tr>';
       }
 
-      function printIssueReport() {
-        const issues = getIssueRows();
-        const rows = issues.map(function(row, index) { return '<tr><td>' + (index + 1) + '</td><td>' + escapeHtml(row.jobNo) + '</td><td>' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join(' | ') || '-') + '</td><td>' + escapeHtml(row.installStatus) + '</td><td>' + escapeHtml(row.installReason || 'ยังไม่ระบุ') + '</td></tr>'; }).join('');
-        const popup = window.open('', '_blank', 'width=1100,height=800');
-        if (!popup) { setStatus('เบราว์เซอร์บล็อกหน้ารายงาน กรุณาอนุญาต Pop-up', true); return; }
-        const date = new Date().toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'});
-        popup.document.write('<!doctype html><html lang="th"><head><meta charset="utf-8"><title>รายงานปัญหาหน้างาน</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Arial,sans-serif;color:#202124}h1{text-align:center;font-size:20px}p{font-size:12px}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:7px;border:1px solid #777;text-align:left}th{background:#e8edf4}.summary{display:flex;gap:24px;margin:16px 0;font-weight:bold}</style></head><body><h1>รายงานสรุปปัญหาหน้างานติดตั้ง</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที | วันที่ออกรายงาน: ' + date + '</p><div class="summary"><span>งานทั้งหมด: ' + getDashboardAssetRows().length + '</span><span>ติดตั้งเสร็จ: ' + getDashboardAssetRows().filter(function(r){return r.installStatus === 'ติดตั้งเสร็จ';}).length + '</span><span>งานติดปัญหา: ' + issues.length + '</span></div><table><thead><tr><th>ลำดับ</th><th>เลขงาน</th><th>สถานที่</th><th>สถานะ</th><th>ปัญหา / สิ่งที่ต้องประสาน</th></tr></thead><tbody>' + (rows || '<tr><td colspan="5">ไม่มีงานติดปัญหา</td></tr>') + '</tbody></table></body></html>');
-        popup.document.close(); popup.onload = function() { popup.focus(); popup.print(); };
-      }
+      function printIssueReport() { return openReportPrintPreview(centerIssueReportHtml(getDashboardAssetRows()),'งานติดปัญหา'); }
 
       function percent(value, total) { return Math.min(100, Math.round((value || 0) / Math.max(1, total) * 100)); }
 
@@ -1182,11 +1316,64 @@
         body.innerHTML = '';
           if (!rows.length) { body.innerHTML = '<tr><td colspan="14" class="empty">ไม่พบข้อมูล</td></tr>'; return; }
         rows.forEach(function(row) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + reportTextCell(row.brand) + '</td><td>' + reportTextCell(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">Photo</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
+          const tr = buildAssetTableRow(row);
           body.appendChild(tr);
         });
       }
+
+      const pendingAssetSaves=new Map();
+      function buildAssetTableRow(asset) {
+        const pending=pendingAssetSaves.get(asset.rowNumber);
+        const row=Object.assign({},asset,pending?pending.patch:{});
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td class="job">' + escapeHtml(row.jobNo) + '</td><td class="location">' + escapeHtml([row.building,row.floor,row.department,row.room].filter(Boolean).join('  | ')) + '</td><td>' + reportTextCell(row.brand) + '</td><td>' + reportTextCell(row.aioSn) + '</td><td class="ip-cell">' + escapeHtml(row.ipAddress || '-') + '</td><td>' + assetStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverAio', 'ส่ง AIO') + '</td><td>' + upsBundleStatusControl(row) + '</td><td>' + accessoryStatusControl(row, 'deliverHub', 'ส่ง USB HUB') + '</td><td>' + accessoryStatusControl(row, 'deliverKbMouse', 'ส่ง KB + Mouse') + '</td><td>' + accessoryStatusControl(row, 'deliverAdapter', 'ส่ง Adapter') + '</td><td>' + prepStatusControl(row) + '</td><td>' + installStatusControl(row) + '</td><td><div class="action-row"><button class="small-button" type="button" onclick="openAssetDetailsByRow(' + row.rowNumber + ')">รายละเอียด</button><button class="small-button" type="button" onclick="openAssetEditorByRow(' + row.rowNumber + ')">แก้ไข</button><button class="small-button green" type="button" onclick="openJobReport(\'' + escapeJs(row.jobNo) + '\')">Photo</button><button class="small-button green" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'return\')">ใบรับ</button><button class="small-button orange" type="button" onclick="openFormForJob(\'' + escapeJs(row.jobNo) + '\', \'delivery\')">ใบส่ง</button></div></td>';
+        tr.dataset.rowNumber=String(row.rowNumber);
+        if(pending){
+          tr.querySelectorAll('input,select,button').forEach(function(control){control.disabled=true;});
+          const note=document.createElement('span');note.className='work-status-detail';note.textContent='กำลังบันทึก…';tr.cells[0].appendChild(note);
+        }
+        return tr;
+      }
+      function refreshAssetRow(rowNumber) {
+        const asset=(portalData.assetRows||[]).find(function(row){return row.rowNumber===rowNumber;});
+        const old=document.querySelector('#assetTableBody tr[data-row-number="'+rowNumber+'"]');
+        if(asset&&old)old.replaceWith(buildAssetTableRow(asset));
+      }
+      function syncSavedWorkRow(asset) {
+        const work=(portalData.jobWorkRows||[]).find(function(row){return row.rowNumber===asset.rowNumber;});
+        if(!work)return;
+        const accessoryMissing=[],blockers=[];
+        if(asset.status!=='ส่งมอบแล้ว')accessoryMissing.push('รอส่งมอบ');
+        if(!asset.deliverUps)accessoryMissing.push('UPS + สายไฟ');
+        if(!asset.deliverHub)accessoryMissing.push('USB HUB');
+        const blocked=installationNeedsReason(asset.installStatus);
+        if(blocked)blockers.push(asset.installStatus+(asset.installReason?': '+asset.installReason:''));
+        else if(asset.installStatus!=='ติดตั้งเสร็จ')blockers.push('รอผลการติดตั้ง');
+        if(asset.status!=='ส่งมอบแล้ว')blockers.push('อุปกรณ์ยังไม่ส่งมอบ');
+        if(!asset.deliverUps)blockers.push('ขาด UPS + สายไฟ');
+        if(!asset.deliverHub)blockers.push('ขาด USB HUB');
+        if((work.missingPrimary||[]).length)blockers.push('ขาดรูป '+work.missingPrimary.join(', '));
+        Object.assign(work,{prepStatus:asset.prepStatus,installStatus:asset.installStatus,installReason:asset.installReason,accessoryMissing:accessoryMissing,accessoryStatus:accessoryMissing.length?accessoryMissing.join(', '):'อุปกรณ์ครบ',blockers:blockers,workStatus:blockers.length?(blocked?'ติดปัญหา':'ยังไม่จบ'):'งานจบ',nextAction:blockers.length?blockers.join(' · '):'ไม่เหลือรายการค้าง'});
+      }
+      function saveAssetFields(rowNumber,patch,method,args) {
+        if(pendingAssetSaves.has(rowNumber))return;
+        const asset=(portalData.assetRows||[]).find(function(row){return row.rowNumber===rowNumber;});
+        if(!asset){setStatus('ไม่พบรายการที่ต้องการบันทึก',true);return;}
+        pendingAssetSaves.set(rowNumber,{patch:patch});refreshAssetRow(rowNumber);
+        setStatus('กำลังบันทึก '+asset.jobNo+'…');
+        function finish(error,result) {
+          pendingAssetSaves.delete(rowNumber);
+          if(!error){Object.assign(asset,patch);syncSavedWorkRow(asset);}
+          refreshAssetRow(rowNumber);
+          if(!error){renderDashboard();renderWorkTable();renderPlanView();if(currentView==='reports')renderReportCenter();}
+          setStatus(error?'บันทึก '+asset.jobNo+' ไม่สำเร็จ: '+getErrorMessage(error):'บันทึก '+asset.jobNo+' แล้ว'+(pendingAssetSaves.size?' · กำลังบันทึกอีก '+pendingAssetSaves.size+' รายการ':''),!!error,!error);
+        }
+        try {
+          const rpc=google.script.run.withSuccessHandler(function(result){finish(null,result);}).withFailureHandler(function(error){finish(error);});
+          rpc[method].apply(rpc,args);
+        }catch(error){finish(error);}
+      }
+      window.addEventListener('beforeunload',function(event){if(pendingAssetSaves.size){event.preventDefault();event.returnValue='';}});
 
       function statusBadge(value) {
         if (!value) return '<span class="status-badge">-</span>';
@@ -1214,13 +1401,12 @@
       }
 
       function handleAssetStatusChange(rowNumber, assetStatus) {
-        setStatus('กำลังบันทึกสถานะ...');
-        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตสถานะชุดไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetStatus(rowNumber, assetStatus);
+        saveAssetFields(rowNumber,{status:assetStatus},'updateAssetStatus',[rowNumber,assetStatus]);
       }
 
       function handleAssetAccessoryChange(rowNumber, fieldName, value) {
-        setStatus('กำลังบันทึกสถานะอุปกรณ์...');
-        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตสถานะอุปกรณ์ไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetAccessoryStatus(rowNumber, fieldName, value);
+        const patch={};patch[fieldName]=value;if(fieldName==='deliverUps')patch.deliverUpsCord=value;
+        saveAssetFields(rowNumber,patch,'updateAssetAccessoryStatus',[rowNumber,fieldName,value]);
       }
 
       function upsBundleStatusControl(row) {
@@ -1229,8 +1415,8 @@
       }
 
       function handleAssetAccessoryBundleChange(rowNumber, input) {
-        setStatus('กำลังบันทึกการส่งมอบ UPS และสายไฟ...');
-        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดต UPS + สายไฟ ไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetAccessoryBundleStatus(rowNumber, !!(input && input.checked));
+        const value=!!(input&&input.checked);
+        saveAssetFields(rowNumber,{deliverUps:value,deliverUpsCord:value},'updateAssetAccessoryBundleStatus',[rowNumber,value]);
       }
 
       function prepStatusControl(row) {
@@ -1311,14 +1497,15 @@
         return items;
       }
       function waitForWorkPrintImages(root) {
-        return Promise.all(Array.from(root.querySelectorAll('img')).map(function(img) {
-          if (img.complete) return img.naturalWidth ? Promise.resolve() : Promise.reject(new Error('รูปโหลดไม่สำเร็จ'));
-          return new Promise(function(resolve,reject) {
-            const timer=window.setTimeout(function() { cleanup();reject(new Error('โหลดรูปนานเกินไป กรุณาลองใหม่')); },30000);
-            function cleanup() { window.clearTimeout(timer);img.removeEventListener('load',loaded);img.removeEventListener('error',failed); }
-            function loaded() { cleanup();resolve(); } function failed() { cleanup();reject(new Error('รูปโหลดไม่สำเร็จ')); }
+        return Promise.all(Array.from(root.querySelectorAll('img')).map(async function(img) {
+          if(!img.complete)await new Promise(function(resolve,reject) {
+            const timer=window.setTimeout(function(){cleanup();reject(new Error('โหลดรูปนานเกินไป กรุณาลองใหม่'));},30000);
+            function cleanup(){window.clearTimeout(timer);img.removeEventListener('load',loaded);img.removeEventListener('error',failed);}
+            function loaded(){cleanup();resolve();}function failed(){cleanup();reject(new Error('รูปโหลดไม่สำเร็จ'));}
             img.addEventListener('load',loaded);img.addEventListener('error',failed);
           });
+          if(!img.naturalWidth)throw new Error('รูปโหลดไม่สำเร็จ');
+          if(typeof img.decode==='function')await img.decode();
         }));
       }
       function openWorkPrintPreview(jobNo,keepSequence) {
@@ -1445,8 +1632,7 @@
       }
 
       function updatePrepStatus(rowNumber, prepStatus, problemDetail) {
-        setStatus('กำลังอัปเดตสถานะเตรียมเครื่อง...');
-        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตสถานะไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetPreparationStatus(rowNumber, prepStatus, problemDetail || '');
+        saveAssetFields(rowNumber,{prepStatus:prepStatus,problemDetail:prepStatus==='ติดปัญหา'?(problemDetail||''):''},'updateAssetPreparationStatus',[rowNumber,prepStatus,problemDetail||'']);
       }
 
       function handleInstallStatusChange(rowNumber, installStatus) {
@@ -1462,8 +1648,7 @@
       }
 
       function updateInstallStatus(rowNumber, installStatus, installReason) {
-        setStatus('กำลังอัปเดตผลการติดตั้ง...');
-        google.script.run.withSuccessHandler(function(result) { setStatus(result.message, false, true); loadPortal(); }).withFailureHandler(function(error) { setStatus('อัปเดตผลการติดตั้งไม่สำเร็จ: ' + getErrorMessage(error), true); loadPortal(); }).updateAssetInstallationStatus(rowNumber, installStatus, installReason || '');
+        saveAssetFields(rowNumber,{installStatus:installStatus,installReason:installationNeedsReason(installStatus)?(installReason||''):''},'updateAssetInstallationStatus',[rowNumber,installStatus,installReason||'']);
       }
 
       function renderDocuments() {

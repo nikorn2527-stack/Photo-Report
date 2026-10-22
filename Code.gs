@@ -139,7 +139,7 @@ function doGet(e) {
     if (isPortal) {
       const template = HtmlService.createTemplateFromFile(fileName);
       const requestedView = String(params.view || '').trim().toLowerCase();
-      template.initialView = ['dashboard', 'work', 'asset', 'documents', 'plan'].indexOf(requestedView) !== -1 ? requestedView : 'dashboard';
+      template.initialView = ['dashboard', 'work', 'asset', 'documents', 'plan','reports'].indexOf(requestedView) !== -1 ? requestedView : 'dashboard';
       return template.evaluate().setTitle(title);
     }
     return createHtmlOutputFromProjectFile_(fileName, title);
