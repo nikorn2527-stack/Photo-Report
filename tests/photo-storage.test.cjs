@@ -231,3 +231,14 @@ test('retrying a persisted upload ID reuses the same original instead of creatin
   assert.equal([...h.files.values()][0].trashed,false);
   assert.equal(h.context.getJobProgress('JOB-001').filledCount,1);
 });
+
+test('executive photo RPC reads only indexed after1 and preserves its original bytes without progress or Drive searches', () => {
+  const h = harness();h.upload('JOB-001','after1',h.dataUrl([7,8,9]));h.upload('JOB-001','after2',h.dataUrl([1,2,3]));
+  h.context.getJobProgress=()=>{throw new Error('Unexpected progress scan');};h.context.getPhotoPreviewUrls_=()=>{throw new Error('Unexpected Drive search');};
+  assert.equal(h.context.getExecutivePhotoImage('JOB-001'),'data:image/jpeg;base64,BwgJ');assert.equal(h.report.images.length,0);assert.deepEqual(h.createdSheets,['Photo_File_Index']);
+});
+
+test('executive photos support legacy Drive files and never replace missing after1 with another photo type', () => {
+  const h=harness();h.upload('JOB-001','after1');h.upload('JOB-002','after2');h.sheets.delete('Photo_File_Index');
+  assert.equal(h.context.getExecutivePhotoImage('JOB-001'),'data:image/jpeg;base64,AQID');assert.equal(h.context.getExecutivePhotoImage('JOB-002'),'');assert.equal(h.context.getExecutivePhotoImage('MISSING'),'');assert.throws(()=>h.context.getExecutivePhotoImage(' '),/กรุณาเลือกงาน/);
+});

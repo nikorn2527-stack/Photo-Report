@@ -354,6 +354,18 @@ function getPhotoPrintImage(jobNo, imageType) {
   return 'data:' + blob.getContentType() + ';base64,' + Utilities.base64Encode(blob.getBytes());
 }
 
+/** ภาพคอมสำหรับรายงานผู้บริหาร อ่านจากทะเบียนไฟล์โดยตรง */
+function getExecutivePhotoImage(jobNo) {
+  const job = String(jobNo || '').trim();
+  if (!job) throw new Error('กรุณาเลือกงาน');
+  const record = getPhotoFileIndexRecord_(job);
+  let id = extractDriveFileId_(record.urls.after1);
+  if (!id) id = extractDriveFileId_(getPhotoPreviewUrls_(job, ['after1']).after1);
+  if (!id) return '';
+  const blob = DriveApp.getFileById(id).getBlob();
+  return 'data:' + blob.getContentType() + ';base64,' + Utilities.base64Encode(blob.getBytes());
+}
+
 function getPhotoFileIndexRecord_(jobNo) {
   const sheet = getSpreadsheet_().getSheetByName(CONFIG.PHOTO_FILE_INDEX_SHEET_NAME);
   const result = { exists: false, updatedAt: '', location: '', installDate: '', urls: {} };
