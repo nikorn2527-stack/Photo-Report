@@ -42,11 +42,11 @@ test('empty data displays zero progress and explicit empty states without NaN',(
   const {context}=portal(),report=context.buildCompletionReportData([],[]);
   assert.equal(report.percent,0);assert.equal(report.remaining,0);
   const html=context.completionReportHtml(report);
-  assert.ok(html.includes('ยังไม่มีเครื่องที่ติดตั้งเสร็จ'));assert.ok(!html.includes('NaN'));assert.ok(!html.includes('undefined'));
+  assert.ok(html.includes('ยังไม่มีข้อมูลเครื่อง'));assert.ok(context.completedMachinesReportHtml(report).includes('ยังไม่มีเครื่องที่ติดตั้งเสร็จ'));assert.ok(!html.includes('NaN'));assert.ok(!html.includes('undefined'));
 });
 test('machine rows escape spreadsheet HTML and do not disclose unrelated fields',()=>{
   const {context}=portal(),report=context.buildCompletionReportData([{rowNumber:4,jobNo:'<script>alert(1)</script>',department:'<img onerror=bad>',installStatus:'ติดตั้งเสร็จ',windowsKey:'DO-NOT-EXPORT'}],[]);
-  const html=context.completionReportHtml(report);
+  const html=context.completedMachinesReportHtml(report);
   assert.ok(html.includes('&lt;script&gt;'));assert.ok(!html.includes('<script>'));assert.ok(!html.includes('<img onerror'));
   assert.ok(!html.includes('DO-NOT-EXPORT'));
 });
@@ -60,19 +60,13 @@ test('dashboard and printable report use the same totals and the snapshot time i
   assert.ok(context.completionTimestamp(report.updatedAt).includes('07:00'));
   assert.ok(context.completionReportHtml(report).includes('40%'));
 });
-test('printing requires a loaded snapshot and handles blocked popups',()=>{
-  const {context,window,document}=portal();let opened=0;
-  window.open=()=>{opened++;return null;};context.printCompletionReport();assert.equal(opened,0);
-  vm.runInContext("portalData.loadedAt='2026-10-21T00:00:00Z'",context);
-  context.printCompletionReport();assert.equal(opened,1);assert.ok(document.getElementById('portalStatus').textContent.includes('Pop-up'));
+test('each report requires loaded data and opens the shared inline print preview',async()=>{
+ const {context}=portal();let opened=0;context.openReportPrintPreview=()=>{opened++;return Promise.resolve(true);};context.printCompletionReport();context.printCompletedMachinesReport();assert.equal(opened,0);
+ context.rows=fixture();vm.runInContext("portalData={assetRows:rows,jobWorkRows:[],loadedAt:'2026-10-21T00:00:00Z'}",context);await context.printCompletionReport();await context.printCompletedMachinesReport();assert.equal(opened,2);
 });
-test('print action includes every completed machine and waits for fonts before printing',async()=>{
-  const {context,window}=portal();let contents='',printed=0,ready;
-  const fonts=new Promise(resolve=>{ready=resolve;});
-  const popup={closed:false,opener:{},document:{fonts:{ready:fonts},open(){},write(html){contents=html;},close(){}},focus(){},print(){printed++;}};
-  window.open=()=>popup;context.rows=fixture();
-  vm.runInContext("portalData={assetRows:rows,jobWorkRows:[],loadedAt:'2026-10-21T00:00:00Z'}",context);
-  context.printCompletionReport();assert.equal(printed,0);assert.equal(popup.opener,null);
-  assert.ok(contents.includes('JOB-2'));assert.ok(contents.includes('JOB-10'));assert.ok(!contents.includes('JOB-3'));
-  ready();await new Promise(resolve=>setImmediate(resolve));assert.equal(printed,1);
+test('progress and completed-machine printouts contain only their own topic, with identical completion counts',async()=>{
+ const {context}=portal();const previews=[];context.openReportPrintPreview=(html,title)=>{previews.push({html,title});return Promise.resolve(true);};context.rows=fixture();vm.runInContext("portalData={assetRows:rows,jobWorkRows:[],loadedAt:'2026-10-21T00:00:00Z'}",context);
+ await context.printCompletionReport();await context.printCompletedMachinesReport();const [progress,machines]=previews;
+ assert.equal(progress.title,'รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ');assert.ok(progress.html.includes('ความคืบหน้า'));assert.ok(progress.html.includes('40%'));assert.ok(!progress.html.includes('JOB-2'));assert.ok(!progress.html.includes('รายการเครื่องที่ติดตั้งเสร็จ'));assert.equal((progress.html.match(/<table/g)||[]).length,1);
+ assert.equal(machines.title,'รายการเครื่องที่ติดตั้งเสร็จ');assert.ok(machines.html.includes('ติดตั้งเสร็จ 2 เครื่อง'));assert.ok(machines.html.includes('JOB-2'));assert.ok(machines.html.includes('JOB-10'));assert.ok(!machines.html.includes('JOB-3'));assert.ok(!machines.html.includes('ความคืบหน้า'));assert.ok(!machines.html.includes('คงเหลือ'));assert.equal((machines.html.match(/<table/g)||[]).length,1);
 });
