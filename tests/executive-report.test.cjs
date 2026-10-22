@@ -156,3 +156,11 @@ test('complete-unit filtering checks only after1; unknown or missing after1 on a
  const {context}=page(),rows=[{jobNo:'A1',department:'A',installStatus:'ติดตั้งเสร็จ'},{jobNo:'A2',department:' A ',installStatus:'ติดตั้งเสร็จ'},{jobNo:'B1',department:'B',installStatus:'ติดตั้งเสร็จ'},{jobNo:'B2',department:'B',installStatus:'รอดำเนินการ'}];
  const work=[{jobNo:'A1',hasAfterPhoto:true,primaryPhotoComplete:true},{jobNo:'A2',hasAfterPhoto:false,primaryPhotoComplete:false,totalPhotoCount:8},{jobNo:'B1',hasAfterPhoto:true,primaryPhotoComplete:false,totalPhotoCount:1,missingPrimary:['ชื่อหน่วยงาน','ก่อนติดตั้ง']}];assert.deepEqual(Array.from(context.filterExecutivePhotoDepartments(rows,work),r=>r.jobNo),['B1','B2']);assert.equal(context.filterExecutivePhotoDepartments(rows,[]).length,0);
 });
+
+
+test('unit tables show matching grand totals and weighted progress in screen, standalone print and photo bundles',()=>{
+ const p=page(),assets=[{jobNo:'A1',department:'A',installStatus:'ติดตั้งเสร็จ',oldComSn:'C1',oldMonitorSn:'M1'},{jobNo:'A2',department:'A',installStatus:'รอดำเนินการ'},{jobNo:'B1',department:'B',installStatus:'ติดตั้งเสร็จ',oldComSn:'ไม่มีเลข',oldUpsSn:'U1'}],report=p.context.buildExecutiveReportData(assets,[]),footer=p.context.executiveDepartmentTotals(report);
+ const values=Array.from(footer.matchAll(/<td(?: colspan="3")?>(.*?)<\/td>/g),m=>m[1]);assert.deepEqual(values,['รวม','3','2','1','67%','2','1','1','1','1','']);
+ for(const html of [p.context.executiveReportHtml(report),p.context.executiveReportPartHtml(report,'units'),p.context.executiveSubmissionSummaryHtml(report,false)])assert.ok(html.includes('<tfoot>'+footer+'</tfoot>'));
+ p.context.assets=assets;vm.runInContext('portalData={assetRows:assets,jobWorkRows:[]}',p.context);p.context.renderExecutiveDashboard();assert.equal(p.document.getElementById('executiveDepartmentTotals').innerHTML,footer);
+});

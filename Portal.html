@@ -69,6 +69,7 @@
       .report-print-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
       .report-print-tools p{margin:4px 0;font-size:12px;color:var(--muted)}
       .report-print-preview iframe{display:block;width:100%;height:calc(100dvh - 130px);min-height:360px;border:1px solid var(--border);background:#fff}
+      .executive-unit-table tfoot{display:table-row-group;font-weight:700;background:#edf4ff;print-color-adjust:exact}
       .executive-photo-actions { display:flex; flex-wrap:wrap; gap:8px; }
       .executive-photo-page[hidden],.executive-photo-modal[hidden] { display:none!important; }
       .executive-photo-modal { position:fixed; inset:0; z-index:1200; overflow:auto; background:#e5e9ef; padding:12px; }
@@ -310,7 +311,7 @@
             <div id="executiveKpis" class="issue-kpis"></div>
             <div id="executiveBrief"></div>
 
-            <div class="table-wrap completion-table-scroll"><table class="completion-table executive-unit-table"><thead><tr id="executiveHeaders"></tr></thead><tbody id="executiveDepartmentBody"></tbody></table></div>
+            <div class="table-wrap completion-table-scroll"><table class="completion-table executive-unit-table"><thead><tr id="executiveHeaders"></tr></thead><tbody id="executiveDepartmentBody"></tbody><tfoot id="executiveDepartmentTotals"></tfoot></table></div>
             <label class="plan-note" style="display:block;margin-top:10px"><input id="executivePrintDetails" type="checkbox"> แนบรายการรับคืนในชุดเอกสาร</label>
           </section>
 </section>
@@ -728,6 +729,10 @@
       function executiveDepartmentRows(report) {
         return report.groups.map(function(row) { return '<tr><td>'+reportTextCell(row.building)+'</td><td>'+reportTextCell(row.floor)+'</td><td>'+reportTextCell(row.department)+'</td>'+['total','completed','remaining','percent','com','aio','pc','monitor','ups','additional'].map(function(key) { return '<td>'+reportCountCell(row[key],key==='percent'?'%':'')+'</td>'; }).join('')+'</tr>'; }).join('')||'<tr><td colspan="13" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
       }
+      function executiveDepartmentTotals(report) {
+        const totals=report.totals;
+        return '<tr><td colspan="3">รวม</td>'+['total','completed','remaining','percent','com','aio','pc','monitor','ups','additional'].map(function(key){return '<td>'+reportCountCell(totals[key],key==='percent'?'%':'')+'</td>';}).join('')+'</tr>';
+      }
       function executiveReturnJobHeaders() { return '<th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th>'; }
       function executiveReturnJobRows(report, operational) {
         return report.returnJobs.map(function(row) {
@@ -772,18 +777,18 @@
         document.getElementById('executiveReturnJobs').innerHTML=executiveReturnJobRows(checks,true);
         document.getElementById('executiveDuplicateNotes').innerHTML=executiveDuplicateNotesHtml(checks);
         document.getElementById('executiveReturnNotes').innerHTML=executiveReturnNotesHtml(checks,false);
-        document.getElementById('executiveHeaders').innerHTML=executiveHeaders();document.getElementById('executiveDepartmentBody').innerHTML=executiveDepartmentRows(report);document.getElementById('executiveAttentionBody').innerHTML=executiveAttentionRows(checks,false);
+        document.getElementById('executiveHeaders').innerHTML=executiveHeaders();document.getElementById('executiveDepartmentBody').innerHTML=executiveDepartmentRows(report);document.getElementById('executiveDepartmentTotals').innerHTML=executiveDepartmentTotals(report);document.getElementById('executiveAttentionBody').innerHTML=executiveAttentionRows(checks,false);
       }
       function executiveReportHtml(report,includeDetails) {
         const base=completionReportHtml({total:0,completed:0,remaining:0,percent:0,workComplete:0,areas:[],rows:[]}),start=base.indexOf('<body>');
         const details=includeDetails?'<section style="break-before:page"><h2>รายการรับคืนตามเลขงาน</h2><table><thead><tr>'+executiveReturnJobHeaders()+'</tr></thead><tbody>'+executiveReturnJobRows(report)+'</tbody></table></section>':'';
-        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>').replace('</style>','h1{font-size:16px;margin:0 0 6px}h2{font-size:12px;margin:8px 0 4px}body{margin:0;font-size:10px;line-height:1.2}p{margin:4px 0}.summary{margin:8px 0;gap:6px}.summary div{padding:5px}.summary strong{font-size:18px}table.executive-unit-table{table-layout:auto}table.executive-unit-table th,table.executive-unit-table td{padding:2px 4px;white-space:nowrap;overflow-wrap:normal;font-size:10px}.completion-table th,.completion-table td{white-space:nowrap;overflow-wrap:normal}</style>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table>'+details+'</body></html>';
+        return base.slice(0,start).replace('<title>รายงานความคืบหน้าเครื่องที่ติดตั้งเสร็จ</title>','<title>สรุปติดตั้งและรับคืนตามหน่วยงาน</title>').replace('</style>','tfoot{display:table-row-group;font-weight:bold;background:#edf4ff;print-color-adjust:exact}h1{font-size:16px;margin:0 0 6px}h2{font-size:12px;margin:8px 0 4px}body{margin:0;font-size:10px;line-height:1.2}p{margin:4px 0}.summary{margin:8px 0;gap:6px}.summary div{padding:5px}.summary strong{font-size:18px}table.executive-unit-table{table-layout:auto}table.executive-unit-table th,table.executive-unit-table td{padding:2px 4px;white-space:nowrap;overflow-wrap:normal;font-size:10px}.completion-table th,.completion-table td{white-space:nowrap;overflow-wrap:normal}</style>')+'<body><h1>สรุปติดตั้งและรับคืนตามหน่วยงาน</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p><div class="summary">'+executiveKpis(report).map(function(item) { return '<div>'+item[0]+'<strong>'+item[1]+'</strong></div>'; }).join('')+'</div>'+executiveBriefHtml(report)+'<h2>สรุปตามหน่วยงาน</h2><table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody><tfoot>'+executiveDepartmentTotals(report)+'</tfoot></table>'+details+'</body></html>';
       }
       function executiveReportPartHtml(report,part) {
         const summary=executiveReportHtml(report,false);
         if(part!=='units'&&part!=='jobs')return summary;
         const title=part==='units'?'สรุปติดตั้งและรับคืนตามหน่วยงาน':'รายการรับคืนตามงาน';
-        const table=part==='units'?'<table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody></table>':'<table><thead><tr>'+executiveReturnJobHeaders()+'</tr></thead><tbody>'+executiveReturnJobRows(report)+'</tbody></table>';
+        const table=part==='units'?'<table class="executive-unit-table"><thead><tr>'+executiveHeaders()+'</tr></thead><tbody>'+executiveDepartmentRows(report)+'</tbody><tfoot>'+executiveDepartmentTotals(report)+'</tfoot></table>':'<table><thead><tr>'+executiveReturnJobHeaders()+'</tr></thead><tbody>'+executiveReturnJobRows(report)+'</tbody></table>';
         return summary.slice(0,summary.indexOf('<body>'))+'<body><h1>'+title+'</h1><p>ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</p><p>'+escapeHtml(executiveNote(report))+'</p>'+table+'</body></html>';
       }
       let reportPrintRequest=0,reportPrintFocus=null;
