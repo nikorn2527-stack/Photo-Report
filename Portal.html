@@ -85,6 +85,20 @@
       .executive-photo-job h3 { margin:0 0 4px; font-size:14px; overflow-wrap:anywhere; }
       .executive-photo-frame { height:70mm; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f7f9fc; border:1px solid #e1e5eb; }
       .executive-photo-frame img { width:100%; height:100%; object-fit:contain; }
+      .executive-photo-form{display:flex;flex-direction:column;min-height:270mm;color:#202124;font-family:Arial,sans-serif}
+      .photo-form-header{text-align:center;border-bottom:2px solid #263c59;padding-bottom:4mm;margin-bottom:4mm}
+      .photo-form-company{font-size:11pt;font-weight:bold}.executive-photo-form .photo-form-header h2{font-size:14pt;margin:2mm 0 0}
+      .photo-form-meta{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #59636e;border-left:1px solid #59636e;margin-bottom:4mm;font-size:10pt}
+      .photo-form-meta>div{padding:2mm;border-right:1px solid #59636e;border-bottom:1px solid #59636e;overflow-wrap:anywhere}
+      .photo-form-meta .photo-form-wide{grid-column:1/-1}
+      .executive-photo-form .executive-photo-grid{gap:4mm}
+      .executive-photo-form .executive-photo-job{border:1px solid #59636e;padding:2mm}
+      .executive-photo-form .executive-photo-job h3{font-size:10pt;padding-bottom:1.5mm;margin:0 0 1.5mm;border-bottom:1px solid #cbd2db}
+      .executive-photo-form .executive-photo-frame{height:65mm;background:white;border:0}
+      .photo-form-item-meta{font-size:9pt;line-height:1.35;margin:1mm 0;overflow-wrap:anywhere}
+      .photo-form-signoff{margin-top:auto;padding-top:8mm}
+      .photo-form-signoff .report-signoff{margin-top:0!important}
+      .photo-form-purpose{font-size:9pt;margin:3mm 0 0;color:#444}
       .executive-photo-empty { font-size:12px; color:#6b7280; text-align:center; }
       @media(max-width:600px) { .executive-photo-modal{padding:6px}.executive-photo-page{padding:12px}.executive-photo-grid{grid-template-columns:1fr}.executive-photo-frame{height:60mm}.executive-photo-actions{width:100%} }
       .completion-dashboard { margin-top:14px; }
@@ -977,7 +991,13 @@
       }
       function executivePhotoJobHtml(row,image) {
         const photo=image?'<img src="'+escapeHtml(image)+'" alt="'+escapeHtml(row.jobNo+' หลังติดตั้ง 1')+'">':'<span class="executive-photo-empty">ยังไม่มีภาพหลังติดตั้ง 1</span>';
-        return '<h3>'+escapeHtml(row.jobNo)+'</h3><p class="executive-photo-page-note">'+escapeHtml([row.building,row.floor?'ชั้น '+row.floor:'',row.room].filter(Boolean).join(' | '))+'</p><div class="executive-photo-frame">'+photo+'</div>';
+        return '<h3>เลขงาน: '+escapeHtml(row.jobNo)+'</h3><div class="executive-photo-frame">'+photo+'</div><p class="photo-form-item-meta">สถานที่: '+escapeHtml([row.building,row.floor?'ชั้น '+row.floor:'',row.room].filter(Boolean).join(' | '))+'</p><p class="photo-form-item-meta">S/N เครื่องติดตั้ง: '+reportTextCell(row.aioSn)+'</p>';
+      }
+      function executivePhotoFormBody(page,index,total,body,noteId) {
+        const contracts=Array.from(new Set(page.jobs.map(function(row){return String(row.contractNo||'').trim();}).filter(function(value){return value&&value!=='-';}))).join(', ');
+        return '<header class="photo-form-header"><div class="photo-form-company">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที</div><h2>รายงานภาพเครื่องที่ติดตั้งเสร็จ</h2></header>'+
+          '<section class="photo-form-meta"><div class="photo-form-wide"><strong>หน่วยงาน:</strong> '+reportTextCell(page.department)+'</div><div><strong>เลขที่สัญญา:</strong> '+escapeHtml(contracts)+'</div><div><strong>ข้อมูล ณ วันที่:</strong> '+escapeHtml(completionTimestamp(executivePhotoTime))+'</div><div><strong>เครื่องติดตั้งเสร็จในหน่วยงาน:</strong> '+page.departmentJobs+' เครื่อง</div><div><strong>ผลการทดสอบ:</strong> ผ่านการทดสอบ</div></section>'+
+          '<p'+(noteId?' id="'+noteId+'"':'')+' class="executive-photo-page-note">หลังติดตั้งช่อง 1 · '+page.jobs.length+' เครื่องในหน้านี้ · หน้าภาพ '+(index+1)+'/'+total+'</p><div class="executive-photo-grid">'+body+'</div><p class="photo-form-purpose">ภาพประกอบการติดตั้งคอมพิวเตอร์ แยกตามเลขงาน</p><footer class="photo-form-signoff">'+reportSignoffHtml()+'</footer>';
       }
       let executivePhotoLoadedImages=new Map();
       const executivePhotoCache=new Map();
@@ -1036,7 +1056,7 @@
         const summary=executivePhotoSubmission?executiveSubmissionSummaryHtml(executivePhotoSnapshot,executivePhotoIncludeDetails):'';
         root.innerHTML='<div id="executivePhotoSummary">'+summary+'</div>'+pages.map(function(page,pageIndex) {
           const body=page.jobs.map(function(row){const index=jobs.length;jobs.push(row);return '<div class="executive-photo-job" id="executivePhotoJob'+index+'">กำลังโหลด '+escapeHtml(row.jobNo)+'...</div>';}).join('');
-          return '<article id="executivePhotoPage'+pageIndex+'" class="executive-photo-page"'+(executivePhotoOnlyWithPhotos?' hidden':'')+'><h2>ภาพเครื่องที่ติดตั้งเสร็จ · '+escapeHtml(page.department)+'</h2><p id="executivePhotoPageNote'+pageIndex+'" class="executive-photo-page-note">ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที · หลังติดตั้ง 1 · '+page.departmentJobs+' เครื่องในหน่วยงาน · หน้า '+(pageIndex+1)+'/'+pages.length+'</p><p class="executive-photo-page-note">ข้อมูลล่าสุด: '+escapeHtml(completionTimestamp(executivePhotoTime))+'</p><div class="executive-photo-grid">'+body+'</div></article>';
+          return '<article id="executivePhotoPage'+pageIndex+'" class="executive-photo-page executive-photo-form"'+(executivePhotoOnlyWithPhotos?' hidden':'')+'>'+executivePhotoFormBody(page,pageIndex,pages.length,body,'executivePhotoPageNote'+pageIndex)+'</article>';
         }).join('');
         if(!jobs.length&&executivePhotoOnlyWithPhotos){root.innerHTML=summary+'<article class="executive-photo-page"><p>ยังไม่มีหน่วยงานที่รูปครบ</p></article>';document.getElementById('executiveSummaryPrint').disabled=!executivePhotoSnapshot.totals.total;status.textContent='ยังไม่มีรูปแนบ · พิมพ์สรุปได้';return;}
         if(!jobs.length){executivePhotoReady=!!summary&&executivePhotoSnapshot.totals.total>0;root.innerHTML=summary||'<article class="executive-photo-page"><p>ยังไม่มี Job ติดตั้งเสร็จในหน่วยงานที่เลือก</p></article>';document.getElementById('executivePhotoPrint').disabled=!executivePhotoReady;status.textContent=executivePhotoReady?'ยังไม่มีภาพเครื่องติดตั้งเสร็จ พิมพ์ได้เฉพาะรายงานสรุป':'ไม่มีรายการสำหรับพิมพ์';return;}
@@ -1077,8 +1097,9 @@
       }
       function executivePhotoPrintHtml(content,submission) {
         const summary=executiveReportHtml({totals:{total:0,completed:0,remaining:0,percent:0,com:0,monitor:0,ups:0,additional:0,comWithoutNumber:0,monitorWithoutNumber:0,upsWithoutNumber:0},groups:[],returnJobs:[],department:'ทุกหน่วยงาน',updatedAt:''},false);
+        const formStyles='      .executive-photo-form{display:flex;flex-direction:column;min-height:270mm;color:#202124;font-family:Arial,sans-serif}\n      .photo-form-header{text-align:center;border-bottom:2px solid #263c59;padding-bottom:4mm;margin-bottom:4mm}\n      .photo-form-company{font-size:11pt;font-weight:bold}.executive-photo-form .photo-form-header h2{font-size:14pt;margin:2mm 0 0}\n      .photo-form-meta{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #59636e;border-left:1px solid #59636e;margin-bottom:4mm;font-size:10pt}\n      .photo-form-meta>div{padding:2mm;border-right:1px solid #59636e;border-bottom:1px solid #59636e;overflow-wrap:anywhere}\n      .photo-form-meta .photo-form-wide{grid-column:1/-1}\n      .executive-photo-form .executive-photo-grid{gap:4mm}\n      .executive-photo-form .executive-photo-job{border:1px solid #59636e;padding:2mm}\n      .executive-photo-form .executive-photo-job h3{font-size:10pt;padding-bottom:1.5mm;margin:0 0 1.5mm;border-bottom:1px solid #cbd2db}\n      .executive-photo-form .executive-photo-frame{height:65mm;background:white;border:0}\n      .photo-form-item-meta{font-size:9pt;line-height:1.35;margin:1mm 0;overflow-wrap:anywhere}\n      .photo-form-signoff{margin-top:auto;padding-top:8mm}\n      .photo-form-signoff .report-signoff{margin-top:0!important}\n      .photo-form-purpose{font-size:9pt;margin:3mm 0 0;color:#444}\n';
         const styles=summary.match(/<style>([\s\S]*?)<\/style>/)[1];
-        return '<!doctype html><html lang="th"><head><meta charset="utf-8"><title>'+(submission?'ชุดเอกสารสรุปติดตั้งและรับคืนสำหรับผู้บริหาร':'รายงานภาพคอมรายหน่วยงาน')+'</title><style>'+styles+'@page{size:A4 portrait;margin:8mm}@page executive-summary{size:A4 landscape;margin:12mm}@page executive-photos{size:A4 portrait;margin:8mm}html,body{margin:0;padding:0;background:#fff}.executive-submission-summary{page:executive-summary;break-after:page}.executive-submission-summary .table-wrap{overflow:visible}table{min-width:0}.executive-photo-page{page:executive-photos;break-after:page}.executive-photo-page:last-child{break-after:auto}.executive-photo-page[hidden]{display:none}.executive-submission-summary{page:executive-summary}.executive-photo-page h2{font-size:16px;margin:0 0 4px}.executive-photo-page-note{font-size:10px;margin:3px 0 8px}.executive-photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.executive-photo-job{min-width:0;border:1px solid #cad5e3;padding:8px;break-inside:avoid}.executive-photo-job h3{font-size:13px;margin:0 0 4px}.executive-photo-frame{height:70mm;display:flex;align-items:center;justify-content:center;overflow:hidden}.executive-photo-frame img{width:100%;height:100%;object-fit:contain}</style></head><body>'+content+'</body></html>';
+        return '<!doctype html><html lang="th"><head><meta charset="utf-8"><title>'+(submission?'ชุดเอกสารสรุปติดตั้งและรับคืนสำหรับผู้บริหาร':'รายงานภาพคอมรายหน่วยงาน')+'</title><style>'+styles+formStyles+'@page{size:A4 portrait;margin:8mm}@page executive-summary{size:A4 landscape;margin:12mm}@page executive-photos{size:A4 portrait;margin:8mm 8mm 12mm}html,body{margin:0;padding:0;background:#fff}.executive-submission-summary{page:executive-summary;break-after:page}.executive-submission-summary .table-wrap{overflow:visible}table{min-width:0}.executive-photo-page{page:executive-photos;break-after:page}.executive-photo-page:last-child{break-after:auto}.executive-photo-page[hidden]{display:none}.executive-submission-summary{page:executive-summary}.executive-photo-page h2{font-size:16px;margin:0 0 4px}.executive-photo-page-note{font-size:10px;margin:3px 0 8px}.executive-photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.executive-photo-job{min-width:0;border:1px solid #cad5e3;padding:8px;break-inside:avoid}.executive-photo-job h3{font-size:13px;margin:0 0 4px}.executive-photo-frame{height:70mm;display:flex;align-items:center;justify-content:center;overflow:hidden}.executive-photo-frame img{width:100%;height:100%;object-fit:contain}.executive-photo-form .executive-photo-frame{height:65mm}.executive-photo-form .executive-photo-job h3{font-size:10pt}.executive-photo-form{min-height:270mm}</style></head><body>'+content+'</body></html>';
       }
       function executiveLoadedUnitRows() {
         return filterExecutivePhotoDepartments(executivePhotoSource,executivePhotoSource.map(function(row){return {jobNo:row.jobNo,hasAfterPhoto:executivePhotoLoadedImages.has(row.jobNo)};}));
@@ -1086,7 +1107,7 @@
       function updateExecutivePhotoPageVisibility(pages) {
         if(!executivePhotoOnlyWithPhotos)return pages;
         const departments=new Set(executiveLoadedUnitRows().map(departmentName)),visible=pages.filter(function(page){return departments.has(page.department);});
-        pages.forEach(function(page,index){const position=visible.indexOf(page);document.getElementById('executivePhotoPage'+index).hidden=position===-1;if(position!==-1)document.getElementById('executivePhotoPageNote'+index).textContent='ห้างหุ้นส่วนจำกัด แปซิฟิก พลัส ไอที · หลังติดตั้ง 1 · '+page.departmentJobs+' เครื่องในหน่วยงาน · หน้า '+(position+1)+'/'+visible.length;});
+        pages.forEach(function(page,index){const position=visible.indexOf(page);document.getElementById('executivePhotoPage'+index).hidden=position===-1;if(position!==-1)document.getElementById('executivePhotoPageNote'+index).textContent='หลังติดตั้งช่อง 1 · '+page.jobs.length+' เครื่องในหน้านี้ · หน้าภาพ '+(position+1)+'/'+visible.length;});
         return visible;
       }
       function executiveLoadedPhotoContent() {
@@ -1095,7 +1116,7 @@
         const loadedRows=included.filter(function(row){return executivePhotoLoadedImages.has(row.jobNo);}),pages=buildExecutivePhotoPlan(loadedRows);
         const report=executivePhotoSnapshot;
         const summary=executivePhotoSubmission&&report&&report.totals.total?executiveSubmissionSummaryHtml(report,executivePhotoIncludeDetails):'';
-        return summary+pages.map(function(page,index){return '<article class="executive-photo-page"><h2>ภาพเครื่องที่ติดตั้งเสร็จ · '+escapeHtml(page.department)+'</h2><p class="executive-photo-page-note">'+page.jobs.length+' รูป · หน้า '+(index+1)+'/'+pages.length+'</p><div class="executive-photo-grid">'+page.jobs.map(function(row){return '<div class="executive-photo-job">'+executivePhotoJobHtml(row,executivePhotoLoadedImages.get(row.jobNo))+'</div>';}).join('')+'</div></article>';}).join('');
+        return summary+pages.map(function(page,index){const body=page.jobs.map(function(row){return '<div class="executive-photo-job">'+executivePhotoJobHtml(row,executivePhotoLoadedImages.get(row.jobNo))+'</div>';}).join('');return '<article class="executive-photo-page executive-photo-form">'+executivePhotoFormBody(page,index,pages.length,body)+'</article>';}).join('');
       }
       function printExecutivePhotoReport() {
         const content=executiveLoadedPhotoContent();if(!content){document.getElementById('executivePhotoStatus').textContent='ยังไม่มีรูปที่โหลดเสร็จ';return;}

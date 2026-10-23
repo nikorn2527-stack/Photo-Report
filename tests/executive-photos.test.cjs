@@ -111,3 +111,17 @@ test('111 computer returns stay 111 on screen and in every print path when only 
  api(p,r=>r.success(''));await p.context.loadExecutivePhotoReport(true);assert.equal(vm.runInContext('executivePhotoSnapshot.totals.com',p.context),111);assert.equal(p.document.getElementById('executiveSummaryPrint').disabled,false);assert.ok(p.document.getElementById('executivePhotoPages').innerHTML.includes('<tfoot>'+footer+'</tfoot>'));
  await p.context.changeExecutivePhotoDepartment('Missing');assert.equal(vm.runInContext('executivePhotoSnapshot.totals.com',p.context),25);assert.equal(p.document.getElementById('executiveSummaryPrint').disabled,false);
 });
+
+test('unit photo form shows real page metadata and signoff without exposing software keys or old-return asset numbers',()=>{
+ const {context}=page(),jobs=[{jobNo:'J1',building:'B1',floor:'1',room:'Room',department:'<Finance>',contractNo:'C-01',aioSn:'NEW-SERIAL',oldComSn:'OLD-ASSET',windowsKey:'SECRET-KEY'}];
+ vm.runInContext("executivePhotoTime='2026-10-23T01:00:00Z'",context);
+ const card=context.executivePhotoJobHtml(jobs[0],'original-after1'),html=context.executivePhotoFormBody({department:'<Finance>',departmentJobs:5,jobs},0,2,card);
+ for(const text of ['รายงานภาพเครื่องที่ติดตั้งเสร็จ','หน่วยงาน:','&lt;Finance&gt;','เลขที่สัญญา:','C-01','NEW-SERIAL','S/N เครื่องติดตั้ง:','ผ่านการทดสอบ','ผู้จัดทำ','ผู้ตรวจสอบ','1 เครื่องในหน้านี้','5 เครื่อง','หน้าภาพ 1/2'])assert.ok(html.includes(text),text);
+ for(const secret of ['SECRET-KEY','OLD-ASSET','<Finance>'])assert.ok(!html.includes(secret));
+ assert.equal((html.match(/<img /g)||[]).length,1);
+});
+test('missing contract and serial numbers remain blank in unit photo forms instead of invented values',()=>{
+ const {context}=page(),job={jobNo:'J1',department:'A'},card=context.executivePhotoJobHtml(job,'original');
+ const html=context.executivePhotoFormBody({department:'A',departmentJobs:1,jobs:[job]},0,1,card);
+ assert.ok(!html.includes('undefined'));assert.ok(!html.includes('null'));assert.ok(!html.includes('ไม่มีเลขครุภัณฑ์'));assert.ok(html.includes('เลขที่สัญญา:</strong> </div>'));assert.ok(html.includes('S/N เครื่องติดตั้ง: </p>'));
+});
