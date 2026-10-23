@@ -464,6 +464,11 @@ function getJobReportInfo(jobNo) {
 }
 
 function prepareJobForm(jobNo, formType) {
+  return prepareJobFormData_(jobNo, formType, false);
+}
+
+// เลือก Job และอ่านข้อมูลเอกสารภายใต้ล็อกเดียวกัน
+function prepareJobFormData_(jobNo, formType, includeValues) {
   const requestedJob = String(jobNo || '').trim();
   const type = String(formType || '').trim().toLowerCase();
   if (!requestedJob) throw new Error('กรุณาเลือกงานก่อนเปิดเอกสาร');
@@ -489,7 +494,7 @@ function prepareJobForm(jobNo, formType) {
     const printUrl = webAppUrl
       ? webAppUrl + '?page=print-form&job=' + encodeURIComponent(asset.jobNo) + '&formType=' + encodeURIComponent(type)
       : '';
-    return {
+    const result = {
       jobNo: asset.jobNo,
       formType: type,
       formName: type === 'delivery' ? 'ใบส่ง' : 'ใบรับ',
@@ -497,26 +502,15 @@ function prepareJobForm(jobNo, formType) {
       printUrl: printUrl,
       message: 'เตรียม ' + (type === 'delivery' ? 'ใบส่ง' : 'ใบรับ') + ' สำหรับ ' + asset.jobNo + ' แล้ว'
     };
+    if (includeValues) result.values = sheet.getRange(1, 1, 28, type === 'delivery' ? 8 : 7).getDisplayValues();
+    return result;
   } finally {
     lock.releaseLock();
   }
 }
 
 function getPrintFormData(jobNo, formType) {
-  const prepared = prepareJobForm(jobNo, formType);
-  const spreadsheet = getSpreadsheet_();
-  const type = prepared.formType;
-  const sheet = spreadsheet.getSheetByName(type === 'delivery' ? 'Delivery_Form' : 'Return_Form');
-  if (!sheet) throw new Error('ไม่พบชีตสำหรับเอกสาร ' + type);
-  const columnCount = type === 'delivery' ? 8 : 7;
-  const values = sheet.getRange(1, 1, 28, columnCount).getDisplayValues();
-  return {
-    jobNo: prepared.jobNo,
-    formType: type,
-    formName: prepared.formName,
-    sheetUrl: prepared.sheetUrl,
-    values: values
-  };
+  return prepareJobFormData_(jobNo, formType, true);
 }
 
 function getSheetEditLinks() {

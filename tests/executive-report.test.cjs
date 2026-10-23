@@ -164,3 +164,15 @@ test('unit tables show matching grand totals and weighted progress in screen, st
  for(const html of [p.context.executiveReportHtml(report),p.context.executiveReportPartHtml(report,'units'),p.context.executiveSubmissionSummaryHtml(report,false)])assert.ok(html.includes('<tfoot>'+footer+'</tfoot>'));
  p.context.assets=assets;vm.runInContext('portalData={assetRows:assets,jobWorkRows:[]}',p.context);p.context.renderExecutiveDashboard();assert.equal(p.document.getElementById('executiveDepartmentTotals').innerHTML,footer);
 });
+
+test('attachment reports carry only the real contracts in the selected scope and escape their text',()=>{
+ const {context}=page(),rows=[{jobNo:'J1',department:'A',contractNo:' C-01 '},{jobNo:'J2',department:'A',contractNo:'C-01'},{jobNo:'J3',department:'B',contractNo:'<other>'},{jobNo:'J4',department:'A',contractNo:''}];
+ const report=context.buildExecutiveReportData(rows.filter(r=>r.department==='A'),[]);assert.deepEqual(Array.from(report.contractNos),['C-01']);
+ for(const html of [context.executiveReportHtml(report),context.executiveReportPartHtml(report,'units'),context.executiveReportPartHtml(report,'jobs')]){assert.ok(html.includes('เลขที่สัญญา: C-01'));assert.ok(!html.includes('&lt;other&gt;'));assert.ok(html.includes('ผู้จัดทำ'));assert.ok(html.includes('ผู้ตรวจสอบ'));}
+ const unsafe=context.executiveReportHtml(context.buildExecutiveReportData(rows,[]));assert.ok(unsafe.includes('&lt;other&gt;'));assert.ok(!unsafe.includes('<other>'));
+ const blank=context.executiveReportHtml(context.buildExecutiveReportData([{jobNo:'J5'}],[]));assert.ok(!blank.includes('เลขที่สัญญา:'));
+});
+test('summary, progress and installed-machine printouts provide blank signoff fields without inventing names',()=>{
+ const {context}=page(),report=context.buildCompletionReportData([{jobNo:'J1',installStatus:'ติดตั้งเสร็จ'}],[]);
+ for(const html of [context.completionReportHtml(report),context.completedMachinesReportHtml(report)]){assert.ok(html.includes('ผู้จัดทำ'));assert.ok(html.includes('ผู้ตรวจสอบ'));assert.ok(html.includes('counter(page)'));}
+});
