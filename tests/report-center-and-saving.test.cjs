@@ -45,3 +45,11 @@ test('image print readiness waits for decoding and rejects failed image decoding
  const result=p.context.waitForWorkPrintImages({querySelectorAll(){return [image];}}).then(()=>{ready=true;});await Promise.resolve();assert.equal(ready,false);finish();await result;assert.equal(ready,true);
  await assert.rejects(p.context.waitForWorkPrintImages({querySelectorAll(){return [{complete:true,naturalWidth:1600,decode(){return Promise.reject(new Error('decode failed'));}}];}}),/decode failed/);
 });
+
+test('report signoffs are optional per report, default to formal photo reports, and never appear twice',()=>{
+ const p=page(),c=p.context;assert.equal(c.reportSignoffsEnabled('summary'),false);assert.equal(c.reportSignoffsEnabled('progress'),false);assert.equal(c.reportSignoffsEnabled('photos'),true);assert.equal(c.reportSignoffsEnabled('evidence'),true);const html='<html><body>table'+c.reportSignoffHtml()+'</body></html>';assert.ok(!c.applyReportSignoffs(html,'summary').includes('ผู้จัดทำ'));vm.runInContext("reportSignoffPreferences.summary=true",c);assert.equal((c.applyReportSignoffs(html,'summary').match(/class="report-signoff"/g)||[]).length,1);assert.ok(c.applyReportSignoffs('<html><body>issues</body></html>','summary').includes('ผู้ตรวจสอบ'));assert.equal(c.reportSignoffsEnabled('progress'),false);
+});
+
+test('signed tables reserve a repeated footer without duplicating totals, dropping rows or creating a separate signature table',()=>{
+ const p=page(),c=p.context;seed(p);const report=c.centerReportData(),raw=c.executiveReportHtml(report);vm.runInContext('reportSignoffPreferences.summary=true',c);const html=c.applyReportSignoffs(raw,'summary');assert.equal((html.match(/<table\b/g)||[]).length,1);assert.equal((html.match(/class="report-signoff-foot"/g)||[]).length,1);assert.equal((html.match(/>รวม<\/td>/g)||[]).length,1);assert.ok(html.includes('display:table-footer-group'));assert.equal((html.match(/<tr\b/g)||[]).length,report.groups.length+3);const foot=html.match(/<tfoot[\s\S]*?<\/tfoot>/)[0];assert.ok(foot.includes('ผู้จัดทำ'));assert.ok(foot.includes('ผู้ตรวจสอบ'));assert.ok(!foot.includes('>รวม</td>'));assert.equal(c.applyReportSignoffs(html,'summary'),html);vm.runInContext('reportSignoffPreferences.summary=false',c);assert.ok(!c.applyReportSignoffs(html,'summary').includes('ผู้จัดทำ'));
+});
