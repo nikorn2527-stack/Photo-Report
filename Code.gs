@@ -1737,3 +1737,61 @@ function removeImageAtAnchor_(sheet, a1Notation) {
     if (row >= minRow && row <= maxRow && column >= minColumn && column <= maxColumn) image.remove();
   });
 }
+
+/** ภาพแนบเฉพาะกิจ เก็บต้นฉบับใน Drive และทะเบียนแยกจากรูปประจำ Job */
+const EVIDENCE_CATEGORIES_ = Object.freeze({set:'ชุดอุปกรณ์',software:'โปรแกรม',ups:'UPS',hub:'USB Hub',sticker:'ตำแหน่งสติกเกอร์',userTest:'การทดสอบผู้ใช้',other:'อื่นๆ'});
+function evidencePrefix_() { return 'reportEvidence:'+getSpreadsheet_().getId()+':'; }
+function evidenceId_(value) { const id=String(value||'');if(!/^[a-zA-Z0-9_-]{8,80}$/.test(id))throw new Error('รหัสภาพแนบไม่ถูกต้อง');return id; }
+function evidenceText_(value,max) { const text=String(value||'').trim();if(text.length>max)throw new Error('ข้อความยาวเกิน '+max+' ตัวอักษร');return text; }
+function evidenceReadReport_(id) { const raw=PropertiesService.getScriptProperties().getProperty(evidencePrefix_()+'report:'+evidenceId_(id));if(!raw)throw new Error('ไม่พบชุดรายงานนี้');return JSON.parse(raw); }
+function evidencePublicImage_(record) { const copy=Object.assign({},record);delete copy.fileId;return copy; }
+function listEvidenceReports() {
+  const prefix=evidencePrefix_()+'report:',values=PropertiesService.getScriptProperties().getProperties();
+  return Object.keys(values).filter(function(key){return key.indexOf(prefix)===0;}).map(function(key){return JSON.parse(values[key]);}).sort(function(a,b){return b.updatedAt.localeCompare(a.updatedAt);});
+}
+function saveEvidenceReport(id,data) {
+  data=data||{};const reportId=id?evidenceId_(id):Utilities.getUuid(),previous=id?evidenceReadReport_(id):{};
+  const title=evidenceText_(data.title,120);if(!title)throw new Error('กรุณาระบุชื่อชุดรายงาน');
+  const jobNo=evidenceText_(data.jobNo,50);let asset={};
+  if(jobNo){asset=getAssetPortalRows_(getSpreadsheet_().getSheetByName(CONFIG.ASSET_MASTER_SHEET_NAME)).find(function(row){return String(row.jobNo).toLowerCase()===jobNo.toLowerCase();});if(!asset)throw new Error('ไม่พบ Job ของเครื่องตัวอย่าง');}
+  const date=evidenceText_(data.testDate,10);if(date&&(!/^\d{4}-\d{2}-\d{2}$/.test(date)||isNaN(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date))throw new Error('วันที่ไม่ถูกต้อง');
+  const record={id:reportId,title:title,jobNo:asset.jobNo||'',building:asset.building||'',floor:asset.floor||'',department:jobNo?(asset.department||''):evidenceText_(data.department,100),contractNo:jobNo?(asset.contractNo||''):evidenceText_(data.contractNo,100),testDate:date,notes:evidenceText_(data.notes,400),createdAt:previous.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+  PropertiesService.getScriptProperties().setProperty(evidencePrefix_()+'report:'+reportId,JSON.stringify(record));return record;
+}
+function getEvidenceReport(id) {
+  const report=evidenceReadReport_(id),prefix=evidencePrefix_()+'image:',values=PropertiesService.getScriptProperties().getProperties();
+  const images=Object.keys(values).filter(function(key){return key.indexOf(prefix)===0;}).map(function(key){return JSON.parse(values[key]);}).filter(function(record){return record.reportId===report.id&&!record.removed;}).sort(function(a,b){return a.position-b.position||a.uploadedAt.localeCompare(b.uploadedAt);}).map(evidencePublicImage_);
+  return {report:report,images:images};
+}
+function evidenceImageMeta_(data) {
+  data=data||{};const category=String(data.category||'other'),result=String(data.result||'');
+  if(!Object.prototype.hasOwnProperty.call(EVIDENCE_CATEGORIES_,category))throw new Error('ประเภทภาพไม่ถูกต้อง');
+  if(['','ผ่าน','ต้องแก้ไข','ภาพประกอบ'].indexOf(result)===-1)throw new Error('ผลการตรวจไม่ถูกต้อง');
+  const position=Number(data.position);if(!Number.isInteger(position)||position<1||position>9999)throw new Error('ลำดับภาพไม่ถูกต้อง');
+  return {category:category,result:result,title:evidenceText_(data.title,120),notes:evidenceText_(data.notes,200),position:position};
+}
+function evidenceFolder_() {
+  const properties=PropertiesService.getScriptProperties(),key=evidencePrefix_()+'folder',saved=properties.getProperty(key);if(saved)return DriveApp.getFolderById(saved);
+  const lock=LockService.getScriptLock();lock.waitLock(30000);
+  try { const existing=properties.getProperty(key);if(existing)return DriveApp.getFolderById(existing);const folder=DriveApp.getFolderById(CONFIG.PHOTO_FOLDER_ID).createFolder('ภาพแนบเฉพาะกิจ');properties.setProperty(key,folder.getId());return folder; }finally{lock.releaseLock();}
+}
+function uploadEvidenceImage(reportId,uploadId,dataUrl,fileName,metadata) {
+  const report=evidenceReadReport_(reportId),id=evidenceId_(uploadId),properties=PropertiesService.getScriptProperties(),key=evidencePrefix_()+'image:'+id;
+  function existingRecord(){const raw=properties.getProperty(key);if(!raw)return null;const record=JSON.parse(raw);if(record.reportId!==report.id)throw new Error('รหัสอัปโหลดนี้อยู่ในรายงานอื่น');return record;}
+  const prior=existingRecord();if(prior)return evidencePublicImage_(prior);
+  const meta=evidenceImageMeta_(metadata),name=evidenceText_(fileName,180)||'photo.jpg',blob=dataUrlToImageBlob_(dataUrl,name);
+  const file=evidenceFolder_().createFile(blob);let saved=false;
+  const lock=LockService.getScriptLock();
+  try {
+    lock.waitLock(30000);const duplicate=existingRecord();if(duplicate)return evidencePublicImage_(duplicate);
+    const record=Object.assign({id:id,reportId:report.id,fileId:file.getId(),fileName:name,uploadedAt:new Date().toISOString()},meta);
+    properties.setProperty(key,JSON.stringify(record));saved=true;return evidencePublicImage_(record);
+  }finally{try{lock.releaseLock();}finally{if(!saved)file.setTrashed(true);}}
+}
+function updateEvidenceImage(reportId,imageId,metadata) {
+  evidenceReadReport_(reportId);const key=evidencePrefix_()+'image:'+evidenceId_(imageId),properties=PropertiesService.getScriptProperties(),lock=LockService.getScriptLock();lock.waitLock(30000);
+  try {const raw=properties.getProperty(key);if(!raw)throw new Error('ไม่พบรูปนี้');const old=JSON.parse(raw);if(old.reportId!==reportId)throw new Error('รูปนี้อยู่ในรายงานอื่น');const record=Object.assign({},old,evidenceImageMeta_(metadata));properties.setProperty(key,JSON.stringify(record));return evidencePublicImage_(record);}finally{lock.releaseLock();}
+}
+function getEvidenceImage(reportId,imageId) {
+  evidenceReadReport_(reportId);const raw=PropertiesService.getScriptProperties().getProperty(evidencePrefix_()+'image:'+evidenceId_(imageId));if(!raw)throw new Error('ไม่พบรูปนี้');const record=JSON.parse(raw);if(record.reportId!==reportId)throw new Error('รูปนี้อยู่ในรายงานอื่น');const file=DriveApp.getFileById(record.fileId);if(file.isTrashed())throw new Error('ไฟล์รูปถูกนำออกจาก Drive');const blob=file.getBlob();return 'data:'+blob.getContentType()+';base64,'+Utilities.base64Encode(blob.getBytes());
+}
