@@ -30,7 +30,7 @@ test('load errors block print, retry rebuilds cleanly, and units without complet
 
 test('submission bundle snapshots summary and photos from the same selected unit in one printable document',async()=>{
  const p=page();p.context.rows=[rows[0]];vm.runInContext("portalData={assetRows:rows,jobWorkRows:[],loadedAt:'2026-10-22T00:00:00Z'};dashboardDepartment='การเงิน'",p.context);api(p,r=>r.success('original-after1'));p.context.openExecutivePhotoReport(true);await tick();await tick();
- const content=p.document.getElementById('executivePhotoPages').innerHTML;assert.ok(content.includes('executive-submission-summary'));assert.ok(content.includes('สรุปติดตั้งและรับคืนตามหน่วยงาน'));assert.ok(content.includes('ภาพเครื่องที่ติดตั้งเสร็จ'));assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);
+ const content=p.document.getElementById('executivePhotoPages').innerHTML;assert.ok(content.includes('executive-submission-summary'));assert.ok(content.includes('สรุปติดตั้งและรับคืนตามหน่วยงาน'));assert.ok(content.includes('รายงานผลการติดตั้งอุปกรณ์คอมพิวเตอร์'));assert.equal(p.document.getElementById('executivePhotoPrint').disabled,false);
  const html=p.context.executivePhotoPrintHtml(content,true);assert.ok(html.includes('ชุดเอกสารสรุปติดตั้งและรับคืนสำหรับผู้บริหาร'));assert.ok(html.includes('@page executive-summary{size:A4 landscape'));assert.ok(html.includes('@page executive-photos{size:A4 portrait'));assert.ok(!content.includes('รายละเอียดประกอบการตรวจสอบ'));
 });
 test('a submission without completed computers can print its summary without issuing image requests',async()=>{
@@ -116,7 +116,7 @@ test('unit photo form shows real page metadata and signoff without exposing soft
  const {context}=page(),jobs=[{jobNo:'J1',building:'B1',floor:'1',room:'Room',department:'<Finance>',contractNo:'C-01',aioSn:'NEW-SERIAL',oldComSn:'OLD-ASSET',windowsKey:'SECRET-KEY'}];
  vm.runInContext("executivePhotoTime='2026-10-23T01:00:00Z'",context);
  const card=context.executivePhotoJobHtml(jobs[0],'original-after1'),html=context.executivePhotoFormBody({department:'<Finance>',departmentJobs:5,jobs},0,2,card);
- for(const text of ['รายงานภาพเครื่องที่ติดตั้งเสร็จ','หน่วยงาน:','&lt;Finance&gt;','เลขที่สัญญา:','C-01','NEW-SERIAL','S/N เครื่องติดตั้ง:','ผ่านการทดสอบ','ผู้จัดทำ','ผู้ตรวจสอบ','1 เครื่องในหน้านี้','5 เครื่อง','หน้าภาพ 1/2'])assert.ok(html.includes(text),text);
+ for(const text of ['รายงานผลการติดตั้งอุปกรณ์คอมพิวเตอร์','หน่วยงาน:','&lt;Finance&gt;','เลขที่สัญญา:','C-01','NEW-SERIAL','S/N เครื่องติดตั้ง:','ผ่านการทดสอบ','ผู้จัดทำ','ผู้ตรวจสอบ','5 เครื่อง'])assert.ok(html.includes(text),text);
  for(const secret of ['SECRET-KEY','OLD-ASSET','<Finance>'])assert.ok(!html.includes(secret));
  assert.equal((html.match(/<img /g)||[]).length,1);
 });
@@ -124,4 +124,13 @@ test('missing contract and serial numbers remain blank in unit photo forms inste
  const {context}=page(),job={jobNo:'J1',department:'A'},card=context.executivePhotoJobHtml(job,'original');
  const html=context.executivePhotoFormBody({department:'A',departmentJobs:1,jobs:[job]},0,1,card);
  assert.ok(!html.includes('undefined'));assert.ok(!html.includes('null'));assert.ok(!html.includes('ไม่มีเลขครุภัณฑ์'));assert.ok(html.includes('เลขที่สัญญา:</strong> </div>'));assert.ok(html.includes('S/N เครื่องติดตั้ง: </p>'));
+});
+
+test('installation photo forms remove the technical note and keep the two signature areas specific to photo reports',()=>{
+ const {context}=page(),job={jobNo:'J1',department:'A'},body=context.executivePhotoJobHtml(job,'original');
+ const form=context.executivePhotoFormBody({department:'A',departmentJobs:1,jobs:[job]},0,1,body,'old-note-id');
+ assert.ok(form.includes('<h2>รายงานผลการติดตั้งอุปกรณ์คอมพิวเตอร์</h2>'));
+ for(const removed of ['หลังติดตั้งช่อง 1','เครื่องในหน้านี้','หน้าภาพ','old-note-id'])assert.ok(!form.includes(removed));
+ assert.equal((form.match(/class="photo-signature-person"/g)||[]).length,2);assert.equal((form.match(/ลงชื่อ /g)||[]).length,2);assert.ok(form.includes('ผู้จัดทำ'));assert.ok(form.includes('ผู้ตรวจสอบ'));
+ assert.ok(!context.reportSignoffHtml().includes('photo-signature-person'));
 });
