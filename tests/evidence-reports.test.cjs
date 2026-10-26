@@ -49,3 +49,10 @@ test('six-photo evidence forms paginate six per page and keep escaped captions b
 test('long captions fall back to a readable layout while preserving all evidence and caption text',()=>{
  const p=page(),items=Array.from({length:6},(_,i)=>({data:'photo-'+i,metadata:{...meta,position:i+1,title:'ภาพตัวอย่าง',notes:'รายละเอียดการตรวจสอบ '.repeat(8)}}));assert.equal(p.evidencePageSize({title:'sample'},items,6),2);const html=p.evidenceReportPrintHtml({title:'sample'},items,6);assert.equal((html.match(/<img /g)||[]).length,6);assert.equal((html.match(/class="photo-form-header"/g)||[]).length,3);assert.ok(html.includes(items[0].metadata.notes));
 });
+
+
+test('project evidence form omits Job and location while retaining editable title and per-image captions',()=>{
+ const p=page(),html=p.evidenceReportPrintHtml({title:'รายงานแสดงส่วนประกอบอุปกรณ์และซอฟต์แวร์ประจำเครื่อง',jobNo:'PRIVATE-JOB',department:'PRIVATE-LOCATION'},[{data:'image',metadata:{...meta,position:1,title:'USB Hub',notes:'ติดตั้งด้านข้างเครื่อง'}}],6);
+ assert.ok(html.includes('รายงานแสดงส่วนประกอบอุปกรณ์และซอฟต์แวร์ประจำเครื่อง'));assert.ok(html.includes('ติดตั้งด้านข้างเครื่อง'));
+ assert.doesNotMatch(html,/PRIVATE-JOB|PRIVATE-LOCATION|Job เครื่องตัวอย่าง:|หน่วยงาน:|S\/N|วันที่ตรวจ \/ ทดสอบ:|เลขที่สัญญา:/);
+});
