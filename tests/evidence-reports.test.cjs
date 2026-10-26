@@ -85,3 +85,11 @@ test('evidence print groups categories automatically and paginates each group wi
  assert.equal((html.match(/<img /g)||[]).length,9);assert.ok(html.includes('evidence-group-heading">โปรแกรม'));assert.ok(html.includes('evidence-group-heading">UPS'));
  assert.ok(html.indexOf('src="photo-8"')<html.indexOf('src="photo-1"'));assert.ok(html.includes('grid-template-rows:repeat(2,minmax(0,1fr))'));assert.ok(html.includes('height:270mm'));
 });
+
+
+test('visible photo numbering closes deleted and unselected gaps and continues across groups and pages',()=>{
+ const p=page(),items=[{position:2,category:'software'},{position:18,category:'ups'},{position:23,category:'software'}].map((image,i)=>({data:'photo-'+i,metadata:{...image,title:'IMG_'+i+'.jpg',fileName:'IMG_'+i+'.jpg',notes:'caption '+i}})),before=JSON.stringify(items);
+ assert.equal(p.evidenceCaptionHeading(items[0].metadata,1),'ภาพที่ 1');
+ const html=p.evidenceReportPrintHtml({title:'report'},items,2),numbers=Array.from(html.matchAll(/<strong>ภาพที่ (\d+)<\/strong>/g),match=>Number(match[1]));
+ assert.deepEqual(numbers,[1,2,3]);assert.equal(JSON.stringify(items),before);assert.equal(p.evidenceCaptionHeading({title:'USB Hub',position:23},1),'USB Hub');
+});
