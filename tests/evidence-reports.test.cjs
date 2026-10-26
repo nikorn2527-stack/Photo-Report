@@ -76,3 +76,12 @@ test('removing an evidence photo persists without printing, preserves original D
  assert.equal(p.files.get('file-1').trashed,false);assert.equal(p.files.get('file-2').trashed,false);assert.equal(p.context.removeEvidenceImage(a.id,one.id).removed,true);
  p.context.uploadEvidenceImage(a.id,one.id,'retry','a.jpg',meta);assert.equal(p.context.getEvidenceReport(a.id).images.length,1);assert.equal(p.created,2);
 });
+
+
+test('evidence print groups categories automatically and paginates each group without dropping images',()=>{
+ const p=page(),items=Array.from({length:9},(_,i)=>({data:'photo-'+i,metadata:{position:i+1,category:i%2?'ups':'software',title:'ภาพ '+i,notes:'รายละเอียด '+i,result:''}}));
+ const html=p.evidenceReportPrintHtml({title:'รายงาน'},items,4);
+ assert.equal((html.match(/class="executive-photo-page executive-photo-form evidence-print-form evidence-photos-4"/g)||[]).length,3);
+ assert.equal((html.match(/<img /g)||[]).length,9);assert.ok(html.includes('evidence-group-heading">โปรแกรม'));assert.ok(html.includes('evidence-group-heading">UPS'));
+ assert.ok(html.indexOf('src="photo-8"')<html.indexOf('src="photo-1"'));assert.ok(html.includes('grid-template-rows:repeat(2,minmax(0,1fr))'));assert.ok(html.includes('height:270mm'));
+});
