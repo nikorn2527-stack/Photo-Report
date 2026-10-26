@@ -1795,3 +1795,8 @@ function updateEvidenceImage(reportId,imageId,metadata) {
 function getEvidenceImage(reportId,imageId) {
   evidenceReadReport_(reportId);const raw=PropertiesService.getScriptProperties().getProperty(evidencePrefix_()+'image:'+evidenceId_(imageId));if(!raw)throw new Error('ไม่พบรูปนี้');const record=JSON.parse(raw);if(record.reportId!==reportId)throw new Error('รูปนี้อยู่ในรายงานอื่น');const file=DriveApp.getFileById(record.fileId);if(file.isTrashed())throw new Error('ไฟล์รูปถูกนำออกจาก Drive');const blob=file.getBlob();return 'data:'+blob.getContentType()+';base64,'+Utilities.base64Encode(blob.getBytes());
 }
+
+function removeEvidenceImage(reportId,imageId) {
+  evidenceReadReport_(reportId);const key=evidencePrefix_()+'image:'+evidenceId_(imageId),properties=PropertiesService.getScriptProperties(),lock=LockService.getScriptLock();lock.waitLock(30000);
+  try {const raw=properties.getProperty(key);if(!raw)throw new Error('ไม่พบรูปนี้');const record=JSON.parse(raw);if(record.reportId!==reportId)throw new Error('รูปนี้อยู่ในรายงานอื่น');record.removed=true;properties.setProperty(key,JSON.stringify(record));return {id:record.id,removed:true};}finally{lock.releaseLock();}
+}

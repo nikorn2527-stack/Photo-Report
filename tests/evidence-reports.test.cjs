@@ -66,3 +66,13 @@ test('document save retains failed or newly edited captions and can retry withou
  assert.equal(await p.saveEvidenceDocument(),false);assert.equal(vm.runInContext("evidenceDrafts.get('b').notes",p),'edited while saving');
  p.evidenceRpc=async(method,args)=>({id:args[1],...args[2]});assert.equal(await p.saveEvidenceDocument(),true);assert.equal(vm.runInContext('evidenceDrafts.size',p),0);assert.equal(vm.runInContext("evidenceImages.find(function(image){return image.id==='b';}).notes",p),'edited while saving');
 });
+
+
+test('removing an evidence photo persists without printing, preserves original Drive files and rejects another report',()=>{
+ const p=backend(),a=p.context.saveEvidenceReport('',{title:'A'}),b=p.context.saveEvidenceReport('',{title:'B'});
+ const one=p.context.uploadEvidenceImage(a.id,'upload-0001','bytes','a.jpg',meta),two=p.context.uploadEvidenceImage(a.id,'upload-0002','bytes','b.jpg',{...meta,position:2});
+ assert.throws(()=>p.context.removeEvidenceImage(b.id,one.id),/รายงานอื่น/);assert.equal(p.context.getEvidenceReport(a.id).images.length,2);
+ assert.equal(p.context.removeEvidenceImage(a.id,one.id).removed,true);assert.deepEqual(Array.from(p.context.getEvidenceReport(a.id).images,image=>image.id),[two.id]);
+ assert.equal(p.files.get('file-1').trashed,false);assert.equal(p.files.get('file-2').trashed,false);assert.equal(p.context.removeEvidenceImage(a.id,one.id).removed,true);
+ p.context.uploadEvidenceImage(a.id,one.id,'retry','a.jpg',meta);assert.equal(p.context.getEvidenceReport(a.id).images.length,1);assert.equal(p.created,2);
+});
