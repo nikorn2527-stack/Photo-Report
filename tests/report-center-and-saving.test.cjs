@@ -13,7 +13,7 @@ function seed(p){p.context.source=structuredClone(rows);vm.runInContext('portalD
 test('report location filters distinguish identically named departments and leave source and dashboard scope intact',()=>{
  const p=page();seed(p);vm.runInContext("reportFilters.building='B1';reportFilters.department='A';",p.context);
  const report=p.context.centerReportData();assert.equal(report.totals.com,2);assert.equal(report.totals.pc,1);assert.equal(report.totals.aio,1);assert.equal(report.totals.total,2);assert.equal(p.context.getDashboardAssetRows().length,3);
- assert.equal(p.context.centerCsvRows()[1][7],2);assert.equal(p.context.centerCsvRows()[0].at(-1),'ผลการทดสอบ');
+ assert.equal(p.context.centerCsvRows()[1][8],2);assert.equal(p.context.centerCsvRows()[0].at(-1),'ผลการทดสอบ');
 });
 test('test result follows installation status per unit without depending on photographs',()=>{
  const p=page();const report=p.context.buildExecutiveReportData(rows,[]);assert.equal(report.groups[0].testStatus,'ผ่าน 1/2 เครื่อง');assert.equal(report.groups[1].testStatus,'ผ่านการทดสอบ');
