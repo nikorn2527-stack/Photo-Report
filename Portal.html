@@ -882,8 +882,8 @@
         const report=centerReportData();
         if(reportCenterType==='missingPhotos')return [['เลขงาน','ตึก','ชั้น','หน่วยงาน','สถานะติดตั้ง','รูปคอมหลังติดตั้ง 1']].concat(getReportPhotoAudit().map(function(row){return [row.jobNo,row.building||'',row.floor||'',row.department||'',row.installStatus||'',row.photoLabel];}));
         if((reportCenterType==='summary'&&document.getElementById('reportLayout').value!=='jobs')||(reportCenterType==='returns'&&document.getElementById('reportLayout').value==='units')){
-          const fields=['building','floor','department','total','completed','installedUps','remaining','percent','com','aio','pc','monitor','ups','additional','testStatus'];
-          return [['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','UPS ที่ติดตั้ง','คงเหลือ','ความคืบหน้า','Computer','AIO','PC','Monitor','UPS รับคืน','จุดใหม่ / เพิ่มเครื่อง','ผลการทดสอบ']].concat(report.groups.map(function(row){return fields.map(function(key){return row[key]||'';});}),[['รวม','',''].concat(fields.slice(3).map(function(key){return report.totals[key]||'';}))]);
+          const fields=['building','floor','department','total','completed','installedCom','installedUps','remaining','percent','com','aio','pc','monitor','ups','additional','testStatus'];
+          return [['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คอมพิวเตอร์ที่ติดตั้ง','UPS ที่ติดตั้ง','คงเหลือ','ความคืบหน้า','Computer','AIO','PC','Monitor','UPS รับคืน','จุดใหม่ / เพิ่มเครื่อง','ผลการทดสอบ']].concat(report.groups.map(function(row){return fields.map(function(key){return row[key]||'';});}),[['รวม','',''].concat(fields.slice(3).map(function(key){return report.totals[key]||'';}))]);
         }
         if(reportCenterType==='progress'){const completion=buildCompletionReportData(getReportAssetRows(),portalData.jobWorkRows,portalData.loadedAt),fields=['building','floor','department','total','completed','remaining','percent'];return [['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คงเหลือ','ความคืบหน้า']].concat(completion.areas.map(function(row){return fields.map(function(key){return row[key]||'';});}),[['รวม','','',completion.total||'',completion.completed||'',completion.remaining||'',completion.percent||'']]);}
         let rows=getReportAssetRows();
@@ -916,9 +916,10 @@
       function getUnitTestStatus(rows){const count=rows.filter(function(row){return row.installStatus==='ติดตั้งเสร็จ';}).length;return !count?'':count===rows.length?'ผ่านการทดสอบ':'ผ่าน '+count+'/'+rows.length+' เครื่อง';}
       function executiveCounts(rows,workRows) {
         const completion=buildCompletionReportData(rows,[]);
-        const result={total:completion.total,completed:completion.completed,remaining:completion.remaining,percent:completion.percent,issues:0,installedUps:0,com:0,aio:0,pc:0,monitor:0,ups:0,comWithoutNumber:0,monitorWithoutNumber:0,upsWithoutNumber:0,additional:0,returnInfoMissing:0,monitorOnly:0};
+        const result={total:completion.total,completed:completion.completed,remaining:completion.remaining,percent:completion.percent,issues:0,installedCom:0,installedUps:0,com:0,aio:0,pc:0,monitor:0,ups:0,comWithoutNumber:0,monitorWithoutNumber:0,upsWithoutNumber:0,additional:0,returnInfoMissing:0,monitorOnly:0};
         rows.forEach(function(row) {
           if (installationNeedsReason(row.installStatus)) result.issues++;
+          if (row.installStatus==='ติดตั้งเสร็จ' && row.deliverAio===true) result.installedCom++;
           if (row.installStatus==='ติดตั้งเสร็จ' && row.deliverUps===true) result.installedUps++;
           const com=classifyReturnedAsset(row.oldComSn),monitor=classifyReturnedAsset(row.oldMonitorSn),ups=classifyReturnedAsset(row.oldUpsSn);
           if(com.received){result.com++;result[monitor.received?'pc':'aio']++;}
@@ -967,13 +968,13 @@
       function reportTextCell(value) { const text=String(value===null||value===undefined?'':value).trim().replace(/\s+/g,' ');return ['-','ไม่ระบุ','ไม่ระบุหน่วยงาน'].indexOf(text)!==-1?'':escapeHtml(text); }
       function reportCountCell(value,suffix) { return value===0||value===null||value===undefined?'':escapeHtml(value)+(suffix||''); }
       function compareReportLocation(a,b) { return ['building','floor','department'].map(function(key){return String(a[key]||'').localeCompare(String(b[key]||''),'th',{numeric:true});}).find(function(order){return order!==0;})||0; }
-      function executiveHeaders() { return ['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','UPS ที่ติดตั้ง','คงเหลือ','ความคืบหน้า','Computer','AIO','PC','Monitor','UPS รับคืน','จุดใหม่ / เพิ่มเครื่อง','ผลการทดสอบ'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
+      function executiveHeaders() { return ['ตึก','ชั้น','หน่วยงาน','งานทั้งหมด','ติดตั้งเสร็จ','คอมพิวเตอร์ที่ติดตั้ง','UPS ที่ติดตั้ง','คงเหลือ','ความคืบหน้า','Computer','AIO','PC','Monitor','UPS รับคืน','จุดใหม่ / เพิ่มเครื่อง','ผลการทดสอบ'].map(function(text) { return '<th>'+text+'</th>'; }).join(''); }
       function executiveDepartmentRows(report) {
-        return report.groups.map(function(row) { return '<tr><td>'+reportTextCell(row.building)+'</td><td>'+reportTextCell(row.floor)+'</td><td>'+reportTextCell(row.department)+'</td>'+['total','completed','installedUps','remaining','percent','com','aio','pc','monitor','ups','additional'].map(function(key) { return '<td>'+reportCountCell(row[key],key==='percent'?'%':'')+'</td>'; }).join('')+'<td>'+reportTextCell(row.testStatus)+'</td></tr>'; }).join('')||'<tr><td colspan="15" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
+        return report.groups.map(function(row) { return '<tr><td>'+reportTextCell(row.building)+'</td><td>'+reportTextCell(row.floor)+'</td><td>'+reportTextCell(row.department)+'</td>'+['total','completed','installedCom','installedUps','remaining','percent','com','aio','pc','monitor','ups','additional'].map(function(key) { return '<td>'+reportCountCell(row[key],key==='percent'?'%':'')+'</td>'; }).join('')+'<td>'+reportTextCell(row.testStatus)+'</td></tr>'; }).join('')||'<tr><td colspan="16" class="issue-empty">ยังไม่มีข้อมูลหน่วยงาน</td></tr>';
       }
       function executiveDepartmentTotals(report) {
         const totals=report.totals;
-        return '<tr><td colspan="3">รวม</td>'+['total','completed','installedUps','remaining','percent','com','aio','pc','monitor','ups','additional'].map(function(key){return '<td>'+reportCountCell(totals[key],key==='percent'?'%':'')+'</td>';}).join('')+'<td></td></tr>';
+        return '<tr><td colspan="3">รวม</td>'+['total','completed','installedCom','installedUps','remaining','percent','com','aio','pc','monitor','ups','additional'].map(function(key){return '<td>'+reportCountCell(totals[key],key==='percent'?'%':'')+'</td>';}).join('')+'<td></td></tr>';
       }
       function executiveReturnJobHeaders() { return '<th>เลขงาน</th><th>หน่วยงาน</th><th>ผลติดตั้ง</th><th>คอมพิวเตอร์</th><th>จอ</th><th>UPS</th><th>หมายเหตุ</th>'; }
       function executiveReturnJobRows(report, operational) {

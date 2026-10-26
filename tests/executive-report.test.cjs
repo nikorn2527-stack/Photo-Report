@@ -65,7 +65,7 @@ test('executive view has four headline metrics and a compact print summary with 
  assert.equal(context.executiveKpis(report).length,4);const summary=context.executiveReportHtml(report),details=context.executiveReportHtml(report,true);
  assert.doesNotMatch(summary,/รับคืน:<|ในจำนวนนี้ไม่มีเลขครุภัณฑ์|ติดตั้งจุดใหม่ \/ เพิ่มเครื่อง:/);assert.ok(!summary.includes('เลขครุภัณฑ์ซ้ำ'));assert.ok(!summary.includes('รับคืนเฉพาะจอ'));
  assert.ok(!summary.includes('PRIVATE-JOB-A'));assert.ok(details.includes('PRIVATE-JOB-A'));assert.ok(!details.includes('รายละเอียดประกอบการตรวจสอบ'));
- assert.equal((context.executiveHeaders().match(/<th>/g)||[]).length,15);
+ assert.equal((context.executiveHeaders().match(/<th>/g)||[]).length,16);
 });
 
 test('executive and submission figures use the reference completion report: 156 total, 126 completed, 30 remaining, 81%, 80 fully complete',()=>{
@@ -160,7 +160,7 @@ test('complete-unit filtering checks only after1; unknown or missing after1 on a
 
 test('unit tables show matching grand totals and weighted progress in screen, standalone print and photo bundles',()=>{
  const p=page(),assets=[{jobNo:'A1',department:'A',installStatus:'ติดตั้งเสร็จ',oldComSn:'C1',oldMonitorSn:'M1'},{jobNo:'A2',department:'A',installStatus:'รอดำเนินการ'},{jobNo:'B1',department:'B',installStatus:'ติดตั้งเสร็จ',oldComSn:'ไม่มีเลข',oldUpsSn:'U1'}],report=p.context.buildExecutiveReportData(assets,[]),footer=p.context.executiveDepartmentTotals(report);
- const values=Array.from(footer.matchAll(/<td(?: colspan="3")?>(.*?)<\/td>/g),m=>m[1]);assert.deepEqual(values,['รวม','3','2','','1','67%','2','1','1','1','1','','']);
+ const values=Array.from(footer.matchAll(/<td(?: colspan="3")?>(.*?)<\/td>/g),m=>m[1]);assert.deepEqual(values,['รวม','3','2','','','1','67%','2','1','1','1','1','','']);
  for(const html of [p.context.executiveReportHtml(report),p.context.executiveReportPartHtml(report,'units'),p.context.executiveSubmissionSummaryHtml(report,false)])assert.ok(html.includes('<tfoot>'+footer+'</tfoot>'));
  p.context.assets=assets;vm.runInContext('portalData={assetRows:assets,jobWorkRows:[]}',p.context);p.context.renderExecutiveDashboard();assert.equal(p.document.getElementById('executiveDepartmentTotals').innerHTML,footer);
 });
@@ -180,23 +180,25 @@ test('summary, progress and installed-machine printouts provide blank signoff fi
 
 test('installed UPS counts completed jobs with UPS delivery, independently of returned UPS, in tables and CSV',()=>{
  const p=page(),assets=[
-  {jobNo:'DONE-UPS',department:'A',installStatus:'ติดตั้งเสร็จ',deliverUps:true,oldUpsSn:'OLD-1'},
+  {jobNo:'DONE-UPS',department:'A',installStatus:'ติดตั้งเสร็จ',deliverAio:true,deliverUps:true,oldUpsSn:'OLD-1'},
   {jobNo:'DONE-NEW',department:'A',installStatus:'ติดตั้งเสร็จ',deliverUps:true},
-  {jobNo:'PENDING',department:'B',installStatus:'รอดำเนินการ',deliverUps:true,oldUpsSn:'OLD-2'},
+  {jobNo:'PENDING',department:'B',installStatus:'รอดำเนินการ',deliverAio:true,deliverUps:true,oldUpsSn:'OLD-2'},
   {jobNo:'SERIAL-ONLY',department:'B',installStatus:'ติดตั้งเสร็จ',upsSn:'NEW-UPS'},
-  {jobNo:'NO-UPS',department:'B',installStatus:'ติดตั้งเสร็จ',deliverUps:false}
+  {jobNo:'NO-UPS',department:'B',installStatus:'ติดตั้งเสร็จ',deliverAio:true,deliverUps:false}
  ];
  const report=p.context.buildExecutiveReportData(assets,[]);
+ assert.equal(report.totals.installedCom,2);assert.equal(report.groups[0].installedCom,1);assert.equal(report.groups[1].installedCom,1);
  assert.equal(report.totals.installedUps,2);assert.equal(report.totals.ups,2);
  assert.equal(report.groups[0].installedUps,2);assert.equal(report.groups[1].installedUps,0);
  assert.equal(report.groups.reduce((sum,row)=>sum+row.installedUps,0),report.totals.installedUps);
  for(const html of [p.context.executiveReportHtml(report),p.context.executiveReportPartHtml(report,'units')]){
-  assert.ok(html.includes('<th>UPS ที่ติดตั้ง</th>'));assert.ok(html.includes('<th>UPS รับคืน</th>'));
+  assert.ok(html.includes('<th>คอมพิวเตอร์ที่ติดตั้ง</th>'));assert.ok(html.includes('<th>UPS ที่ติดตั้ง</th>'));assert.ok(html.includes('<th>UPS รับคืน</th>'));
   assert.doesNotMatch(html,/ในจำนวนนี้ไม่มีเลขครุภัณฑ์|รับคืน:<|ติดตั้งจุดใหม่ \/ เพิ่มเครื่อง:/);
  }
  p.context.assets=assets;vm.runInContext("portalData={assetRows:assets,jobWorkRows:[]};reportCenterType='summary'",p.context);
  p.document.getElementById('reportLayout').value='units';
  const csv=p.context.centerCsvRows(),index=csv[0].indexOf('UPS ที่ติดตั้ง');
- assert.equal(index,5);assert.equal(csv[1][index],2);assert.equal(csv[2][index],'');assert.equal(csv.at(-1)[index],2);
- assert.equal(csv[0].length,15);assert.equal(csv[1].length,15);assert.equal(csv.at(-1).length,15);
+ const comIndex=csv[0].indexOf('คอมพิวเตอร์ที่ติดตั้ง');assert.equal(comIndex,5);assert.equal(csv[1][comIndex],1);assert.equal(csv[2][comIndex],1);assert.equal(csv.at(-1)[comIndex],2);
+ assert.equal(index,6);assert.equal(csv[1][index],2);assert.equal(csv[2][index],'');assert.equal(csv.at(-1)[index],2);
+ assert.equal(csv[0].length,16);assert.equal(csv[1].length,16);assert.equal(csv.at(-1).length,16);
 });
