@@ -56,3 +56,13 @@ test('project evidence form omits Job and location while retaining editable titl
  assert.ok(html.includes('รายงานแสดงส่วนประกอบอุปกรณ์และซอฟต์แวร์ประจำเครื่อง'));assert.ok(html.includes('ติดตั้งด้านข้างเครื่อง'));
  assert.doesNotMatch(html,/PRIVATE-JOB|PRIVATE-LOCATION|Job เครื่องตัวอย่าง:|หน่วยงาน:|S\/N|วันที่ตรวจ \/ ทดสอบ:|เลขที่สัญญา:/);
 });
+
+
+test('document save retains failed or newly edited captions and can retry without losing successful saves',async()=>{
+ const p=page();vm.runInContext("evidenceCurrent={id:'report-1'};evidenceImages=[{id:'a',position:1},{id:'b',position:2}];evidenceDrafts.set('a',{position:1,notes:'caption a'});evidenceDrafts.set('b',{position:2,notes:'caption b'});evidenceReportHasDraft=function(){return false;};renderEvidenceImages=function(){};evidenceMessage=function(){};",p);
+ p.evidenceRpc=async(method,args)=>{if(args[1]==='b')throw new Error('save failed');return {id:args[1],...args[2]};};
+ assert.equal(await p.saveEvidenceDocument(),false);assert.equal(vm.runInContext("evidenceDrafts.has('a')",p),false);assert.equal(vm.runInContext("evidenceDrafts.get('b').notes",p),'caption b');
+ p.evidenceRpc=async(method,args)=>{vm.runInContext("evidenceDrafts.set('b',{position:2,notes:'edited while saving'})",p);return {id:args[1],...args[2]};};
+ assert.equal(await p.saveEvidenceDocument(),false);assert.equal(vm.runInContext("evidenceDrafts.get('b').notes",p),'edited while saving');
+ p.evidenceRpc=async(method,args)=>({id:args[1],...args[2]});assert.equal(await p.saveEvidenceDocument(),true);assert.equal(vm.runInContext('evidenceDrafts.size',p),0);assert.equal(vm.runInContext("evidenceImages.find(function(image){return image.id==='b';}).notes",p),'edited while saving');
+});
